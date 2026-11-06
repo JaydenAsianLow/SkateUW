@@ -1,0 +1,706 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-11-06T00:06:06Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 4708373,
+  "bounds": {
+    "minlat": 47.6540754,
+    "minlon": -122.3087901,
+    "maxlat": 47.6552651,
+    "maxlon": -122.3079988
+  },
+  "geometry": [
+    { "lat": 47.6540754, "lon": -122.3079988 },
+    { "lat": 47.6541670, "lon": -122.3080589 },
+    { "lat": 47.6544084, "lon": -122.3082128 },
+    { "lat": 47.6548789, "lon": -122.3085282 },
+    { "lat": 47.6550981, "lon": -122.3086802 },
+    { "lat": 47.6552651, "lon": -122.3087901 }
+  ],
+  "tags": {
+    "bicycle": "dismount",
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "noname": "yes",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "11"
+  }
+},
+{
+  "type": "way",
+  "id": 50779390,
+  "bounds": {
+    "minlat": 47.6554479,
+    "minlon": -122.3112767,
+    "maxlat": 47.6564685,
+    "maxlon": -122.3087673
+  },
+  "geometry": [
+    { "lat": 47.6564677, "lon": -122.3110974 },
+    { "lat": 47.6564685, "lon": -122.3112666 },
+    { "lat": 47.6554496, "lon": -122.3112767 },
+    { "lat": 47.6554489, "lon": -122.3111413 },
+    { "lat": 47.6554479, "lon": -122.3109088 },
+    { "lat": 47.6559885, "lon": -122.3109035 },
+    { "lat": 47.6559849, "lon": -122.3101221 },
+    { "lat": 47.6559342, "lon": -122.3100802 },
+    { "lat": 47.6555407, "lon": -122.3101265 },
+    { "lat": 47.6555401, "lon": -122.3099899 },
+    { "lat": 47.6555359, "lon": -122.3090714 },
+    { "lat": 47.6555346, "lon": -122.3087737 },
+    { "lat": 47.6561731, "lon": -122.3087673 },
+    { "lat": 47.6561787, "lon": -122.3099998 },
+    { "lat": 47.6561829, "lon": -122.3109278 },
+    { "lat": 47.6564669, "lon": -122.3109250 },
+    { "lat": 47.6564677, "lon": -122.3110974 }
+  ],
+  "tags": {
+    "addr:state": "WA",
+    "amenity": "parking",
+    "capacity": "971",
+    "capacity:disabled": "30",
+    "fee": "yes",
+    "gnis:feature_id": "2461196",
+    "layer": "-1",
+    "lit": "yes",
+    "name": "Central Plaza Garage (C01–C06)",
+    "parking": "underground",
+    "ref": "C01;C02;C03;C04;C05;C06",
+    "website": "https://transportation.uw.edu/maps/lots-garages"
+  }
+},
+{
+  "type": "way",
+  "id": 222831554,
+  "bounds": {
+    "minlat": 47.6551109,
+    "minlon": -122.3074772,
+    "maxlat": 47.6559754,
+    "maxlon": -122.3065718
+  },
+  "geometry": [
+    { "lat": 47.6558897, "lon": -122.3073774 },
+    { "lat": 47.6559264, "lon": -122.3073638 },
+    { "lat": 47.6559754, "lon": -122.3073504 },
+    { "lat": 47.6559698, "lon": -122.3072973 },
+    { "lat": 47.6559644, "lon": -122.3072461 },
+    { "lat": 47.6559127, "lon": -122.3072594 },
+    { "lat": 47.6558635, "lon": -122.3072720 },
+    { "lat": 47.6557913, "lon": -122.3066681 },
+    { "lat": 47.6557065, "lon": -122.3066919 },
+    { "lat": 47.6557228, "lon": -122.3068335 },
+    { "lat": 47.6557098, "lon": -122.3068739 },
+    { "lat": 47.6556337, "lon": -122.3068217 },
+    { "lat": 47.6552691, "lon": -122.3065718 },
+    { "lat": 47.6551109, "lon": -122.3070515 },
+    { "lat": 47.6554890, "lon": -122.3073088 },
+    { "lat": 47.6555528, "lon": -122.3073567 },
+    { "lat": 47.6555182, "lon": -122.3074670 },
+    { "lat": 47.6555261, "lon": -122.3074772 },
+    { "lat": 47.6558897, "lon": -122.3073774 }
+  ],
+  "tags": {
+    "amenity": "library",
+    "building": "university",
+    "building:levels": "5",
+    "building:material": "brick",
+    "name": "Allen Library",
+    "name:etymology": "Kenneth S. Allen",
+    "official_name": "Kenneth S. Allen Library",
+    "opening_hours": "Mo-Th 09:00-20:00; Fr 09:00-17:00; Su 13:00-20:00",
+    "operator": "University of Washington Libraries",
+    "operator:type": "university",
+    "operator:wikidata": "Q7896575",
+    "ref": "ALB",
+    "roof:colour": "gray",
+    "wheelchair": "yes",
+    "wikidata": "Q107290624"
+  }
+},
+{
+  "type": "way",
+  "id": 333735035,
+  "bounds": {
+    "minlat": 47.6554890,
+    "minlon": -122.3073088,
+    "maxlat": 47.6556337,
+    "maxlon": -122.3068217
+  },
+  "geometry": [
+    { "lat": 47.6556337, "lon": -122.3068217 },
+    { "lat": 47.6554890, "lon": -122.3073088 }
+  ],
+  "tags": {
+    "bicycle": "dismount",
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "name:etymology": "Grant County, Washington",
+    "name:etymology:wikidata": "Q281681",
+    "name:etymology:wikipedia": "en:Grant County, Washington",
+    "surface": "paving_stones",
+    "tunnel": "building_passage",
+    "website": "http://www.washington.edu"
+  }
+},
+{
+  "type": "way",
+  "id": 333735036,
+  "bounds": {
+    "minlat": 47.6550981,
+    "minlon": -122.3086802,
+    "maxlat": 47.6553008,
+    "maxlon": -122.3080321
+  },
+  "geometry": [
+    { "lat": 47.6553008, "lon": -122.3080321 },
+    { "lat": 47.6552816, "lon": -122.3080934 },
+    { "lat": 47.6552652, "lon": -122.3081472 },
+    { "lat": 47.6551703, "lon": -122.3084471 },
+    { "lat": 47.6550981, "lon": -122.3086802 }
+  ],
+  "tags": {
+    "bicycle": "dismount",
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "name:etymology": "Grant County, Washington",
+    "name:etymology:wikidata": "Q281681",
+    "name:etymology:wikipedia": "en:Grant County, Washington",
+    "surface": "paving_stones",
+    "width": "11"
+  }
+},
+{
+  "type": "way",
+  "id": 382759627,
+  "bounds": {
+    "minlat": 47.6558456,
+    "minlon": -122.3114399,
+    "maxlat": 47.6562945,
+    "maxlon": -122.3103022
+  },
+  "geometry": [
+    { "lat": 47.6562939, "lon": -122.3113734 },
+    { "lat": 47.6562945, "lon": -122.3114287 },
+    { "lat": 47.6561834, "lon": -122.3114315 },
+    { "lat": 47.6558470, "lon": -122.3114399 },
+    { "lat": 47.6558464, "lon": -122.3113886 },
+    { "lat": 47.6558456, "lon": -122.3113190 },
+    { "lat": 47.6559962, "lon": -122.3109150 },
+    { "lat": 47.6559955, "lon": -122.3108191 },
+    { "lat": 47.6559948, "lon": -122.3107322 },
+    { "lat": 47.6559652, "lon": -122.3107327 },
+    { "lat": 47.6559648, "lon": -122.3106739 },
+    { "lat": 47.6559643, "lon": -122.3106174 },
+    { "lat": 47.6559640, "lon": -122.3105647 },
+    { "lat": 47.6559617, "lon": -122.3103091 },
+    { "lat": 47.6559992, "lon": -122.3103076 },
+    { "lat": 47.6560164, "lon": -122.3103069 },
+    { "lat": 47.6560664, "lon": -122.3103061 },
+    { "lat": 47.6561440, "lon": -122.3103033 },
+    { "lat": 47.6561746, "lon": -122.3103022 },
+    { "lat": 47.6561756, "lon": -122.3104043 },
+    { "lat": 47.6561770, "lon": -122.3105490 },
+    { "lat": 47.6561119, "lon": -122.3105529 },
+    { "lat": 47.6561135, "lon": -122.3107789 },
+    { "lat": 47.6561188, "lon": -122.3108162 },
+    { "lat": 47.6561208, "lon": -122.3108298 },
+    { "lat": 47.6561208, "lon": -122.3109228 },
+    { "lat": 47.6562311, "lon": -122.3111557 },
+    { "lat": 47.6562929, "lon": -122.3112865 },
+    { "lat": 47.6562932, "lon": -122.3113094 },
+    { "lat": 47.6562939, "lon": -122.3113734 }
+  ],
+  "tags": {
+    "area": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 607193784,
+  "bounds": {
+    "minlat": 47.6548320,
+    "minlon": -122.3096245,
+    "maxlat": 47.6549204,
+    "maxlon": -122.3095184
+  },
+  "geometry": [
+    { "lat": 47.6548320, "lon": -122.3095184 },
+    { "lat": 47.6549115, "lon": -122.3096138 },
+    { "lat": 47.6549204, "lon": -122.3096245 }
+  ],
+  "tags": {
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 932369432,
+  "bounds": {
+    "minlat": 47.6572300,
+    "minlon": -122.3097771,
+    "maxlat": 47.6573114,
+    "maxlon": -122.3096569
+  },
+  "geometry": [
+    { "lat": 47.6572400, "lon": -122.3097568 },
+    { "lat": 47.6572327, "lon": -122.3097391 },
+    { "lat": 47.6572300, "lon": -122.3097189 },
+    { "lat": 47.6572319, "lon": -122.3096984 },
+    { "lat": 47.6572384, "lon": -122.3096801 },
+    { "lat": 47.6572487, "lon": -122.3096661 },
+    { "lat": 47.6572615, "lon": -122.3096581 },
+    { "lat": 47.6572754, "lon": -122.3096569 },
+    { "lat": 47.6572888, "lon": -122.3096628 },
+    { "lat": 47.6573001, "lon": -122.3096749 },
+    { "lat": 47.6573079, "lon": -122.3096920 },
+    { "lat": 47.6573114, "lon": -122.3097121 },
+    { "lat": 47.6573106, "lon": -122.3097304 },
+    { "lat": 47.6573061, "lon": -122.3097474 },
+    { "lat": 47.6572983, "lon": -122.3097617 },
+    { "lat": 47.6572881, "lon": -122.3097719 },
+    { "lat": 47.6572762, "lon": -122.3097771 },
+    { "lat": 47.6572639, "lon": -122.3097768 },
+    { "lat": 47.6572507, "lon": -122.3097699 },
+    { "lat": 47.6572400, "lon": -122.3097568 }
+  ],
+  "tags": {
+    "area": "yes",
+    "highway": "pedestrian",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 967093040,
+  "bounds": {
+    "minlat": 47.6553052,
+    "minlon": -122.3079561,
+    "maxlat": 47.6554826,
+    "maxlon": -122.3073315
+  },
+  "geometry": [
+    { "lat": 47.6554826, "lon": -122.3073315 },
+    { "lat": 47.6553906, "lon": -122.3076565 },
+    { "lat": 47.6553329, "lon": -122.3078599 },
+    { "lat": 47.6553264, "lon": -122.3078837 },
+    { "lat": 47.6553052, "lon": -122.3079561 }
+  ],
+  "tags": {
+    "bicycle": "dismount",
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "name:etymology": "Grant County, Washington",
+    "name:etymology:wikidata": "Q281681",
+    "name:etymology:wikipedia": "en:Grant County, Washington",
+    "surface": "asphalt",
+    "website": "http://www.washington.edu"
+  }
+},
+{
+  "type": "way",
+  "id": 967093041,
+  "bounds": {
+    "minlat": 47.6553008,
+    "minlon": -122.3080321,
+    "maxlat": 47.6553052,
+    "maxlon": -122.3079561
+  },
+  "geometry": [
+    { "lat": 47.6553052, "lon": -122.3079561 },
+    { "lat": 47.6553008, "lon": -122.3080321 }
+  ],
+  "tags": {
+    "bicycle": "dismount",
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "name:etymology": "Grant County, Washington",
+    "name:etymology:wikidata": "Q281681",
+    "name:etymology:wikipedia": "en:Grant County, Washington",
+    "surface": "paving_stones",
+    "website": "http://www.washington.edu",
+    "width": "11"
+  }
+},
+{
+  "type": "way",
+  "id": 1089821443,
+  "bounds": {
+    "minlat": 47.6548909,
+    "minlon": -122.3119159,
+    "maxlat": 47.6552416,
+    "maxlon": -122.3105450
+  },
+  "geometry": [
+    { "lat": 47.6549884, "lon": -122.3111458 },
+    { "lat": 47.6549869, "lon": -122.3111432 },
+    { "lat": 47.6549806, "lon": -122.3111094 },
+    { "lat": 47.6549664, "lon": -122.3110251 },
+    { "lat": 47.6549589, "lon": -122.3109752 },
+    { "lat": 47.6549526, "lon": -122.3109283 },
+    { "lat": 47.6549469, "lon": -122.3108807 },
+    { "lat": 47.6549415, "lon": -122.3108299 },
+    { "lat": 47.6549371, "lon": -122.3107825 },
+    { "lat": 47.6549329, "lon": -122.3107282 },
+    { "lat": 47.6549283, "lon": -122.3106508 },
+    { "lat": 47.6549256, "lon": -122.3105829 },
+    { "lat": 47.6549247, "lon": -122.3105450 },
+    { "lat": 47.6549083, "lon": -122.3105452 },
+    { "lat": 47.6548909, "lon": -122.3105456 },
+    { "lat": 47.6548928, "lon": -122.3105721 },
+    { "lat": 47.6548936, "lon": -122.3106011 },
+    { "lat": 47.6548949, "lon": -122.3106383 },
+    { "lat": 47.6548970, "lon": -122.3106857 },
+    { "lat": 47.6548996, "lon": -122.3107306 },
+    { "lat": 47.6549029, "lon": -122.3107772 },
+    { "lat": 47.6549056, "lon": -122.3108100 },
+    { "lat": 47.6549095, "lon": -122.3108512 },
+    { "lat": 47.6549118, "lon": -122.3108736 },
+    { "lat": 47.6549137, "lon": -122.3108911 },
+    { "lat": 47.6549198, "lon": -122.3109431 },
+    { "lat": 47.6549263, "lon": -122.3109915 },
+    { "lat": 47.6549327, "lon": -122.3110346 },
+    { "lat": 47.6549405, "lon": -122.3110828 },
+    { "lat": 47.6549462, "lon": -122.3111158 },
+    { "lat": 47.6549518, "lon": -122.3111463 },
+    { "lat": 47.6549561, "lon": -122.3111682 },
+    { "lat": 47.6549587, "lon": -122.3111811 },
+    { "lat": 47.6549612, "lon": -122.3111940 },
+    { "lat": 47.6549722, "lon": -122.3112460 },
+    { "lat": 47.6549829, "lon": -122.3112928 },
+    { "lat": 47.6549908, "lon": -122.3113258 },
+    { "lat": 47.6550022, "lon": -122.3113704 },
+    { "lat": 47.6550061, "lon": -122.3113853 },
+    { "lat": 47.6550151, "lon": -122.3114184 },
+    { "lat": 47.6550213, "lon": -122.3114401 },
+    { "lat": 47.6550302, "lon": -122.3114702 },
+    { "lat": 47.6550391, "lon": -122.3115003 },
+    { "lat": 47.6550457, "lon": -122.3115211 },
+    { "lat": 47.6550608, "lon": -122.3115676 },
+    { "lat": 47.6550711, "lon": -122.3115980 },
+    { "lat": 47.6550876, "lon": -122.3116445 },
+    { "lat": 47.6551016, "lon": -122.3116821 },
+    { "lat": 47.6551159, "lon": -122.3117188 },
+    { "lat": 47.6551257, "lon": -122.3117431 },
+    { "lat": 47.6551395, "lon": -122.3117765 },
+    { "lat": 47.6551517, "lon": -122.3118049 },
+    { "lat": 47.6551695, "lon": -122.3118449 },
+    { "lat": 47.6551787, "lon": -122.3118650 },
+    { "lat": 47.6551913, "lon": -122.3118917 },
+    { "lat": 47.6551969, "lon": -122.3119034 },
+    { "lat": 47.6551967, "lon": -122.3119089 },
+    { "lat": 47.6551957, "lon": -122.3119124 },
+    { "lat": 47.6551929, "lon": -122.3119159 },
+    { "lat": 47.6552416, "lon": -122.3119147 },
+    { "lat": 47.6552240, "lon": -122.3118783 },
+    { "lat": 47.6552069, "lon": -122.3118418 },
+    { "lat": 47.6551925, "lon": -122.3118096 },
+    { "lat": 47.6551995, "lon": -122.3118029 },
+    { "lat": 47.6551947, "lon": -122.3117919 },
+    { "lat": 47.6551898, "lon": -122.3117808 },
+    { "lat": 47.6551829, "lon": -122.3117876 },
+    { "lat": 47.6551559, "lon": -122.3117230 },
+    { "lat": 47.6551314, "lon": -122.3116599 },
+    { "lat": 47.6551119, "lon": -122.3116065 },
+    { "lat": 47.6550894, "lon": -122.3115405 },
+    { "lat": 47.6550596, "lon": -122.3114443 },
+    { "lat": 47.6550392, "lon": -122.3113715 },
+    { "lat": 47.6550221, "lon": -122.3113045 },
+    { "lat": 47.6550065, "lon": -122.3112375 },
+    { "lat": 47.6549964, "lon": -122.3111903 },
+    { "lat": 47.6549947, "lon": -122.3111803 },
+    { "lat": 47.6549914, "lon": -122.3111624 },
+    { "lat": 47.6549884, "lon": -122.3111458 }
+  ],
+  "tags": {
+    "area:highway": "footway",
+    "landuse": "highway"
+  }
+},
+{
+  "type": "way",
+  "id": 1099938601,
+  "bounds": {
+    "minlat": 47.6548320,
+    "minlon": -122.3095184,
+    "maxlat": 47.6550981,
+    "maxlon": -122.3086802
+  },
+  "geometry": [
+    { "lat": 47.6550981, "lon": -122.3086802 },
+    { "lat": 47.6550129, "lon": -122.3089458 },
+    { "lat": 47.6549797, "lon": -122.3090501 },
+    { "lat": 47.6549553, "lon": -122.3091246 },
+    { "lat": 47.6548320, "lon": -122.3095184 }
+  ],
+  "tags": {
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "name:etymology": "Grant County, Washington",
+    "name:etymology:wikidata": "Q281681",
+    "name:etymology:wikipedia": "en:Grant County, Washington",
+    "surface": "paving_stones",
+    "width": "11"
+  }
+},
+{
+  "type": "way",
+  "id": 1099938603,
+  "bounds": {
+    "minlat": 47.6552651,
+    "minlon": -122.3088842,
+    "maxlat": 47.6554057,
+    "maxlon": -122.3087901
+  },
+  "geometry": [
+    { "lat": 47.6552651, "lon": -122.3087901 },
+    { "lat": 47.6553841, "lon": -122.3088691 },
+    { "lat": 47.6554057, "lon": -122.3088842 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "noname": "yes",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "11"
+  }
+},
+{
+  "type": "way",
+  "id": 1104202902,
+  "bounds": {
+    "minlat": 47.6553669,
+    "minlon": -122.3087705,
+    "maxlat": 47.6561904,
+    "maxlon": -122.3079331
+  },
+  "geometry": [
+    { "lat": 47.6555940, "lon": -122.3079331 },
+    { "lat": 47.6556786, "lon": -122.3079941 },
+    { "lat": 47.6556865, "lon": -122.3080646 },
+    { "lat": 47.6556352, "lon": -122.3082312 },
+    { "lat": 47.6555447, "lon": -122.3085172 },
+    { "lat": 47.6555747, "lon": -122.3085103 },
+    { "lat": 47.6555762, "lon": -122.3085224 },
+    { "lat": 47.6557544, "lon": -122.3084753 },
+    { "lat": 47.6560948, "lon": -122.3083854 },
+    { "lat": 47.6560933, "lon": -122.3083733 },
+    { "lat": 47.6561159, "lon": -122.3083675 },
+    { "lat": 47.6561253, "lon": -122.3083651 },
+    { "lat": 47.6561325, "lon": -122.3084213 },
+    { "lat": 47.6561407, "lon": -122.3084194 },
+    { "lat": 47.6561819, "lon": -122.3084487 },
+    { "lat": 47.6561904, "lon": -122.3085153 },
+    { "lat": 47.6561582, "lon": -122.3085646 },
+    { "lat": 47.6561489, "lon": -122.3085662 },
+    { "lat": 47.6561547, "lon": -122.3086180 },
+    { "lat": 47.6558644, "lon": -122.3086928 },
+    { "lat": 47.6555676, "lon": -122.3087705 },
+    { "lat": 47.6555612, "lon": -122.3087258 },
+    { "lat": 47.6555193, "lon": -122.3086969 },
+    { "lat": 47.6555093, "lon": -122.3086233 },
+    { "lat": 47.6554739, "lon": -122.3087348 },
+    { "lat": 47.6554499, "lon": -122.3087179 },
+    { "lat": 47.6553740, "lon": -122.3086645 },
+    { "lat": 47.6553669, "lon": -122.3086424 },
+    { "lat": 47.6555210, "lon": -122.3081596 },
+    { "lat": 47.6555334, "lon": -122.3081208 },
+    { "lat": 47.6555445, "lon": -122.3080857 },
+    { "lat": 47.6555940, "lon": -122.3079331 }
+  ],
+  "tags": {
+    "building:levels": "6",
+    "building:material": "brick",
+    "building:part": "yes",
+    "name": "Henry Suzzallo Library",
+    "roof:colour": "lightsteelblue",
+    "roof:shape": "hipped"
+  }
+},
+{
+  "type": "way",
+  "id": 1115398982,
+  "bounds": {
+    "minlat": 47.6558444,
+    "minlon": -122.3118983,
+    "maxlat": 47.6567444,
+    "maxlon": -122.3114498
+  },
+  "geometry": [
+    { "lat": 47.6567431, "lon": -122.3114498 },
+    { "lat": 47.6567444, "lon": -122.3115873 },
+    { "lat": 47.6566816, "lon": -122.3115886 },
+    { "lat": 47.6566820, "lon": -122.3116288 },
+    { "lat": 47.6566721, "lon": -122.3116290 },
+    { "lat": 47.6566720, "lon": -122.3116198 },
+    { "lat": 47.6566289, "lon": -122.3116207 },
+    { "lat": 47.6566290, "lon": -122.3116300 },
+    { "lat": 47.6566235, "lon": -122.3116301 },
+    { "lat": 47.6564182, "lon": -122.3116344 },
+    { "lat": 47.6564181, "lon": -122.3116262 },
+    { "lat": 47.6563533, "lon": -122.3116270 },
+    { "lat": 47.6562412, "lon": -122.3116290 },
+    { "lat": 47.6562430, "lon": -122.3117881 },
+    { "lat": 47.6562436, "lon": -122.3118500 },
+    { "lat": 47.6561786, "lon": -122.3118520 },
+    { "lat": 47.6561790, "lon": -122.3118945 },
+    { "lat": 47.6559972, "lon": -122.3118983 },
+    { "lat": 47.6559968, "lon": -122.3118580 },
+    { "lat": 47.6559678, "lon": -122.3118580 },
+    { "lat": 47.6559647, "lon": -122.3118430 },
+    { "lat": 47.6559592, "lon": -122.3118300 },
+    { "lat": 47.6559526, "lon": -122.3118192 },
+    { "lat": 47.6559431, "lon": -122.3118126 },
+    { "lat": 47.6559336, "lon": -122.3118115 },
+    { "lat": 47.6559325, "lon": -122.3116333 },
+    { "lat": 47.6559323, "lon": -122.3116105 },
+    { "lat": 47.6558457, "lon": -122.3116124 },
+    { "lat": 47.6558444, "lon": -122.3114686 },
+    { "lat": 47.6559375, "lon": -122.3114666 },
+    { "lat": 47.6562332, "lon": -122.3114605 },
+    { "lat": 47.6567431, "lon": -122.3114498 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4000",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "15th Avenue Northeast",
+    "amenity": "arts_centre",
+    "ele": "41",
+    "gnis:feature_id": "2461183",
+    "name": "Allen Center for the Visual Arts",
+    "name:etymology": "Edna Faye (née Gardner) Allen",
+    "official_name": "Faye G. Allen Center for the Visual Arts",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "owner": "University of Washington",
+    "ref": "AVA",
+    "short_name": "Allen Ctr Vis Arts",
+    "start_date": "1997-04"
+  }
+},
+{
+  "type": "way",
+  "id": 1139088016,
+  "bounds": {
+    "minlat": 47.6554826,
+    "minlon": -122.3073315,
+    "maxlat": 47.6554890,
+    "maxlon": -122.3073088
+  },
+  "geometry": [
+    { "lat": 47.6554890, "lon": -122.3073088 },
+    { "lat": 47.6554826, "lon": -122.3073315 }
+  ],
+  "tags": {
+    "bicycle": "dismount",
+    "emergency": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "motor_vehicle": "private",
+    "name": "Northeast Grant Lane",
+    "name:etymology": "Grant County, Washington",
+    "name:etymology:wikidata": "Q281681",
+    "name:etymology:wikipedia": "en:Grant County, Washington",
+    "surface": "paving_stones",
+    "website": "http://www.washington.edu"
+  }
+},
+{
+  "type": "relation",
+  "id": 2955450,
+  "bounds": {
+    "minlat": 47.6553669,
+    "minlon": -122.3087705,
+    "maxlat": 47.6561904,
+    "maxlon": -122.3073774
+  },
+  "tags": {
+    "access": "yes",
+    "amenity": "library",
+    "building": "university",
+    "building:levels": "6",
+    "building:levels:underground": "1",
+    "contact:phone": "+1-206-543-0242",
+    "contact:website": "https://www.lib.washington.edu/suzzallo/",
+    "lending": "private",
+    "name": "Suzzallo Library",
+    "name:etymology": "Henry Suzzallo",
+    "name:etymology:wikidata": "Q15525116",
+    "name:etymology:wikipedia": "en:Henry Suzzallo",
+    "operator": "University of Washington Libraries",
+    "operator:type": "university",
+    "operator:wikidata": "Q7896575",
+    "ref": "SUZ",
+    "type": "multipolygon",
+    "wikidata": "Q7651462",
+    "wikimedia_commons": "Category:Suzzallo Library",
+    "wikipedia": "en:Suzzallo Library"
+  }
+},
+{
+  "type": "relation",
+  "id": 7779519,
+  "bounds": {
+    "minlat": 47.6554283,
+    "minlon": -122.3101792,
+    "maxlat": 47.6566624,
+    "maxlon": -122.3086358
+  },
+  "tags": {
+    "access": "yes",
+    "foot": "designated",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Red Square",
+    "name:en": "Red Square",
+    "name:zh": "紅場",
+    "name:zh-Hans": "红场",
+    "name:zh-Hant": "紅場",
+    "official_name": "Central Plaza",
+    "place": "square",
+    "ref": "LNDMK-2",
+    "surface": "brick",
+    "type": "multipolygon",
+    "wikidata": "Q7305086",
+    "wikimedia_commons": "Category:Red Square (University of Washington)",
+    "wikipedia": "en:Red Square (University of Washington)"
+  }
+}
+
+  ]
+}

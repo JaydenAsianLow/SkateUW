@@ -1,0 +1,118 @@
+:root {
+  --bg: #1a100c;
+  --panel: rgba(34, 20, 14, 0.62);
+  --text: #f4ead9;
+  --muted: #bfa88c;
+  --accent: #f7c47c;
+  --hot: #b8705a;
+  --ok: #3ddc84;
+  --warn: #ffc23d;
+  --bad: #ff5a5a;
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+button { font: inherit; color: inherit; cursor: pointer; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.dot.warn { background: var(--warn); }
+.dot.bad { background: var(--bad); }
+
+/* ---------- Bars ---------- */
+.bar { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; font-size: 12px; }
+.bar-label { color: var(--muted); }
+.bar-val { text-align: right; font-variant-numeric: tabular-nums; }
+.bar-track { position: relative; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden; }
+.bar-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, 0.35); }
+.bar-fill { position: absolute; top: 0; bottom: 0; background: var(--accent); }
+
+/* ---------- Laptop display ---------- */
+.display { position: fixed; inset: 0; }
+.hud {
+  position: absolute; top: 16px; left: 16px; width: 300px; max-width: calc(100vw - 32px);
+  padding: 12px 14px; display: grid; gap: 8px; font-size: 13px;
+  background: var(--panel); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;
+  backdrop-filter: blur(8px); user-select: none;
+}
+.hud-row { display: flex; align-items: center; gap: 8px; }
+.hud-small { font-size: 11px; font-variant-numeric: tabular-nums; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); text-align: left; font-size: 12px; }
+.qr-panel {
+  position: absolute; top: 16px; right: 16px; width: 260px; padding: 14px; display: grid; gap: 10px; justify-items: center;
+  background: var(--panel); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; backdrop-filter: blur(8px);
+}
+.qr-panel img, .qr-ph { border-radius: 8px; background: #fff; width: 220px; height: 220px; }
+.qr-title { font-weight: 600; }
+.qr-url { font-family: ui-monospace, Consolas, monospace; font-size: 12px; word-break: break-all; text-align: center; user-select: all; }
+.qr-alt { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center; }
+.qr-note { font-size: 11px; color: var(--muted); text-align: center; }
+.chip { font-size: 11px; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.15); background: transparent; }
+.chip.on { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Phone controller ---------- */
+.ctrl {
+  height: 100%; display: flex; flex-direction: column; padding: 16px; padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; overscroll-behavior: none;
+}
+.ctrl-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.ctrl-head .muted { margin-left: auto; }
+.ctrl-start { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.ctrl-start h1 { margin: 0; font-size: 30px; }
+.ctrl-start p, .ctrl-start ul { margin: 0; color: var(--muted); line-height: 1.6; }
+.ctrl-start ul { padding-left: 20px; }
+.ctrl-start b { color: var(--text); }
+.ctrl-start ul.moves { list-style: none; padding-left: 0; font-size: 14px; line-height: 1.5; display: grid; gap: 4px; }
+.ctrl-start ul.moves b { display: inline-block; min-width: 7.5em; }
+.big {
+  margin-top: 12px; padding: 18px; font-size: 20px; font-weight: 700; border: 0; border-radius: 14px;
+  background: var(--accent); color: #001217;
+}
+.error { color: var(--bad); font-size: 14px; line-height: 1.4; }
+/* Deck controller: the phone screen is the board, nose up, tail down. */
+.deck-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+.deck {
+  position: relative; flex: 1; min-height: 0; align-self: center; width: min(78vw, 46vh);
+  border-radius: 46% 46% 46% 46% / 13% 13% 13% 13%; overflow: hidden; touch-action: none;
+  /* griptape: fine noise from layered gradients over near-black */
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 0 1px, transparent 1.5px) 0 0 / 7px 7px,
+    radial-gradient(circle at 70% 60%, rgba(255,255,255,0.04) 0 1px, transparent 1.5px) 0 0 / 5px 5px,
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0.5) 0 1px, transparent 1.5px) 0 0 / 3px 3px,
+    linear-gradient(#1a1c21, #121317);
+  box-shadow: 0 0 0 3px #3a2a1c, 0 0 0 5px #6b4a2e, 0 18px 40px rgba(0,0,0,0.6);
+  transition: transform 80ms linear;
+}
+.deck-kick { position: absolute; left: 0; right: 0; height: 14%; pointer-events: none; }
+.deck-kick.nose { top: 0; background: linear-gradient(rgba(255,255,255,0.06), transparent); }
+.deck-kick.tail { bottom: 0; background: linear-gradient(transparent, rgba(255,61,242,0.12)); }
+.bolts { position: absolute; left: 50%; width: 30%; height: 7%; transform: translateX(-50%); display: grid; grid-template-columns: 1fr 1fr; place-items: center; pointer-events: none; }
+.bolts.top { top: 20%; }
+.bolts.bottom { bottom: 20%; }
+.bolts span { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c9cdd4, #5c6068); box-shadow: 0 1px 1px rgba(0,0,0,0.8); }
+.deck-label { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: 4px; color: rgba(255,255,255,0.22); pointer-events: none; }
+.nose-label { top: 6%; }
+.tail-label { bottom: 6%; }
+.hold-zone { position: absolute; top: 16%; right: 12%; width: 30%; height: 22%; border: 1px dashed rgba(255,61,242,0.22); border-radius: 18px; display: grid; place-items: center; font-size: 10px; letter-spacing: 3px; color: rgba(255,61,242,0.35); pointer-events: none; }
+.combo { position: absolute; top: 40%; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; pointer-events: none; }
+.pip { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.12); transition: all 90ms; }
+.pip.on { color: #001217; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 14px var(--accent); }
+.move-flash { position: absolute; top: 52%; left: 0; right: 0; text-align: center; font-size: 30px; font-weight: 900; letter-spacing: 3px; color: var(--hot); text-shadow: 0 0 16px var(--hot); pointer-events: none; animation: flash-out 600ms ease-out forwards; }
+.deck-trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.deck-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.small-btn { padding: 10px 14px; font-size: 14px; border-radius: 10px; }
+@keyframes flash-out { 0% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0; transform: scale(1) translateY(-10px); } }
+
+/* Trick callout on the laptop */
+.trick-callout {
+  position: absolute; top: 18%; left: 0; right: 0; text-align: center; pointer-events: none;
+  font-size: clamp(36px, 7vw, 84px); font-weight: 900; font-style: italic; letter-spacing: 4px;
+  color: #fff2d6; text-shadow: 0 0 28px rgba(255, 182, 107, 0.7), 0 4px 0 #5a2e28;
+  animation: callout 1.4s ease-out forwards;
+}
+.trick-callout.bail { color: var(--bad); text-shadow: 0 0 24px rgba(255, 90, 90, 0.6), 0 4px 0 #400b0b; }
+@keyframes callout { 0% { opacity: 0; transform: scale(1.6); } 12% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
+.osm-credit { position: fixed; right: 10px; bottom: 8px; font: 11px/1.3 system-ui, sans-serif; color: rgba(255,255,255,0.75); text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none; z-index: 5; }

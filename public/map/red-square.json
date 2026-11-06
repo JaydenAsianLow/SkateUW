@@ -1,0 +1,5537 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-11-06T00:05:02Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 2672133045,
+  "lat": 47.6560625,
+  "lon": -122.3111513,
+  "tags": {
+    "artist:wikipedia": "en:Lorado Taft",
+    "artist_name": "Loredo Taft",
+    "artwork_type": "statue",
+    "name": "George Washington",
+    "start_date": "1909",
+    "subject:wikidata": "Q23",
+    "subject:wikipedia": "en:George Washington",
+    "tourism": "artwork",
+    "wikidata": "Q22022600",
+    "wikimedia_commons": "Category:George Washington statue, University of Washington",
+    "wikipedia": "en:Statue of George Washington (Seattle)"
+  }
+},
+{
+  "type": "node",
+  "id": 2672133049,
+  "lat": 47.6564491,
+  "lon": -122.3110950,
+  "tags": {
+    "artist:wikipedia": "en:Robert Irwin (artist)",
+    "artist_name": "Robert Irwin",
+    "artwork_type": "sculpture",
+    "name": "9 Spaces 9 Trees",
+    "start_date": "2007",
+    "tourism": "artwork",
+    "wikidata": "Q23136900",
+    "wikipedia": "en:Nine Spaces Nine Trees"
+  }
+},
+{
+  "type": "node",
+  "id": 2677761043,
+  "lat": 47.6560898,
+  "lon": -122.3090540,
+  "tags": {
+    "artist:wikidata": "Q374504",
+    "artist:wikipedia": "en:Barnett Newman",
+    "artist_name": "Barnett Newman",
+    "artwork_type": "sculpture",
+    "date": "1963",
+    "man_made": "obelisk",
+    "name": "Broken Obelisk",
+    "obelisk:material": "steel",
+    "tourism": "artwork",
+    "wikidata": "Q2652466",
+    "wikimedia_commons": "File:Barnett_Newman,_Broken_Obelisk_(designed_1963,_cast_1967),_Quadrangle,_Suzzallo_Library,_University_of_Washington,_Seattle,_Washington_-_20060328.jpg",
+    "wikipedia": "en:Broken Obelisk"
+  }
+},
+{
+  "type": "node",
+  "id": 5144238927,
+  "lat": 47.6553861,
+  "lon": -122.3078816,
+  "tags": {
+    "name": "Blocked Out",
+    "tourism": "artwork"
+  }
+},
+{
+  "type": "node",
+  "id": 5497812393,
+  "lat": 47.6551286,
+  "lon": -122.3100110,
+  "tags": {
+    "artist_name": "Joseph McDonnell",
+    "artwork_type": "sculpture",
+    "name": "Breaking Away",
+    "tourism": "artwork"
+  }
+},
+{
+  "type": "node",
+  "id": 8439909811,
+  "lat": 47.6550894,
+  "lon": -122.3114380,
+  "tags": {
+    "artist_name": "Wangechi Mutu",
+    "artwork_type": "statue",
+    "material": "bronze",
+    "name": "The Seated IV",
+    "source": "https://www.washington.edu/news/2021/01/28/uw-installs-strikingly-unique-public-sculpture-at-new-hans-rosling-center-for-population-health/",
+    "start_date": "2021",
+    "tourism": "artwork"
+  }
+},
+{
+  "type": "node",
+  "id": 8643121452,
+  "lat": 47.6572716,
+  "lon": -122.3097185,
+  "tags": {
+    "artist": "Michael Magrath;Heidi Wastweet;Dodi Fredericks",
+    "historic": "memorial",
+    "material": "stone",
+    "memorial": "stele",
+    "name": "Medal of Honor",
+    "source": "https://www.washington.edu/visit/valor/",
+    "source_2": "https://www.washington.edu/news/2009/10/21/new-university-of-washington-memorial-honors-alumni-who-hold-the-congressional-medal-of-honor/",
+    "start_date": "2009"
+  }
+},
+{
+  "type": "node",
+  "id": 8643121459,
+  "lat": 47.6570315,
+  "lon": -122.3097431,
+  "tags": {
+    "artist": "Jon Gierlich",
+    "historic": "memorial",
+    "material": "stone",
+    "memorial": "stele",
+    "name": "WWII Memorial – Interrupted Journey",
+    "source": "https://www.washington.edu/visit/valor/",
+    "start_date": "2001"
+  }
+},
+{
+  "type": "node",
+  "id": 8660653293,
+  "lat": 47.6548740,
+  "lon": -122.3110625,
+  "tags": {
+    "alt_name": "Stairs to Nowhere",
+    "artwork_type": "sculpture",
+    "image": "https://i.redd.it/dx9b6lnx1i061.jpg",
+    "name": "Stairway to Nowhere",
+    "source": "https://www.reddit.com/r/udub/comments/jy2cg8/anyone_happen_to_know_the_previous_location_and/",
+    "tourism": "artwork"
+  }
+},
+{
+  "type": "way",
+  "id": 26447597,
+  "bounds": {
+    "minlat": 47.6562228,
+    "minlon": -122.3096684,
+    "maxlat": 47.6569417,
+    "maxlon": -122.3087091
+  },
+  "geometry": [
+    { "lat": 47.6562228, "lon": -122.3091039 },
+    { "lat": 47.6563244, "lon": -122.3093991 },
+    { "lat": 47.6564203, "lon": -122.3096684 },
+    { "lat": 47.6564768, "lon": -122.3096242 },
+    { "lat": 47.6565334, "lon": -122.3095799 },
+    { "lat": 47.6565128, "lon": -122.3095217 },
+    { "lat": 47.6565210, "lon": -122.3095153 },
+    { "lat": 47.6565417, "lon": -122.3095734 },
+    { "lat": 47.6565654, "lon": -122.3096399 },
+    { "lat": 47.6566617, "lon": -122.3096383 },
+    { "lat": 47.6567004, "lon": -122.3096387 },
+    { "lat": 47.6566997, "lon": -122.3095647 },
+    { "lat": 47.6569257, "lon": -122.3095666 },
+    { "lat": 47.6569256, "lon": -122.3095144 },
+    { "lat": 47.6569254, "lon": -122.3094272 },
+    { "lat": 47.6569417, "lon": -122.3093610 },
+    { "lat": 47.6568891, "lon": -122.3090781 },
+    { "lat": 47.6568478, "lon": -122.3090162 },
+    { "lat": 47.6568459, "lon": -122.3089557 },
+    { "lat": 47.6567169, "lon": -122.3087614 },
+    { "lat": 47.6566760, "lon": -122.3087681 },
+    { "lat": 47.6566359, "lon": -122.3087091 },
+    { "lat": 47.6565320, "lon": -122.3087114 },
+    { "lat": 47.6564539, "lon": -122.3088258 },
+    { "lat": 47.6564209, "lon": -122.3087787 },
+    { "lat": 47.6563859, "lon": -122.3088309 },
+    { "lat": 47.6563580, "lon": -122.3088726 },
+    { "lat": 47.6562478, "lon": -122.3089004 },
+    { "lat": 47.6562608, "lon": -122.3089973 },
+    { "lat": 47.6563309, "lon": -122.3089779 },
+    { "lat": 47.6563650, "lon": -122.3090677 },
+    { "lat": 47.6563524, "lon": -122.3090776 },
+    { "lat": 47.6563346, "lon": -122.3090192 },
+    { "lat": 47.6562788, "lon": -122.3090615 },
+    { "lat": 47.6562228, "lon": -122.3091039 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4069",
+    "addr:postcode": "98116",
+    "addr:state": "WA",
+    "addr:street": "Spokane Lane Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "building:material": "brick",
+    "ele": "50",
+    "gnis:feature_id": "2461238",
+    "name": "Kane Hall",
+    "name:etymology": "Thomas Franklin Kane",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "KNE",
+    "roof:colour": "silver",
+    "source": "King County GIS;data.seattle.gov",
+    "wikidata": "Q111372216",
+    "wikimedia_commons": "Category:Kane Hall, University of Washington"
+  }
+},
+{
+  "type": "way",
+  "id": 26447602,
+  "bounds": {
+    "minlat": 47.6561740,
+    "minlon": -122.3108213,
+    "maxlat": 47.6567696,
+    "maxlon": -122.3099098
+  },
+  "geometry": [
+    { "lat": 47.6567696, "lon": -122.3106220 },
+    { "lat": 47.6567656, "lon": -122.3102009 },
+    { "lat": 47.6566652, "lon": -122.3102031 },
+    { "lat": 47.6566624, "lon": -122.3099098 },
+    { "lat": 47.6565089, "lon": -122.3099130 },
+    { "lat": 47.6565099, "lon": -122.3100220 },
+    { "lat": 47.6564216, "lon": -122.3100238 },
+    { "lat": 47.6563052, "lon": -122.3100263 },
+    { "lat": 47.6563056, "lon": -122.3100736 },
+    { "lat": 47.6561994, "lon": -122.3100758 },
+    { "lat": 47.6562010, "lon": -122.3102393 },
+    { "lat": 47.6561740, "lon": -122.3102398 },
+    { "lat": 47.6561746, "lon": -122.3103022 },
+    { "lat": 47.6561756, "lon": -122.3104043 },
+    { "lat": 47.6561770, "lon": -122.3105490 },
+    { "lat": 47.6561776, "lon": -122.3106185 },
+    { "lat": 47.6562007, "lon": -122.3106180 },
+    { "lat": 47.6562022, "lon": -122.3107717 },
+    { "lat": 47.6562261, "lon": -122.3107712 },
+    { "lat": 47.6563284, "lon": -122.3107691 },
+    { "lat": 47.6563289, "lon": -122.3108213 },
+    { "lat": 47.6565577, "lon": -122.3108165 },
+    { "lat": 47.6565574, "lon": -122.3107792 },
+    { "lat": 47.6567129, "lon": -122.3107759 },
+    { "lat": 47.6567115, "lon": -122.3106232 },
+    { "lat": 47.6567696, "lon": -122.3106220 }
+  ],
+  "tags": {
+    "access": "private",
+    "addr:city": "Seattle",
+    "addr:housenumber": "4060",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "George Washington Lane Northeast",
+    "amenity": "library",
+    "building": "university",
+    "building:levels": "3",
+    "building:material": "brick",
+    "ele": "47",
+    "gnis:feature_id": "2461267",
+    "lending": "restricted",
+    "name": "Odegaard Undergraduate Library",
+    "name:etymology:wikidata": "Q5081342",
+    "name:etymology:wikipedia": "en:Charles Odegaard",
+    "official_name": "Charles E. Odegaard Undergraduate Library",
+    "operator": "University of Washington Libraries",
+    "operator:type": "university",
+    "operator:wikidata": "Q7896575",
+    "ref": "OUG",
+    "roof:colour": "whitesmoke",
+    "source": "King County GIS;data.seattle.gov",
+    "website": "https://lib.uw.edu/location/odegaard-undergraduate-library/",
+    "wikidata": "Q7077623",
+    "wikimedia_commons": "Category:Odegaard Undergraduate Library",
+    "wikipedia": "en:Odegaard Undergraduate Library"
+  }
+},
+{
+  "type": "way",
+  "id": 26447608,
+  "bounds": {
+    "minlat": 47.6551692,
+    "minlon": -122.3110751,
+    "maxlat": 47.6559652,
+    "maxlon": -122.3100835
+  },
+  "geometry": [
+    { "lat": 47.6551692, "lon": -122.3101062 },
+    { "lat": 47.6551736, "lon": -122.3108731 },
+    { "lat": 47.6553917, "lon": -122.3108704 },
+    { "lat": 47.6555386, "lon": -122.3108685 },
+    { "lat": 47.6555474, "lon": -122.3108684 },
+    { "lat": 47.6555486, "lon": -122.3110751 },
+    { "lat": 47.6557809, "lon": -122.3110722 },
+    { "lat": 47.6557804, "lon": -122.3109906 },
+    { "lat": 47.6558834, "lon": -122.3109893 },
+    { "lat": 47.6558823, "lon": -122.3107934 },
+    { "lat": 47.6558948, "lon": -122.3107932 },
+    { "lat": 47.6558949, "lon": -122.3108168 },
+    { "lat": 47.6559651, "lon": -122.3108158 },
+    { "lat": 47.6559652, "lon": -122.3107327 },
+    { "lat": 47.6559648, "lon": -122.3106739 },
+    { "lat": 47.6559643, "lon": -122.3106174 },
+    { "lat": 47.6559640, "lon": -122.3105647 },
+    { "lat": 47.6559617, "lon": -122.3103091 },
+    { "lat": 47.6559618, "lon": -122.3102805 },
+    { "lat": 47.6559096, "lon": -122.3102813 },
+    { "lat": 47.6559097, "lon": -122.3102984 },
+    { "lat": 47.6558988, "lon": -122.3102985 },
+    { "lat": 47.6558984, "lon": -122.3102467 },
+    { "lat": 47.6557997, "lon": -122.3102480 },
+    { "lat": 47.6555464, "lon": -122.3102513 },
+    { "lat": 47.6555471, "lon": -122.3103541 },
+    { "lat": 47.6554722, "lon": -122.3103550 },
+    { "lat": 47.6554721, "lon": -122.3103407 },
+    { "lat": 47.6554706, "lon": -122.3100835 },
+    { "lat": 47.6553626, "lon": -122.3100849 },
+    { "lat": 47.6553628, "lon": -122.3101167 },
+    { "lat": 47.6553404, "lon": -122.3101170 },
+    { "lat": 47.6553403, "lon": -122.3101040 },
+    { "lat": 47.6551692, "lon": -122.3101062 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4040",
+    "addr:postcode": "98195",
+    "addr:street": "George Washington Lane Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "building:material": "brick",
+    "contact:email": "Ticket@uw.edu",
+    "contact:facebook": "https://www.facebook.com/meanycenter",
+    "contact:instagram": "https://www.instagram.com/meanycenter/",
+    "contact:phone": "+1-206-543-4880",
+    "contact:twitter": "https://twitter.com/meanycenter",
+    "contact:website": "https://meanycenter.org/",
+    "contact:youtube": "https://www.youtube.com/user/UWWSMeany",
+    "name": "Meany Hall",
+    "name:etymology": "Edmond Stephen Meany",
+    "name:etymology:wikidata": "Q5338911",
+    "name:etymology:wikipedia": "en:Edmond S. Meany",
+    "opening_hours": "Mo-Fr 07:00-22:00; PH off",
+    "operator": "University of Washington",
+    "ref": "MNY",
+    "roof:colour": "silver",
+    "wikidata": "Q6804124",
+    "wikimedia_commons": "Category:Meany Hall",
+    "wikipedia": "en:Meany Hall"
+  }
+},
+{
+  "type": "way",
+  "id": 26447622,
+  "bounds": {
+    "minlat": 47.6566907,
+    "minlon": -122.3089134,
+    "maxlat": 47.6575593,
+    "maxlon": -122.3077884
+  },
+  "geometry": [
+    { "lat": 47.6574184, "lon": -122.3077884 },
+    { "lat": 47.6571359, "lon": -122.3082141 },
+    { "lat": 47.6570367, "lon": -122.3083638 },
+    { "lat": 47.6570579, "lon": -122.3083949 },
+    { "lat": 47.6570050, "lon": -122.3084747 },
+    { "lat": 47.6569831, "lon": -122.3084426 },
+    { "lat": 47.6569703, "lon": -122.3084618 },
+    { "lat": 47.6569535, "lon": -122.3084873 },
+    { "lat": 47.6567996, "lon": -122.3082623 },
+    { "lat": 47.6567568, "lon": -122.3083269 },
+    { "lat": 47.6566907, "lon": -122.3084264 },
+    { "lat": 47.6568934, "lon": -122.3087228 },
+    { "lat": 47.6568618, "lon": -122.3087704 },
+    { "lat": 47.6568865, "lon": -122.3088065 },
+    { "lat": 47.6569080, "lon": -122.3088380 },
+    { "lat": 47.6569395, "lon": -122.3087905 },
+    { "lat": 47.6570235, "lon": -122.3089134 },
+    { "lat": 47.6571367, "lon": -122.3087429 },
+    { "lat": 47.6570861, "lon": -122.3086691 },
+    { "lat": 47.6570918, "lon": -122.3086605 },
+    { "lat": 47.6571091, "lon": -122.3086345 },
+    { "lat": 47.6571043, "lon": -122.3086274 },
+    { "lat": 47.6571579, "lon": -122.3085466 },
+    { "lat": 47.6571718, "lon": -122.3085668 },
+    { "lat": 47.6574362, "lon": -122.3081681 },
+    { "lat": 47.6574538, "lon": -122.3081937 },
+    { "lat": 47.6574704, "lon": -122.3081687 },
+    { "lat": 47.6574909, "lon": -122.3081378 },
+    { "lat": 47.6574773, "lon": -122.3081179 },
+    { "lat": 47.6575593, "lon": -122.3079944 },
+    { "lat": 47.6574907, "lon": -122.3078941 },
+    { "lat": 47.6574184, "lon": -122.3077884 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4100",
+    "addr:postcode": "98116",
+    "addr:street": "Spokane Lane Northeast",
+    "building": "university",
+    "building:levels": "4",
+    "building:material": "brick",
+    "name": "Savery Hall",
+    "name:etymology": "William Savery",
+    "old_name:-1947": "Commerce Hall;Philosophy Hall",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "SAV",
+    "roof:colour": "whitesmoke",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1917",
+    "wikidata": "Q98534810"
+  }
+},
+{
+  "type": "way",
+  "id": 26447626,
+  "bounds": {
+    "minlat": 47.6576399,
+    "minlon": -122.3076546,
+    "maxlat": 47.6581694,
+    "maxlon": -122.3068549
+  },
+  "geometry": [
+    { "lat": 47.6580315, "lon": -122.3068549 },
+    { "lat": 47.6579345, "lon": -122.3070009 },
+    { "lat": 47.6576399, "lon": -122.3074441 },
+    { "lat": 47.6577133, "lon": -122.3075516 },
+    { "lat": 47.6577836, "lon": -122.3076546 },
+    { "lat": 47.6578722, "lon": -122.3075214 },
+    { "lat": 47.6578888, "lon": -122.3075458 },
+    { "lat": 47.6579046, "lon": -122.3075216 },
+    { "lat": 47.6579252, "lon": -122.3074912 },
+    { "lat": 47.6579063, "lon": -122.3074635 },
+    { "lat": 47.6579719, "lon": -122.3073647 },
+    { "lat": 47.6580089, "lon": -122.3074188 },
+    { "lat": 47.6580936, "lon": -122.3072913 },
+    { "lat": 47.6580666, "lon": -122.3072517 },
+    { "lat": 47.6581022, "lon": -122.3071981 },
+    { "lat": 47.6580887, "lon": -122.3071783 },
+    { "lat": 47.6581694, "lon": -122.3070569 },
+    { "lat": 47.6580315, "lon": -122.3068549 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "1901",
+    "addr:postcode": "98106",
+    "addr:street": "Northeast Chelan Lane",
+    "building": "university",
+    "building:levels": "4",
+    "name": "Raitt Hall",
+    "name:etymology": "Effie Isobel Raitt",
+    "old_name:-1946": "Home Economics Hall #2",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "RAI",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1917-04",
+    "wikidata": "Q98429924"
+  }
+},
+{
+  "type": "way",
+  "id": 26447631,
+  "bounds": {
+    "minlat": 47.6573701,
+    "minlon": -122.3061621,
+    "maxlat": 47.6579750,
+    "maxlon": -122.3054121
+  },
+  "geometry": [
+    { "lat": 47.6577790, "lon": -122.3058668 },
+    { "lat": 47.6574826, "lon": -122.3054121 },
+    { "lat": 47.6574650, "lon": -122.3054397 },
+    { "lat": 47.6574475, "lon": -122.3054164 },
+    { "lat": 47.6573708, "lon": -122.3055334 },
+    { "lat": 47.6573870, "lon": -122.3055584 },
+    { "lat": 47.6573701, "lon": -122.3055843 },
+    { "lat": 47.6574508, "lon": -122.3057084 },
+    { "lat": 47.6574610, "lon": -122.3056999 },
+    { "lat": 47.6574831, "lon": -122.3057321 },
+    { "lat": 47.6574583, "lon": -122.3057691 },
+    { "lat": 47.6574857, "lon": -122.3058076 },
+    { "lat": 47.6575104, "lon": -122.3057706 },
+    { "lat": 47.6576746, "lon": -122.3060067 },
+    { "lat": 47.6576552, "lon": -122.3060368 },
+    { "lat": 47.6577448, "lon": -122.3061621 },
+    { "lat": 47.6577962, "lon": -122.3060803 },
+    { "lat": 47.6578259, "lon": -122.3061197 },
+    { "lat": 47.6578625, "lon": -122.3060620 },
+    { "lat": 47.6578761, "lon": -122.3060405 },
+    { "lat": 47.6578983, "lon": -122.3060674 },
+    { "lat": 47.6579119, "lon": -122.3060669 },
+    { "lat": 47.6579294, "lon": -122.3060429 },
+    { "lat": 47.6579255, "lon": -122.3060226 },
+    { "lat": 47.6578813, "lon": -122.3059616 },
+    { "lat": 47.6579750, "lon": -122.3058153 },
+    { "lat": 47.6578860, "lon": -122.3056900 },
+    { "lat": 47.6577790, "lon": -122.3058668 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "2034",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Skagit Lane",
+    "building": "university",
+    "building:levels": "4",
+    "building:levels:underground": "2",
+    "ele": "51",
+    "gnis:feature_id": "2461355",
+    "name": "Music Building",
+    "opening_hours": "Mo-Fr 07:00-22:00; Sa 08:00-22:00; Su 10:00-22:00; PH 10:00-22:00",
+    "operator": "University of Washington",
+    "ref": "MUS",
+    "roof:levels": "1",
+    "wikidata": "Q98690890"
+  }
+},
+{
+  "type": "way",
+  "id": 26447635,
+  "bounds": {
+    "minlat": 47.6579761,
+    "minlon": -122.3070064,
+    "maxlat": 47.6588070,
+    "maxlon": -122.3057763
+  },
+  "geometry": [
+    { "lat": 47.6588070, "lon": -122.3063911 },
+    { "lat": 47.6586562, "lon": -122.3061690 },
+    { "lat": 47.6583897, "lon": -122.3057763 },
+    { "lat": 47.6582831, "lon": -122.3059358 },
+    { "lat": 47.6583460, "lon": -122.3060280 },
+    { "lat": 47.6585130, "lon": -122.3062745 },
+    { "lat": 47.6583433, "lon": -122.3065284 },
+    { "lat": 47.6583575, "lon": -122.3065494 },
+    { "lat": 47.6583427, "lon": -122.3065716 },
+    { "lat": 47.6582077, "lon": -122.3063726 },
+    { "lat": 47.6582536, "lon": -122.3063039 },
+    { "lat": 47.6581705, "lon": -122.3061814 },
+    { "lat": 47.6581023, "lon": -122.3062833 },
+    { "lat": 47.6580445, "lon": -122.3061981 },
+    { "lat": 47.6580180, "lon": -122.3062376 },
+    { "lat": 47.6580449, "lon": -122.3062774 },
+    { "lat": 47.6580298, "lon": -122.3062990 },
+    { "lat": 47.6579926, "lon": -122.3063553 },
+    { "lat": 47.6579916, "lon": -122.3063764 },
+    { "lat": 47.6580082, "lon": -122.3064008 },
+    { "lat": 47.6580086, "lon": -122.3064221 },
+    { "lat": 47.6579761, "lon": -122.3064707 },
+    { "lat": 47.6580542, "lon": -122.3065857 },
+    { "lat": 47.6580704, "lon": -122.3065615 },
+    { "lat": 47.6583631, "lon": -122.3069926 },
+    { "lat": 47.6583725, "lon": -122.3070064 },
+    { "lat": 47.6584604, "lon": -122.3068749 },
+    { "lat": 47.6584475, "lon": -122.3068570 },
+    { "lat": 47.6584287, "lon": -122.3068282 },
+    { "lat": 47.6584609, "lon": -122.3067800 },
+    { "lat": 47.6584747, "lon": -122.3068003 },
+    { "lat": 47.6586081, "lon": -122.3066000 },
+    { "lat": 47.6586656, "lon": -122.3065147 },
+    { "lat": 47.6586952, "lon": -122.3065583 },
+    { "lat": 47.6588070, "lon": -122.3063911 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "1915",
+    "addr:postcode": "98106",
+    "addr:state": "WA",
+    "addr:street": "Northeast Chelan Lane",
+    "building": "university",
+    "building:levels": "3",
+    "building:levels:underground": "1",
+    "ele": "54",
+    "gnis:feature_id": "2461326",
+    "name": "Art Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "ART",
+    "source": "King County GIS;data.seattle.gov",
+    "wikidata": "Q98839533",
+    "wikimedia_commons": "File:University of Washington Art Building IMG8206 photo by Jeanette-Mills.jpg"
+  }
+},
+{
+  "type": "way",
+  "id": 30859396,
+  "bounds": {
+    "minlat": 47.6533771,
+    "minlon": -122.3071106,
+    "maxlat": 47.6537715,
+    "maxlon": -122.3055612
+  },
+  "geometry": [
+    { "lat": 47.6534408, "lon": -122.3061290 },
+    { "lat": 47.6534993, "lon": -122.3063295 },
+    { "lat": 47.6534977, "lon": -122.3063707 },
+    { "lat": 47.6534970, "lon": -122.3063889 },
+    { "lat": 47.6533771, "lon": -122.3067563 },
+    { "lat": 47.6534249, "lon": -122.3068529 },
+    { "lat": 47.6534332, "lon": -122.3068256 },
+    { "lat": 47.6534647, "lon": -122.3068891 },
+    { "lat": 47.6534564, "lon": -122.3069164 },
+    { "lat": 47.6534901, "lon": -122.3069846 },
+    { "lat": 47.6534902, "lon": -122.3070074 },
+    { "lat": 47.6535102, "lon": -122.3070457 },
+    { "lat": 47.6535200, "lon": -122.3070450 },
+    { "lat": 47.6535525, "lon": -122.3071106 },
+    { "lat": 47.6535580, "lon": -122.3070929 },
+    { "lat": 47.6535601, "lon": -122.3070943 },
+    { "lat": 47.6535820, "lon": -122.3070239 },
+    { "lat": 47.6537625, "lon": -122.3064424 },
+    { "lat": 47.6537526, "lon": -122.3064319 },
+    { "lat": 47.6537427, "lon": -122.3064213 },
+    { "lat": 47.6537433, "lon": -122.3063691 },
+    { "lat": 47.6537423, "lon": -122.3063242 },
+    { "lat": 47.6537569, "lon": -122.3063162 },
+    { "lat": 47.6537715, "lon": -122.3063082 },
+    { "lat": 47.6536288, "lon": -122.3057612 },
+    { "lat": 47.6535902, "lon": -122.3055612 },
+    { "lat": 47.6535729, "lon": -122.3055717 },
+    { "lat": 47.6534196, "lon": -122.3056649 },
+    { "lat": 47.6533942, "lon": -122.3056803 },
+    { "lat": 47.6534932, "lon": -122.3060826 },
+    { "lat": 47.6534408, "lon": -122.3061290 }
+  ],
+  "tags": {
+    "building": "university",
+    "building:levels": "5",
+    "building:material": "brick",
+    "name": "Electrical and Computer Engineering Building",
+    "old_name": "Electrical Engineering Building",
+    "old_ref": "EEB",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "ECE",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 30859594,
+  "bounds": {
+    "minlat": 47.6546786,
+    "minlon": -122.3069580,
+    "maxlat": 47.6550876,
+    "maxlon": -122.3060835
+  },
+  "geometry": [
+    { "lat": 47.6548422, "lon": -122.3069580 },
+    { "lat": 47.6550097, "lon": -122.3064379 },
+    { "lat": 47.6550321, "lon": -122.3063693 },
+    { "lat": 47.6550876, "lon": -122.3061994 },
+    { "lat": 47.6549239, "lon": -122.3060835 },
+    { "lat": 47.6548642, "lon": -122.3062682 },
+    { "lat": 47.6546786, "lon": -122.3068421 },
+    { "lat": 47.6547779, "lon": -122.3069124 },
+    { "lat": 47.6548422, "lon": -122.3069580 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3960",
+    "addr:postcode": "98116",
+    "addr:state": "WA",
+    "addr:street": "Benton Lane Northeast",
+    "alt_name": "Sieg Hall",
+    "building": "university",
+    "building:levels": "4",
+    "building:levels:underground": "1",
+    "ele": "41",
+    "gnis:feature_id": "2461314",
+    "name": "Sieg Building",
+    "official_name": "Lee Paul Sieg Building",
+    "opening_hours": "Mo-Fr 07:00-21:00",
+    "operator": "University of Washington",
+    "ref": "SIG",
+    "source": "King County GIS;data.seattle.gov",
+    "wikidata": "Q98970685"
+  }
+},
+{
+  "type": "way",
+  "id": 30861157,
+  "bounds": {
+    "minlat": 47.6581282,
+    "minlon": -122.3093066,
+    "maxlat": 47.6586881,
+    "maxlon": -122.3084681
+  },
+  "geometry": [
+    { "lat": 47.6583452, "lon": -122.3086571 },
+    { "lat": 47.6582900, "lon": -122.3087389 },
+    { "lat": 47.6582456, "lon": -122.3088045 },
+    { "lat": 47.6582248, "lon": -122.3087996 },
+    { "lat": 47.6582060, "lon": -122.3088137 },
+    { "lat": 47.6581965, "lon": -122.3088416 },
+    { "lat": 47.6581998, "lon": -122.3088724 },
+    { "lat": 47.6582147, "lon": -122.3088945 },
+    { "lat": 47.6581463, "lon": -122.3090005 },
+    { "lat": 47.6581737, "lon": -122.3090440 },
+    { "lat": 47.6581576, "lon": -122.3090683 },
+    { "lat": 47.6581430, "lon": -122.3090905 },
+    { "lat": 47.6581301, "lon": -122.3091235 },
+    { "lat": 47.6581282, "lon": -122.3091616 },
+    { "lat": 47.6581378, "lon": -122.3091970 },
+    { "lat": 47.6581569, "lon": -122.3092225 },
+    { "lat": 47.6581817, "lon": -122.3092330 },
+    { "lat": 47.6582070, "lon": -122.3092263 },
+    { "lat": 47.6582277, "lon": -122.3092037 },
+    { "lat": 47.6582536, "lon": -122.3091654 },
+    { "lat": 47.6582854, "lon": -122.3092090 },
+    { "lat": 47.6583296, "lon": -122.3091432 },
+    { "lat": 47.6583935, "lon": -122.3090481 },
+    { "lat": 47.6585687, "lon": -122.3093066 },
+    { "lat": 47.6586275, "lon": -122.3092187 },
+    { "lat": 47.6586317, "lon": -122.3092124 },
+    { "lat": 47.6586881, "lon": -122.3091281 },
+    { "lat": 47.6585109, "lon": -122.3088666 },
+    { "lat": 47.6586213, "lon": -122.3087016 },
+    { "lat": 47.6585876, "lon": -122.3086518 },
+    { "lat": 47.6586207, "lon": -122.3086006 },
+    { "lat": 47.6586330, "lon": -122.3085666 },
+    { "lat": 47.6586330, "lon": -122.3085280 },
+    { "lat": 47.6586209, "lon": -122.3084939 },
+    { "lat": 47.6585994, "lon": -122.3084722 },
+    { "lat": 47.6585735, "lon": -122.3084681 },
+    { "lat": 47.6585494, "lon": -122.3084824 },
+    { "lat": 47.6585202, "lon": -122.3085274 },
+    { "lat": 47.6585092, "lon": -122.3085444 },
+    { "lat": 47.6584770, "lon": -122.3084968 },
+    { "lat": 47.6584112, "lon": -122.3085943 },
+    { "lat": 47.6583924, "lon": -122.3085743 },
+    { "lat": 47.6583694, "lon": -122.3085734 },
+    { "lat": 47.6583499, "lon": -122.3085919 },
+    { "lat": 47.6583408, "lon": -122.3086234 },
+    { "lat": 47.6583452, "lon": -122.3086571 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4216",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Memorial Way Northeast",
+    "building": "university",
+    "building:levels": "4",
+    "ele": "58",
+    "gnis:feature_id": "2461205",
+    "name": "Denny Hall",
+    "name:etymology": "Arthur Armstrong Denny",
+    "name:etymology:wikidata": "Q1595543",
+    "name:etymology:wikipedia": "en:Arthur A. Denny",
+    "operator": "University of Washington",
+    "ref": "DEN",
+    "roof:levels": "1",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1895",
+    "wikidata": "Q28449746",
+    "wikimedia_commons": "Category:Denny Hall, University of Washington",
+    "wikipedia": "en:Denny Hall"
+  }
+},
+{
+  "type": "way",
+  "id": 30896763,
+  "bounds": {
+    "minlat": 47.6567026,
+    "minlon": -122.3059899,
+    "maxlat": 47.6573215,
+    "maxlon": -122.3048503
+  },
+  "geometry": [
+    { "lat": 47.6567737, "lon": -122.3059899 },
+    { "lat": 47.6568536, "lon": -122.3058692 },
+    { "lat": 47.6568608, "lon": -122.3058797 },
+    { "lat": 47.6569205, "lon": -122.3057896 },
+    { "lat": 47.6568757, "lon": -122.3057270 },
+    { "lat": 47.6570891, "lon": -122.3054042 },
+    { "lat": 47.6571692, "lon": -122.3052838 },
+    { "lat": 47.6572125, "lon": -122.3053443 },
+    { "lat": 47.6572282, "lon": -122.3053206 },
+    { "lat": 47.6572325, "lon": -122.3053268 },
+    { "lat": 47.6573101, "lon": -122.3052097 },
+    { "lat": 47.6573036, "lon": -122.3052002 },
+    { "lat": 47.6573215, "lon": -122.3051732 },
+    { "lat": 47.6571003, "lon": -122.3048503 },
+    { "lat": 47.6569761, "lon": -122.3050378 },
+    { "lat": 47.6570030, "lon": -122.3050771 },
+    { "lat": 47.6570131, "lon": -122.3050618 },
+    { "lat": 47.6570574, "lon": -122.3051265 },
+    { "lat": 47.6567961, "lon": -122.3055211 },
+    { "lat": 47.6567863, "lon": -122.3055068 },
+    { "lat": 47.6567688, "lon": -122.3055331 },
+    { "lat": 47.6567583, "lon": -122.3055490 },
+    { "lat": 47.6567703, "lon": -122.3055664 },
+    { "lat": 47.6567026, "lon": -122.3056686 },
+    { "lat": 47.6567777, "lon": -122.3057782 },
+    { "lat": 47.6567045, "lon": -122.3058888 },
+    { "lat": 47.6567737, "lon": -122.3059899 }
+  ],
+  "tags": {
+    "addr:state": "WA",
+    "building": "university",
+    "ele": "48",
+    "gnis:feature_id": "2461337",
+    "name": "Communications Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "CMU",
+    "wikidata": "Q98343163"
+  }
+},
+{
+  "type": "way",
+  "id": 30896795,
+  "bounds": {
+    "minlat": 47.6563224,
+    "minlon": -122.3061854,
+    "maxlat": 47.6567828,
+    "maxlon": -122.3055061
+  },
+  "geometry": [
+    { "lat": 47.6564427, "lon": -122.3055061 },
+    { "lat": 47.6564004, "lon": -122.3055698 },
+    { "lat": 47.6563894, "lon": -122.3055537 },
+    { "lat": 47.6563466, "lon": -122.3056182 },
+    { "lat": 47.6563528, "lon": -122.3056274 },
+    { "lat": 47.6563224, "lon": -122.3056731 },
+    { "lat": 47.6563609, "lon": -122.3057290 },
+    { "lat": 47.6563933, "lon": -122.3057771 },
+    { "lat": 47.6564077, "lon": -122.3057555 },
+    { "lat": 47.6565841, "lon": -122.3060145 },
+    { "lat": 47.6565658, "lon": -122.3060420 },
+    { "lat": 47.6565849, "lon": -122.3060701 },
+    { "lat": 47.6566066, "lon": -122.3061020 },
+    { "lat": 47.6566637, "lon": -122.3061854 },
+    { "lat": 47.6567066, "lon": -122.3061208 },
+    { "lat": 47.6567172, "lon": -122.3061364 },
+    { "lat": 47.6567644, "lon": -122.3060652 },
+    { "lat": 47.6567529, "lon": -122.3060484 },
+    { "lat": 47.6567828, "lon": -122.3060033 },
+    { "lat": 47.6567737, "lon": -122.3059899 },
+    { "lat": 47.6567045, "lon": -122.3058888 },
+    { "lat": 47.6564427, "lon": -122.3055061 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "2023",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Skagit Lane",
+    "architect": "Heath, Gove and Bell;Lea, Pearson, and Richards",
+    "architect:wikidata": "Q5497989",
+    "building": "university",
+    "building:levels": "3",
+    "ele": "48",
+    "gnis:feature_id": "2461318",
+    "name": "Thomson Hall",
+    "name:etymology": "David Thomson",
+    "official_name": "David Thomson Hall",
+    "opening_hours": "Mo-Fr 07:00-22:00; PH off",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "THO",
+    "roof:levels": "1",
+    "roof:shape": "gabled",
+    "source": "data.seattle.gov",
+    "start_date": "1948",
+    "wikidata": "Q98066251"
+  }
+},
+{
+  "type": "way",
+  "id": 30922695,
+  "bounds": {
+    "minlat": 47.6572022,
+    "minlon": -122.3106659,
+    "maxlat": 47.6576739,
+    "maxlon": -122.3099718
+  },
+  "geometry": [
+    { "lat": 47.6575779, "lon": -122.3101487 },
+    { "lat": 47.6575935, "lon": -122.3101079 },
+    { "lat": 47.6575957, "lon": -122.3100611 },
+    { "lat": 47.6575840, "lon": -122.3100175 },
+    { "lat": 47.6575608, "lon": -122.3099856 },
+    { "lat": 47.6575306, "lon": -122.3099718 },
+    { "lat": 47.6574993, "lon": -122.3099787 },
+    { "lat": 47.6574732, "lon": -122.3100051 },
+    { "lat": 47.6574330, "lon": -122.3100667 },
+    { "lat": 47.6574173, "lon": -122.3100425 },
+    { "lat": 47.6573409, "lon": -122.3101535 },
+    { "lat": 47.6572460, "lon": -122.3102915 },
+    { "lat": 47.6572634, "lon": -122.3103209 },
+    { "lat": 47.6572103, "lon": -122.3104141 },
+    { "lat": 47.6572022, "lon": -122.3104666 },
+    { "lat": 47.6572134, "lon": -122.3105178 },
+    { "lat": 47.6572407, "lon": -122.3105533 },
+    { "lat": 47.6572764, "lon": -122.3105631 },
+    { "lat": 47.6573104, "lon": -122.3105443 },
+    { "lat": 47.6573636, "lon": -122.3104710 },
+    { "lat": 47.6573785, "lon": -122.3104911 },
+    { "lat": 47.6574229, "lon": -122.3104253 },
+    { "lat": 47.6574412, "lon": -122.3104535 },
+    { "lat": 47.6574276, "lon": -122.3104728 },
+    { "lat": 47.6575594, "lon": -122.3106659 },
+    { "lat": 47.6576180, "lon": -122.3105810 },
+    { "lat": 47.6576739, "lon": -122.3105001 },
+    { "lat": 47.6575409, "lon": -122.3103064 },
+    { "lat": 47.6575273, "lon": -122.3103297 },
+    { "lat": 47.6575091, "lon": -122.3102989 },
+    { "lat": 47.6575517, "lon": -122.3102318 },
+    { "lat": 47.6575359, "lon": -122.3102142 },
+    { "lat": 47.6575779, "lon": -122.3101487 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4105",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "Memorial Way Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "building:levels:underground": "1",
+    "building:material": "brick",
+    "ele": "54",
+    "name": "Parrington Hall",
+    "name:en": "Parrington Hall",
+    "name:etymology": "Vernon Louis Parrington",
+    "name:etymology:wikidata": "Q2517365",
+    "name:etymology:wikipedia": "en:Vernon Louis Parrington",
+    "official_name": "Vernon Louis Parrington Hall",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "PAR",
+    "roof:levels": "2",
+    "roof:shape": "hipped",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1902",
+    "wikimedia_commons": "Category:Parrington Hall, University of Washington"
+  }
+},
+{
+  "type": "way",
+  "id": 30922739,
+  "bounds": {
+    "minlat": 47.6538326,
+    "minlon": -122.3096842,
+    "maxlat": 47.6541486,
+    "maxlon": -122.3090548
+  },
+  "geometry": [
+    { "lat": 47.6540397, "lon": -122.3090548 },
+    { "lat": 47.6540180, "lon": -122.3091226 },
+    { "lat": 47.6540096, "lon": -122.3091489 },
+    { "lat": 47.6539737, "lon": -122.3091240 },
+    { "lat": 47.6538832, "lon": -122.3094102 },
+    { "lat": 47.6538636, "lon": -122.3093966 },
+    { "lat": 47.6538483, "lon": -122.3094449 },
+    { "lat": 47.6538326, "lon": -122.3094945 },
+    { "lat": 47.6538547, "lon": -122.3095097 },
+    { "lat": 47.6538406, "lon": -122.3095542 },
+    { "lat": 47.6538983, "lon": -122.3095941 },
+    { "lat": 47.6538948, "lon": -122.3096054 },
+    { "lat": 47.6540085, "lon": -122.3096842 },
+    { "lat": 47.6540588, "lon": -122.3095253 },
+    { "lat": 47.6540122, "lon": -122.3094930 },
+    { "lat": 47.6540429, "lon": -122.3093958 },
+    { "lat": 47.6540764, "lon": -122.3092901 },
+    { "lat": 47.6540876, "lon": -122.3092978 },
+    { "lat": 47.6541132, "lon": -122.3092169 },
+    { "lat": 47.6541295, "lon": -122.3092282 },
+    { "lat": 47.6541486, "lon": -122.3091677 },
+    { "lat": 47.6541050, "lon": -122.3091375 },
+    { "lat": 47.6541144, "lon": -122.3091071 },
+    { "lat": 47.6540397, "lon": -122.3090548 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3920",
+    "addr:postcode": "98195",
+    "addr:street": "Okanogan Lane Northeast",
+    "building": "university",
+    "building:levels": "6",
+    "name": "Atmospheric Sciences-Geophysics Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "ATG",
+    "source": "data.seattle.gov;King County GIS",
+    "wikidata": "Q98429412"
+  }
+},
+{
+  "type": "way",
+  "id": 30924849,
+  "bounds": {
+    "minlat": 47.6539873,
+    "minlon": -122.3066833,
+    "maxlat": 47.6545043,
+    "maxlon": -122.3059802
+  },
+  "geometry": [
+    { "lat": 47.6540864, "lon": -122.3061073 },
+    { "lat": 47.6539873, "lon": -122.3064200 },
+    { "lat": 47.6540372, "lon": -122.3064549 },
+    { "lat": 47.6540901, "lon": -122.3064919 },
+    { "lat": 47.6541009, "lon": -122.3064578 },
+    { "lat": 47.6541779, "lon": -122.3065116 },
+    { "lat": 47.6541676, "lon": -122.3065441 },
+    { "lat": 47.6542028, "lon": -122.3065686 },
+    { "lat": 47.6542320, "lon": -122.3065890 },
+    { "lat": 47.6542423, "lon": -122.3065567 },
+    { "lat": 47.6543276, "lon": -122.3066164 },
+    { "lat": 47.6543201, "lon": -122.3066401 },
+    { "lat": 47.6543510, "lon": -122.3066616 },
+    { "lat": 47.6543567, "lon": -122.3066434 },
+    { "lat": 47.6544139, "lon": -122.3066833 },
+    { "lat": 47.6545043, "lon": -122.3063980 },
+    { "lat": 47.6544659, "lon": -122.3063738 },
+    { "lat": 47.6544304, "lon": -122.3063464 },
+    { "lat": 47.6544452, "lon": -122.3062999 },
+    { "lat": 47.6544301, "lon": -122.3062894 },
+    { "lat": 47.6544159, "lon": -122.3062794 },
+    { "lat": 47.6544343, "lon": -122.3062215 },
+    { "lat": 47.6544559, "lon": -122.3061531 },
+    { "lat": 47.6544650, "lon": -122.3061244 },
+    { "lat": 47.6542585, "lon": -122.3059802 },
+    { "lat": 47.6542471, "lon": -122.3060162 },
+    { "lat": 47.6542257, "lon": -122.3060836 },
+    { "lat": 47.6542199, "lon": -122.3061019 },
+    { "lat": 47.6541915, "lon": -122.3060820 },
+    { "lat": 47.6541741, "lon": -122.3061369 },
+    { "lat": 47.6541348, "lon": -122.3061094 },
+    { "lat": 47.6541265, "lon": -122.3061354 },
+    { "lat": 47.6540864, "lon": -122.3061073 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3940",
+    "addr:postcode": "98116",
+    "addr:state": "WA",
+    "addr:street": "Benton Lane Northeast",
+    "building": "university",
+    "building:levels": "4",
+    "building:material": "brick",
+    "ele": "39",
+    "gnis:feature_id": "2461219",
+    "name": "Guggenheim Hall",
+    "operator": "University of Washington",
+    "ref": "GUG",
+    "roof:shape": "gabled",
+    "source": "King County GIS;data.seattle.gov",
+    "website": "https://www.engr.washington.edu/about/bldgs/gug.html",
+    "wikidata": "Q98637635",
+    "wikimedia_commons": "File:U of Washington Guggenheim Hall 01.jpg"
+  }
+},
+{
+  "type": "way",
+  "id": 30924855,
+  "bounds": {
+    "minlat": 47.6544851,
+    "minlon": -122.3066523,
+    "maxlat": 47.6547040,
+    "maxlon": -122.3062234
+  },
+  "geometry": [
+    { "lat": 47.6545918, "lon": -122.3066523 },
+    { "lat": 47.6547040, "lon": -122.3062979 },
+    { "lat": 47.6545973, "lon": -122.3062234 },
+    { "lat": 47.6544851, "lon": -122.3065779 },
+    { "lat": 47.6545217, "lon": -122.3066034 },
+    { "lat": 47.6545918, "lon": -122.3066523 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3950",
+    "addr:postcode": "98116",
+    "addr:street": "Benton Lane Northeast",
+    "building": "university",
+    "building:levels": "1",
+    "name": "Guggenheim Annex",
+    "operator": "University of Washington",
+    "ref": "GUA",
+    "source": "King County GIS;data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 30924877,
+  "bounds": {
+    "minlat": 47.6542352,
+    "minlon": -122.3060729,
+    "maxlat": 47.6546145,
+    "maxlon": -122.3056104
+  },
+  "geometry": [
+    { "lat": 47.6542352, "lon": -122.3058634 },
+    { "lat": 47.6542793, "lon": -122.3058938 },
+    { "lat": 47.6545015, "lon": -122.3060467 },
+    { "lat": 47.6545396, "lon": -122.3060729 },
+    { "lat": 47.6546145, "lon": -122.3058342 },
+    { "lat": 47.6545745, "lon": -122.3058067 },
+    { "lat": 47.6543782, "lon": -122.3056716 },
+    { "lat": 47.6543882, "lon": -122.3056396 },
+    { "lat": 47.6543458, "lon": -122.3056104 },
+    { "lat": 47.6543386, "lon": -122.3056334 },
+    { "lat": 47.6543130, "lon": -122.3056157 },
+    { "lat": 47.6542793, "lon": -122.3057229 },
+    { "lat": 47.6542352, "lon": -122.3058634 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3915",
+    "addr:postcode": "98116",
+    "addr:street": "East Stevens Way Northeast",
+    "building": "university",
+    "name": "Kirsten Wind Tunnel",
+    "operator": "University of Washington",
+    "ref": "KIR",
+    "source": "King County GIS;data.seattle.gov",
+    "website": "https://www.engr.washington.edu/about/bldgs/kir.html"
+  }
+},
+{
+  "type": "way",
+  "id": 30924926,
+  "bounds": {
+    "minlat": 47.6537684,
+    "minlon": -122.3060816,
+    "maxlat": 47.6541603,
+    "maxlon": -122.3055832
+  },
+  "geometry": [
+    { "lat": 47.6537684, "lon": -122.3058813 },
+    { "lat": 47.6538189, "lon": -122.3059138 },
+    { "lat": 47.6538285, "lon": -122.3058808 },
+    { "lat": 47.6538519, "lon": -122.3058959 },
+    { "lat": 47.6538376, "lon": -122.3059447 },
+    { "lat": 47.6539062, "lon": -122.3059889 },
+    { "lat": 47.6539949, "lon": -122.3060462 },
+    { "lat": 47.6540497, "lon": -122.3060816 },
+    { "lat": 47.6541187, "lon": -122.3058462 },
+    { "lat": 47.6541009, "lon": -122.3058347 },
+    { "lat": 47.6541059, "lon": -122.3058178 },
+    { "lat": 47.6541488, "lon": -122.3058454 },
+    { "lat": 47.6541603, "lon": -122.3058059 },
+    { "lat": 47.6541040, "lon": -122.3057696 },
+    { "lat": 47.6541029, "lon": -122.3057734 },
+    { "lat": 47.6540905, "lon": -122.3057654 },
+    { "lat": 47.6540776, "lon": -122.3057571 },
+    { "lat": 47.6541002, "lon": -122.3056801 },
+    { "lat": 47.6540302, "lon": -122.3056349 },
+    { "lat": 47.6539499, "lon": -122.3055832 },
+    { "lat": 47.6539317, "lon": -122.3056450 },
+    { "lat": 47.6538932, "lon": -122.3056202 },
+    { "lat": 47.6538526, "lon": -122.3055939 },
+    { "lat": 47.6538255, "lon": -122.3056864 },
+    { "lat": 47.6537684, "lon": -122.3058813 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3795",
+    "addr:postcode": "98126",
+    "addr:state": "WA",
+    "addr:street": "East Stevens Way Northeast",
+    "building": "university",
+    "building:levels": "4",
+    "ele": "38",
+    "gnis:feature_id": "2461324",
+    "name": "Aerospace Engineering and Research Building (AERB)",
+    "operator": "University of Washington",
+    "ref": "AERB",
+    "source": "King County GIS;data.seattle.gov",
+    "website": "https://www.engr.washington.edu/about/bldgs/aer.html"
+  }
+},
+{
+  "type": "way",
+  "id": 49888203,
+  "bounds": {
+    "minlat": 47.6543478,
+    "minlon": -122.3112730,
+    "maxlat": 47.6548248,
+    "maxlon": -122.3106547
+  },
+  "geometry": [
+    { "lat": 47.6545000, "lon": -122.3112730 },
+    { "lat": 47.6546840, "lon": -122.3112704 },
+    { "lat": 47.6546822, "lon": -122.3109980 },
+    { "lat": 47.6546504, "lon": -122.3109984 },
+    { "lat": 47.6546502, "lon": -122.3109639 },
+    { "lat": 47.6548248, "lon": -122.3109600 },
+    { "lat": 47.6548220, "lon": -122.3106896 },
+    { "lat": 47.6546593, "lon": -122.3106933 },
+    { "lat": 47.6546590, "lon": -122.3106547 },
+    { "lat": 47.6545908, "lon": -122.3106557 },
+    { "lat": 47.6545084, "lon": -122.3106569 },
+    { "lat": 47.6545086, "lon": -122.3106967 },
+    { "lat": 47.6543478, "lon": -122.3107004 },
+    { "lat": 47.6543506, "lon": -122.3109707 },
+    { "lat": 47.6545308, "lon": -122.3109666 },
+    { "lat": 47.6545311, "lon": -122.3110001 },
+    { "lat": 47.6544982, "lon": -122.3110006 },
+    { "lat": 47.6545000, "lon": -122.3112730 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3943",
+    "addr:postcode": "98116",
+    "addr:state": "WA",
+    "addr:street": "West Stevens Way Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "ele": "36",
+    "gnis:feature_id": "2461186",
+    "name": "Architecture Hall",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "ARC",
+    "roof:levels": "1",
+    "start_date": "1909"
+  }
+},
+{
+  "type": "way",
+  "id": 49888205,
+  "bounds": {
+    "minlat": 47.6537981,
+    "minlon": -122.3112164,
+    "maxlat": 47.6541273,
+    "maxlon": -122.3105831
+  },
+  "geometry": [
+    { "lat": 47.6541273, "lon": -122.3111388 },
+    { "lat": 47.6541259, "lon": -122.3106519 },
+    { "lat": 47.6541025, "lon": -122.3106521 },
+    { "lat": 47.6541024, "lon": -122.3106216 },
+    { "lat": 47.6539448, "lon": -122.3106225 },
+    { "lat": 47.6539341, "lon": -122.3106226 },
+    { "lat": 47.6539339, "lon": -122.3105831 },
+    { "lat": 47.6538441, "lon": -122.3105836 },
+    { "lat": 47.6538445, "lon": -122.3107233 },
+    { "lat": 47.6537981, "lon": -122.3107236 },
+    { "lat": 47.6537992, "lon": -122.3110960 },
+    { "lat": 47.6538562, "lon": -122.3110956 },
+    { "lat": 47.6538563, "lon": -122.3111232 },
+    { "lat": 47.6538477, "lon": -122.3111232 },
+    { "lat": 47.6538480, "lon": -122.3112164 },
+    { "lat": 47.6539179, "lon": -122.3112159 },
+    { "lat": 47.6539178, "lon": -122.3111776 },
+    { "lat": 47.6539280, "lon": -122.3111776 },
+    { "lat": 47.6541141, "lon": -122.3111763 },
+    { "lat": 47.6541140, "lon": -122.3111388 },
+    { "lat": 47.6541273, "lon": -122.3111388 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3921",
+    "addr:postcode": "98116",
+    "addr:state": "WA",
+    "addr:street": "West Stevens Way Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "ele": "36",
+    "gnis:feature_id": "2461224",
+    "name": "Guthrie Hall",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "GTH",
+    "source": "King County GIS;data.seattle.gov",
+    "wikidata": "Q98538284"
+  }
+},
+{
+  "type": "way",
+  "id": 50191487,
+  "bounds": {
+    "minlat": 47.6534521,
+    "minlon": -122.3118447,
+    "maxlat": 47.6537186,
+    "maxlon": -122.3107659
+  },
+  "geometry": [
+    { "lat": 47.6534530, "lon": -122.3117987 },
+    { "lat": 47.6535137, "lon": -122.3117976 },
+    { "lat": 47.6535141, "lon": -122.3118447 },
+    { "lat": 47.6535752, "lon": -122.3118436 },
+    { "lat": 47.6536308, "lon": -122.3118426 },
+    { "lat": 47.6537186, "lon": -122.3118410 },
+    { "lat": 47.6537155, "lon": -122.3114614 },
+    { "lat": 47.6537099, "lon": -122.3107659 },
+    { "lat": 47.6536221, "lon": -122.3107674 },
+    { "lat": 47.6535666, "lon": -122.3107684 },
+    { "lat": 47.6535053, "lon": -122.3107695 },
+    { "lat": 47.6535060, "lon": -122.3108595 },
+    { "lat": 47.6534992, "lon": -122.3108670 },
+    { "lat": 47.6534941, "lon": -122.3108770 },
+    { "lat": 47.6534909, "lon": -122.3108886 },
+    { "lat": 47.6534901, "lon": -122.3109011 },
+    { "lat": 47.6534914, "lon": -122.3109130 },
+    { "lat": 47.6534948, "lon": -122.3109240 },
+    { "lat": 47.6535000, "lon": -122.3109333 },
+    { "lat": 47.6535067, "lon": -122.3109402 },
+    { "lat": 47.6535109, "lon": -122.3114707 },
+    { "lat": 47.6535127, "lon": -122.3116916 },
+    { "lat": 47.6534521, "lon": -122.3116927 },
+    { "lat": 47.6534530, "lon": -122.3117987 }
+  ],
+  "tags": {
+    "building": "university",
+    "name": "Physics / Astronomy Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "PAB",
+    "source": "data.seattle.gov",
+    "wikidata": "Q98690276"
+  }
+},
+{
+  "type": "way",
+  "id": 50191495,
+  "bounds": {
+    "minlat": 47.6546480,
+    "minlon": -122.3131428,
+    "maxlat": 47.6551275,
+    "maxlon": -122.3123268
+  },
+  "geometry": [
+    { "lat": 47.6546796, "lon": -122.3125078 },
+    { "lat": 47.6546806, "lon": -122.3127330 },
+    { "lat": 47.6546480, "lon": -122.3127333 },
+    { "lat": 47.6546482, "lon": -122.3128028 },
+    { "lat": 47.6546825, "lon": -122.3128025 },
+    { "lat": 47.6546831, "lon": -122.3129680 },
+    { "lat": 47.6547750, "lon": -122.3129673 },
+    { "lat": 47.6547753, "lon": -122.3130418 },
+    { "lat": 47.6547961, "lon": -122.3130417 },
+    { "lat": 47.6547963, "lon": -122.3131086 },
+    { "lat": 47.6548857, "lon": -122.3131082 },
+    { "lat": 47.6548857, "lon": -122.3131428 },
+    { "lat": 47.6549566, "lon": -122.3131425 },
+    { "lat": 47.6550274, "lon": -122.3131423 },
+    { "lat": 47.6550274, "lon": -122.3131088 },
+    { "lat": 47.6551103, "lon": -122.3131086 },
+    { "lat": 47.6551102, "lon": -122.3130434 },
+    { "lat": 47.6551102, "lon": -122.3130255 },
+    { "lat": 47.6551275, "lon": -122.3130255 },
+    { "lat": 47.6551275, "lon": -122.3129910 },
+    { "lat": 47.6551275, "lon": -122.3129609 },
+    { "lat": 47.6551069, "lon": -122.3129610 },
+    { "lat": 47.6551069, "lon": -122.3129338 },
+    { "lat": 47.6551271, "lon": -122.3129338 },
+    { "lat": 47.6551261, "lon": -122.3125175 },
+    { "lat": 47.6551004, "lon": -122.3125177 },
+    { "lat": 47.6551003, "lon": -122.3124997 },
+    { "lat": 47.6551222, "lon": -122.3124995 },
+    { "lat": 47.6551221, "lon": -122.3124674 },
+    { "lat": 47.6551219, "lon": -122.3124411 },
+    { "lat": 47.6550982, "lon": -122.3124414 },
+    { "lat": 47.6550981, "lon": -122.3124238 },
+    { "lat": 47.6550975, "lon": -122.3123543 },
+    { "lat": 47.6550147, "lon": -122.3123556 },
+    { "lat": 47.6550145, "lon": -122.3123268 },
+    { "lat": 47.6549438, "lon": -122.3123278 },
+    { "lat": 47.6548730, "lon": -122.3123289 },
+    { "lat": 47.6548733, "lon": -122.3123650 },
+    { "lat": 47.6547827, "lon": -122.3123662 },
+    { "lat": 47.6547831, "lon": -122.3124383 },
+    { "lat": 47.6547656, "lon": -122.3124385 },
+    { "lat": 47.6547660, "lon": -122.3125069 },
+    { "lat": 47.6546796, "lon": -122.3125078 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3949",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "15th Avenue Northeast",
+    "building": "yes",
+    "building:levels": "4",
+    "building:levels:underground": "1",
+    "building:material": "concrete",
+    "ele": "29",
+    "gnis:feature_id": "2461213",
+    "name": "Gould Hall",
+    "name:etymology:wikidata": "Q5040176",
+    "name:etymology:wikipedia": "en:Carl Frelinghuysen Gould",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "GLD",
+    "roof:colour": "silver",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1972",
+    "website": "http://www.caup.washington.edu/",
+    "wheelchair": "limited",
+    "wikidata": "Q98399994"
+  }
+},
+{
+  "type": "way",
+  "id": 50191498,
+  "bounds": {
+    "minlat": 47.6539211,
+    "minlon": -122.3126921,
+    "maxlat": 47.6541679,
+    "maxlon": -122.3123348
+  },
+  "geometry": [
+    { "lat": 47.6539211, "lon": -122.3123562 },
+    { "lat": 47.6539238, "lon": -122.3126921 },
+    { "lat": 47.6541378, "lon": -122.3126882 },
+    { "lat": 47.6541363, "lon": -122.3125026 },
+    { "lat": 47.6541604, "lon": -122.3125021 },
+    { "lat": 47.6541600, "lon": -122.3124570 },
+    { "lat": 47.6541679, "lon": -122.3124569 },
+    { "lat": 47.6541675, "lon": -122.3124163 },
+    { "lat": 47.6541613, "lon": -122.3124164 },
+    { "lat": 47.6541607, "lon": -122.3123348 },
+    { "lat": 47.6540389, "lon": -122.3123370 },
+    { "lat": 47.6540390, "lon": -122.3123437 },
+    { "lat": 47.6539444, "lon": -122.3123453 },
+    { "lat": 47.6539445, "lon": -122.3123558 },
+    { "lat": 47.6539211, "lon": -122.3123562 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "3925",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "15th Avenue Northeast",
+    "amenity": "place_of_worship",
+    "building": "church",
+    "denomination": "mormon",
+    "ele": "26",
+    "gnis:feature_id": "2462076",
+    "name": "The Church of Jesus Christ of Latter-day Saints",
+    "religion": "christian",
+    "website": "https://local.churchofjesuschrist.org/en/us/wa/seattle/3925-15th-avenue-northeast"
+  }
+},
+{
+  "type": "way",
+  "id": 50779397,
+  "bounds": {
+    "minlat": 47.6550182,
+    "minlon": -122.3102776,
+    "maxlat": 47.6551169,
+    "maxlon": -122.3101949
+  },
+  "geometry": [
+    { "lat": 47.6551169, "lon": -122.3101949 },
+    { "lat": 47.6550610, "lon": -122.3102774 },
+    { "lat": 47.6550182, "lon": -122.3102776 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "22",
+    "surface": "concrete",
+    "tactile_paving": "no",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 50779400,
+  "bounds": {
+    "minlat": 47.6554231,
+    "minlon": -122.3090811,
+    "maxlat": 47.6554451,
+    "maxlon": -122.3090101
+  },
+  "geometry": [
+    { "lat": 47.6554451, "lon": -122.3090101 },
+    { "lat": 47.6554231, "lon": -122.3090811 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "lit": "yes",
+    "ramp": "no",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 54024501,
+  "bounds": {
+    "minlat": 47.6533567,
+    "minlon": -122.3102972,
+    "maxlat": 47.6540208,
+    "maxlon": -122.3095953
+  },
+  "geometry": [
+    { "lat": 47.6534658, "lon": -122.3099756 },
+    { "lat": 47.6534992, "lon": -122.3099965 },
+    { "lat": 47.6539174, "lon": -122.3102805 },
+    { "lat": 47.6539260, "lon": -122.3102532 },
+    { "lat": 47.6539623, "lon": -122.3102781 },
+    { "lat": 47.6539894, "lon": -122.3102967 },
+    { "lat": 47.6540059, "lon": -122.3102972 },
+    { "lat": 47.6540150, "lon": -122.3102873 },
+    { "lat": 47.6540208, "lon": -122.3102661 },
+    { "lat": 47.6540163, "lon": -122.3102415 },
+    { "lat": 47.6539825, "lon": -122.3102183 },
+    { "lat": 47.6539468, "lon": -122.3101938 },
+    { "lat": 47.6540051, "lon": -122.3100122 },
+    { "lat": 47.6537464, "lon": -122.3098446 },
+    { "lat": 47.6537560, "lon": -122.3098174 },
+    { "lat": 47.6536606, "lon": -122.3097554 },
+    { "lat": 47.6536663, "lon": -122.3097370 },
+    { "lat": 47.6536570, "lon": -122.3097312 },
+    { "lat": 47.6535998, "lon": -122.3096954 },
+    { "lat": 47.6535933, "lon": -122.3097182 },
+    { "lat": 47.6534145, "lon": -122.3095953 },
+    { "lat": 47.6534028, "lon": -122.3096314 },
+    { "lat": 47.6533854, "lon": -122.3096191 },
+    { "lat": 47.6533732, "lon": -122.3096583 },
+    { "lat": 47.6533567, "lon": -122.3097111 },
+    { "lat": 47.6533790, "lon": -122.3097277 },
+    { "lat": 47.6533710, "lon": -122.3097537 },
+    { "lat": 47.6534659, "lon": -122.3098132 },
+    { "lat": 47.6535042, "lon": -122.3098368 },
+    { "lat": 47.6534658, "lon": -122.3099756 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3923",
+    "addr:postcode": "98105",
+    "addr:street": "Okanogan Lane Northeast",
+    "building": "university",
+    "building:levels": "2",
+    "name": "Chemistry Library Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "CHL",
+    "source": "data.seattle.gov",
+    "source:addr:id": "13927"
+  }
+},
+{
+  "type": "way",
+  "id": 54029689,
+  "bounds": {
+    "minlat": 47.6568216,
+    "minlon": -122.3097511,
+    "maxlat": 47.6569257,
+    "maxlon": -122.3097461
+  },
+  "geometry": [
+    { "lat": 47.6568216, "lon": -122.3097511 },
+    { "lat": 47.6569257, "lon": -122.3097461 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "25",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 54356424,
+  "bounds": {
+    "minlat": 47.6563143,
+    "minlon": -122.3131472,
+    "maxlat": 47.6567567,
+    "maxlon": -122.3122645
+  },
+  "geometry": [
+    { "lat": 47.6563960, "lon": -122.3128143 },
+    { "lat": 47.6563143, "lon": -122.3128164 },
+    { "lat": 47.6563156, "lon": -122.3129281 },
+    { "lat": 47.6563387, "lon": -122.3129275 },
+    { "lat": 47.6563976, "lon": -122.3129260 },
+    { "lat": 47.6564002, "lon": -122.3131472 },
+    { "lat": 47.6567359, "lon": -122.3131386 },
+    { "lat": 47.6567567, "lon": -122.3131380 },
+    { "lat": 47.6567509, "lon": -122.3126453 },
+    { "lat": 47.6567465, "lon": -122.3122645 },
+    { "lat": 47.6565394, "lon": -122.3122692 },
+    { "lat": 47.6563897, "lon": -122.3122737 },
+    { "lat": 47.6563942, "lon": -122.3126596 },
+    { "lat": 47.6563960, "lon": -122.3128143 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "1410",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Campus Parkway",
+    "building": "office",
+    "building:levels": "4",
+    "ele": "38",
+    "gnis:feature_id": "2461281",
+    "name": "Schmitz Hall",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "SMZ",
+    "roof:shape": "flat",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1970"
+  }
+},
+{
+  "type": "way",
+  "id": 54675151,
+  "bounds": {
+    "minlat": 47.6571754,
+    "minlon": -122.3112508,
+    "maxlat": 47.6572720,
+    "maxlon": -122.3109034
+  },
+  "geometry": [
+    { "lat": 47.6571803, "lon": -122.3112508 },
+    { "lat": 47.6571778, "lon": -122.3110740 },
+    { "lat": 47.6571754, "lon": -122.3109062 },
+    { "lat": 47.6572671, "lon": -122.3109034 },
+    { "lat": 47.6572720, "lon": -122.3112479 },
+    { "lat": 47.6571803, "lon": -122.3112508 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4101",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "George Washington Lane Northeast",
+    "building": "university",
+    "building:levels": "2",
+    "building:material": "wood",
+    "ele": "37",
+    "name": "Cunningham Hall",
+    "name:en": "Cunningham Hall",
+    "opening_hours": "Mo-Fr 09:00-17:00; PH off",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "ICH",
+    "roof:orientation": "along",
+    "roof:shape": "hipped",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1909"
+  }
+},
+{
+  "type": "way",
+  "id": 82699420,
+  "bounds": {
+    "minlat": 47.6569136,
+    "minlon": -122.3130773,
+    "maxlat": 47.6570415,
+    "maxlon": -122.3127369
+  },
+  "geometry": [
+    { "lat": 47.6569136, "lon": -122.3127406 },
+    { "lat": 47.6569182, "lon": -122.3130773 },
+    { "lat": 47.6570415, "lon": -122.3130736 },
+    { "lat": 47.6570369, "lon": -122.3127369 },
+    { "lat": 47.6569136, "lon": -122.3127406 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4100",
+    "addr:postcode": "98105",
+    "addr:street": "University Way Northeast",
+    "amenity": "bank",
+    "atm": "yes",
+    "brand": "Wells Fargo",
+    "brand:wikidata": "Q744149",
+    "building": "yes",
+    "check_date:opening_hours": "2026-09-11",
+    "name": "Wells Fargo",
+    "opening_hours": "Mo-Fr 09:00-17:00",
+    "source": "King County GIS;data.seattle.gov",
+    "website": "https://locations.wellsfargo.com/wa/seattle/4100-university-way-ne",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 87481964,
+  "bounds": {
+    "minlat": 47.6537821,
+    "minlon": -122.3114019,
+    "maxlat": 47.6537835,
+    "maxlon": -122.3112726
+  },
+  "geometry": [
+    { "lat": 47.6537835, "lon": -122.3114019 },
+    { "lat": 47.6537821, "lon": -122.3112726 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up"
+  }
+},
+{
+  "type": "way",
+  "id": 118781382,
+  "bounds": {
+    "minlat": 47.6561198,
+    "minlon": -122.3081229,
+    "maxlat": 47.6565823,
+    "maxlon": -122.3074180
+  },
+  "geometry": [
+    { "lat": 47.6563702, "lon": -122.3074180 },
+    { "lat": 47.6562973, "lon": -122.3075260 },
+    { "lat": 47.6562356, "lon": -122.3074343 },
+    { "lat": 47.6561798, "lon": -122.3075170 },
+    { "lat": 47.6561198, "lon": -122.3076060 },
+    { "lat": 47.6561780, "lon": -122.3076924 },
+    { "lat": 47.6563702, "lon": -122.3079782 },
+    { "lat": 47.6563731, "lon": -122.3079825 },
+    { "lat": 47.6563788, "lon": -122.3079910 },
+    { "lat": 47.6563761, "lon": -122.3079950 },
+    { "lat": 47.6564621, "lon": -122.3081229 },
+    { "lat": 47.6564952, "lon": -122.3080738 },
+    { "lat": 47.6565141, "lon": -122.3081020 },
+    { "lat": 47.6565674, "lon": -122.3080230 },
+    { "lat": 47.6565577, "lon": -122.3080087 },
+    { "lat": 47.6565472, "lon": -122.3079930 },
+    { "lat": 47.6565823, "lon": -122.3079410 },
+    { "lat": 47.6565389, "lon": -122.3078765 },
+    { "lat": 47.6564995, "lon": -122.3078178 },
+    { "lat": 47.6564911, "lon": -122.3078303 },
+    { "lat": 47.6564041, "lon": -122.3077010 },
+    { "lat": 47.6564183, "lon": -122.3076800 },
+    { "lat": 47.6564055, "lon": -122.3076610 },
+    { "lat": 47.6564705, "lon": -122.3075647 },
+    { "lat": 47.6563702, "lon": -122.3074180 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4060",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Spokane Lane Northeast",
+    "building": "university",
+    "building:levels": "4",
+    "name": "Gowen Hall",
+    "name:etymology": "Herbert Henry Gowen",
+    "name:etymology:wikidata": "Q17380433",
+    "name:etymology:wikipedia": "en:Herbert Henry Gowen",
+    "old_name:-1977-07-22": "Condon Hall #1",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "GWN",
+    "source": "data.seattle.gov",
+    "start_date": "1933"
+  }
+},
+{
+  "type": "way",
+  "id": 118781383,
+  "bounds": {
+    "minlat": 47.6563546,
+    "minlon": -122.3076003,
+    "maxlat": 47.6569586,
+    "maxlon": -122.3067245
+  },
+  "geometry": [
+    { "lat": 47.6564949, "lon": -122.3076003 },
+    { "lat": 47.6565890, "lon": -122.3074583 },
+    { "lat": 47.6568724, "lon": -122.3070310 },
+    { "lat": 47.6568911, "lon": -122.3070585 },
+    { "lat": 47.6569586, "lon": -122.3069568 },
+    { "lat": 47.6568902, "lon": -122.3068568 },
+    { "lat": 47.6568990, "lon": -122.3068436 },
+    { "lat": 47.6568754, "lon": -122.3068091 },
+    { "lat": 47.6568516, "lon": -122.3067743 },
+    { "lat": 47.6568380, "lon": -122.3067949 },
+    { "lat": 47.6567898, "lon": -122.3067245 },
+    { "lat": 47.6566793, "lon": -122.3068913 },
+    { "lat": 47.6566613, "lon": -122.3068650 },
+    { "lat": 47.6566469, "lon": -122.3068868 },
+    { "lat": 47.6566303, "lon": -122.3069118 },
+    { "lat": 47.6566531, "lon": -122.3069451 },
+    { "lat": 47.6564573, "lon": -122.3072403 },
+    { "lat": 47.6563546, "lon": -122.3073952 },
+    { "lat": 47.6563702, "lon": -122.3074180 },
+    { "lat": 47.6564705, "lon": -122.3075647 },
+    { "lat": 47.6564949, "lon": -122.3076003 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "1911",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Skagit Lane",
+    "architect": "Bebb and Gould",
+    "architect:wikidata": "Q4878300",
+    "building": "university",
+    "building:levels": "4",
+    "building:material": "brick",
+    "name": "Smith Hall",
+    "name:etymology": "James Allen Smith",
+    "name:etymology:wikidata": "Q55720666",
+    "official_name": "J. Allen Smith Hall",
+    "old_name:-1947-06": "Social Science Hall",
+    "opening_hours": "Mo-Fr 07:00-21:30; Sa 08:00-17:00; Su 12:30-17:00; PH off",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "SMI",
+    "roof:colour": "whitesmoke",
+    "source": "data.seattle.gov",
+    "start_date": "1939",
+    "wikidata": "Q98825683"
+  }
+},
+{
+  "type": "way",
+  "id": 160546650,
+  "bounds": {
+    "minlat": 47.6569252,
+    "minlon": -122.3067661,
+    "maxlat": 47.6574812,
+    "maxlon": -122.3059071
+  },
+  "geometry": [
+    { "lat": 47.6573484, "lon": -122.3059071 },
+    { "lat": 47.6572629, "lon": -122.3060369 },
+    { "lat": 47.6570472, "lon": -122.3063644 },
+    { "lat": 47.6569903, "lon": -122.3064508 },
+    { "lat": 47.6569817, "lon": -122.3064385 },
+    { "lat": 47.6569252, "lon": -122.3065243 },
+    { "lat": 47.6569767, "lon": -122.3065986 },
+    { "lat": 47.6569663, "lon": -122.3066145 },
+    { "lat": 47.6569869, "lon": -122.3066441 },
+    { "lat": 47.6570084, "lon": -122.3066752 },
+    { "lat": 47.6570168, "lon": -122.3066624 },
+    { "lat": 47.6570887, "lon": -122.3067661 },
+    { "lat": 47.6570998, "lon": -122.3067493 },
+    { "lat": 47.6571071, "lon": -122.3067598 },
+    { "lat": 47.6571464, "lon": -122.3067000 },
+    { "lat": 47.6571365, "lon": -122.3066856 },
+    { "lat": 47.6571478, "lon": -122.3066685 },
+    { "lat": 47.6571263, "lon": -122.3066375 },
+    { "lat": 47.6574812, "lon": -122.3060987 },
+    { "lat": 47.6573484, "lon": -122.3059071 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "2012",
+    "addr:postcode": "98195",
+    "addr:street": "Northeast Skagit Lane",
+    "building": "university",
+    "building:levels": "4",
+    "name": "Miller Hall",
+    "name:etymology": "William Winlock Miller",
+    "old_name:-1954": "Education Hall",
+    "opening_hours": "Mo-Fr 07:00-22:00; Sa 07:00-19:00; PH off",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "MLR",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1922",
+    "wikidata": "Q111456811"
+  }
+},
+{
+  "type": "way",
+  "id": 222822705,
+  "bounds": {
+    "minlat": 47.6546616,
+    "minlon": -122.3056892,
+    "maxlat": 47.6558693,
+    "maxlon": -122.3046300
+  },
+  "geometry": [
+    { "lat": 47.6549758, "lon": -122.3049565 },
+    { "lat": 47.6549148, "lon": -122.3051535 },
+    { "lat": 47.6548916, "lon": -122.3052284 },
+    { "lat": 47.6547306, "lon": -122.3051184 },
+    { "lat": 47.6546616, "lon": -122.3053414 },
+    { "lat": 47.6549299, "lon": -122.3055246 },
+    { "lat": 47.6549204, "lon": -122.3055551 },
+    { "lat": 47.6549491, "lon": -122.3055746 },
+    { "lat": 47.6549734, "lon": -122.3055912 },
+    { "lat": 47.6549809, "lon": -122.3055963 },
+    { "lat": 47.6549883, "lon": -122.3055724 },
+    { "lat": 47.6549911, "lon": -122.3055635 },
+    { "lat": 47.6550972, "lon": -122.3055377 },
+    { "lat": 47.6551154, "lon": -122.3056892 },
+    { "lat": 47.6551440, "lon": -122.3056814 },
+    { "lat": 47.6551792, "lon": -122.3056720 },
+    { "lat": 47.6551699, "lon": -122.3055946 },
+    { "lat": 47.6554896, "lon": -122.3055099 },
+    { "lat": 47.6554933, "lon": -122.3055404 },
+    { "lat": 47.6555421, "lon": -122.3055274 },
+    { "lat": 47.6555445, "lon": -122.3055475 },
+    { "lat": 47.6555803, "lon": -122.3055380 },
+    { "lat": 47.6556206, "lon": -122.3055274 },
+    { "lat": 47.6556182, "lon": -122.3055073 },
+    { "lat": 47.6556690, "lon": -122.3054939 },
+    { "lat": 47.6556539, "lon": -122.3053682 },
+    { "lat": 47.6558693, "lon": -122.3053111 },
+    { "lat": 47.6558526, "lon": -122.3051721 },
+    { "lat": 47.6558384, "lon": -122.3050542 },
+    { "lat": 47.6558087, "lon": -122.3048071 },
+    { "lat": 47.6556798, "lon": -122.3048413 },
+    { "lat": 47.6556724, "lon": -122.3047796 },
+    { "lat": 47.6556163, "lon": -122.3047945 },
+    { "lat": 47.6556142, "lon": -122.3047770 },
+    { "lat": 47.6555109, "lon": -122.3048044 },
+    { "lat": 47.6555011, "lon": -122.3047220 },
+    { "lat": 47.6554900, "lon": -122.3046300 },
+    { "lat": 47.6552473, "lon": -122.3046943 },
+    { "lat": 47.6551070, "lon": -122.3047315 },
+    { "lat": 47.6550625, "lon": -122.3047433 },
+    { "lat": 47.6549951, "lon": -122.3049482 },
+    { "lat": 47.6549758, "lon": -122.3049565 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4001",
+    "addr:postcode": "98195",
+    "addr:street": "East Stevens Way Northeast",
+    "alt_name": "The HUB",
+    "building": "university",
+    "building:levels": "4",
+    "building:levels:underground": "2",
+    "building:material": "brick",
+    "contact:email": "thehub@uw.edu",
+    "contact:facebook": "https://www.facebook.com/hubatuw",
+    "contact:flickr": "https://www.flickr.com/photos/thehub_uw/",
+    "contact:instagram": "https://www.instagram.com/hubatuw/",
+    "contact:phone": "+1-206-543-8191",
+    "contact:twitter": "https://twitter.com/hubatuw",
+    "contact:website": "https://hub.washington.edu/",
+    "name": "Husky Union Building",
+    "opening_hours": "Mo-Fr 10:00-17:30; Sa-Su off",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "HUB",
+    "roof:colour": "white",
+    "source": "data.seattle.gov;King County GIS",
+    "start_date": "1949-10-25",
+    "wheelchair": "yes",
+    "wheelchair:description": "All main entrances are accessible and have power-assisted doors.",
+    "wikidata": "Q5949405",
+    "wikimedia_commons": "Category:Husky Union Building",
+    "wikipedia": "en:Husky Union Building"
+  }
+},
+{
+  "type": "way",
+  "id": 222825537,
+  "bounds": {
+    "minlat": 47.6530596,
+    "minlon": -122.3094061,
+    "maxlat": 47.6539047,
+    "maxlon": -122.3082754
+  },
+  "geometry": [
+    { "lat": 47.6532221, "lon": -122.3084683 },
+    { "lat": 47.6532597, "lon": -122.3083546 },
+    { "lat": 47.6532822, "lon": -122.3082754 },
+    { "lat": 47.6534952, "lon": -122.3084244 },
+    { "lat": 47.6535004, "lon": -122.3084081 },
+    { "lat": 47.6535939, "lon": -122.3084730 },
+    { "lat": 47.6537128, "lon": -122.3085566 },
+    { "lat": 47.6537059, "lon": -122.3085783 },
+    { "lat": 47.6538365, "lon": -122.3086697 },
+    { "lat": 47.6538952, "lon": -122.3087107 },
+    { "lat": 47.6538753, "lon": -122.3087735 },
+    { "lat": 47.6539047, "lon": -122.3087941 },
+    { "lat": 47.6539003, "lon": -122.3088078 },
+    { "lat": 47.6538948, "lon": -122.3088252 },
+    { "lat": 47.6538844, "lon": -122.3088581 },
+    { "lat": 47.6538576, "lon": -122.3088394 },
+    { "lat": 47.6538346, "lon": -122.3089121 },
+    { "lat": 47.6537457, "lon": -122.3088499 },
+    { "lat": 47.6536538, "lon": -122.3091396 },
+    { "lat": 47.6537309, "lon": -122.3091935 },
+    { "lat": 47.6537424, "lon": -122.3092015 },
+    { "lat": 47.6536775, "lon": -122.3094061 },
+    { "lat": 47.6534821, "lon": -122.3092694 },
+    { "lat": 47.6534686, "lon": -122.3093118 },
+    { "lat": 47.6533610, "lon": -122.3092375 },
+    { "lat": 47.6532342, "lon": -122.3091479 },
+    { "lat": 47.6532410, "lon": -122.3091266 },
+    { "lat": 47.6530596, "lon": -122.3089833 },
+    { "lat": 47.6531201, "lon": -122.3087941 },
+    { "lat": 47.6531273, "lon": -122.3087742 },
+    { "lat": 47.6532207, "lon": -122.3088413 },
+    { "lat": 47.6533127, "lon": -122.3085532 },
+    { "lat": 47.6532161, "lon": -122.3084837 },
+    { "lat": 47.6532221, "lon": -122.3084683 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3900",
+    "addr:postcode": "98195",
+    "addr:street": "Okanogan Lane Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "building:material": "brick",
+    "name": "Bagley Hall",
+    "name:etymology": "Daniel Bagley",
+    "name:etymology:wikidata": "Q20806907",
+    "name:etymology:wikipedia": "en:Daniel Bagley",
+    "opening_hours": "Mo-Fr 07:00-22:00; PH off",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "BAG",
+    "roof:colour": "gray",
+    "source": "King County GIS;data.seattle.gov",
+    "wikidata": "Q99705102"
+  }
+},
+{
+  "type": "way",
+  "id": 222825547,
+  "bounds": {
+    "minlat": 47.6541200,
+    "minlon": -122.3057579,
+    "maxlat": 47.6541614,
+    "maxlon": -122.3056908
+  },
+  "geometry": [
+    { "lat": 47.6541364, "lon": -122.3056908 },
+    { "lat": 47.6541200, "lon": -122.3057392 },
+    { "lat": 47.6541449, "lon": -122.3057579 },
+    { "lat": 47.6541614, "lon": -122.3057095 },
+    { "lat": 47.6541364, "lon": -122.3056908 }
+  ],
+  "tags": {
+    "building": "yes",
+    "operator": "University of Washington",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 222830381,
+  "bounds": {
+    "minlat": 47.6554246,
+    "minlon": -122.3126974,
+    "maxlat": 47.6558166,
+    "maxlon": -122.3122707
+  },
+  "geometry": [
+    { "lat": 47.6558152, "lon": -122.3122707 },
+    { "lat": 47.6556628, "lon": -122.3122728 },
+    { "lat": 47.6555284, "lon": -122.3122746 },
+    { "lat": 47.6554246, "lon": -122.3122760 },
+    { "lat": 47.6554272, "lon": -122.3126974 },
+    { "lat": 47.6555772, "lon": -122.3126953 },
+    { "lat": 47.6555756, "lon": -122.3124383 },
+    { "lat": 47.6556102, "lon": -122.3124378 },
+    { "lat": 47.6556106, "lon": -122.3124974 },
+    { "lat": 47.6556543, "lon": -122.3124968 },
+    { "lat": 47.6556556, "lon": -122.3126961 },
+    { "lat": 47.6557724, "lon": -122.3126945 },
+    { "lat": 47.6557712, "lon": -122.3124962 },
+    { "lat": 47.6558166, "lon": -122.3124956 },
+    { "lat": 47.6558157, "lon": -122.3123543 },
+    { "lat": 47.6558152, "lon": -122.3122707 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "4001",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "15th Avenue Northeast",
+    "amenity": "student_accommodation",
+    "building": "apartments",
+    "building:colour": "tan",
+    "building:levels": "9",
+    "building:material": "brick",
+    "name": "Commodore-Duchess Apartments",
+    "operator": "Blanton Turner",
+    "owner": "University of Washington",
+    "ref": "CDA",
+    "roof:shape": "flat",
+    "start_date": "1927",
+    "website": "https://www.commodoreduchess.com"
+  }
+},
+{
+  "type": "way",
+  "id": 222830382,
+  "bounds": {
+    "minlat": 47.6554250,
+    "minlon": -122.3131901,
+    "maxlat": 47.6555484,
+    "maxlon": -122.3127473
+  },
+  "geometry": [
+    { "lat": 47.6555380, "lon": -122.3130577 },
+    { "lat": 47.6555348, "lon": -122.3127473 },
+    { "lat": 47.6554250, "lon": -122.3127498 },
+    { "lat": 47.6554295, "lon": -122.3131901 },
+    { "lat": 47.6555223, "lon": -122.3131880 },
+    { "lat": 47.6555222, "lon": -122.3131813 },
+    { "lat": 47.6555484, "lon": -122.3131807 },
+    { "lat": 47.6555471, "lon": -122.3130575 },
+    { "lat": 47.6555380, "lon": -122.3130577 }
+  ],
+  "tags": {
+    "alt_name": "Ye College Inn",
+    "architect": "Graham & Myers",
+    "architect:wikidata": "Q6235938",
+    "architect:wikipedia": "en:John Graham & Company",
+    "building": "hotel",
+    "building:levels": "3",
+    "name": "The College Inn",
+    "roof:levels": "1",
+    "start_date": "1908",
+    "wikidata": "Q14713955",
+    "wikimedia_commons": "Category:College Inn, Seattle",
+    "wikipedia": "en:The College Inn"
+  }
+},
+{
+  "type": "way",
+  "id": 222830383,
+  "bounds": {
+    "minlat": 47.6558444,
+    "minlon": -122.3118983,
+    "maxlat": 47.6567444,
+    "maxlon": -122.3114498
+  },
+  "geometry": [
+    { "lat": 47.6562412, "lon": -122.3116290 },
+    { "lat": 47.6563533, "lon": -122.3116270 },
+    { "lat": 47.6563543, "lon": -122.3117360 },
+    { "lat": 47.6563543, "lon": -122.3117419 },
+    { "lat": 47.6563554, "lon": -122.3118540 },
+    { "lat": 47.6564203, "lon": -122.3118530 },
+    { "lat": 47.6564201, "lon": -122.3118356 },
+    { "lat": 47.6566309, "lon": -122.3118312 },
+    { "lat": 47.6566309, "lon": -122.3118402 },
+    { "lat": 47.6566741, "lon": -122.3118393 },
+    { "lat": 47.6566740, "lon": -122.3118303 },
+    { "lat": 47.6566839, "lon": -122.3118301 },
+    { "lat": 47.6566820, "lon": -122.3116288 },
+    { "lat": 47.6566816, "lon": -122.3115886 },
+    { "lat": 47.6567444, "lon": -122.3115873 },
+    { "lat": 47.6567431, "lon": -122.3114498 },
+    { "lat": 47.6562332, "lon": -122.3114605 },
+    { "lat": 47.6561887, "lon": -122.3114614 },
+    { "lat": 47.6559375, "lon": -122.3114666 },
+    { "lat": 47.6558444, "lon": -122.3114686 },
+    { "lat": 47.6558457, "lon": -122.3116124 },
+    { "lat": 47.6559323, "lon": -122.3116105 },
+    { "lat": 47.6559325, "lon": -122.3116333 },
+    { "lat": 47.6559336, "lon": -122.3118115 },
+    { "lat": 47.6559431, "lon": -122.3118126 },
+    { "lat": 47.6559526, "lon": -122.3118192 },
+    { "lat": 47.6559592, "lon": -122.3118300 },
+    { "lat": 47.6559647, "lon": -122.3118430 },
+    { "lat": 47.6559678, "lon": -122.3118580 },
+    { "lat": 47.6559968, "lon": -122.3118580 },
+    { "lat": 47.6559972, "lon": -122.3118983 },
+    { "lat": 47.6561790, "lon": -122.3118945 },
+    { "lat": 47.6561786, "lon": -122.3118520 },
+    { "lat": 47.6562436, "lon": -122.3118500 },
+    { "lat": 47.6562430, "lon": -122.3117881 },
+    { "lat": 47.6562412, "lon": -122.3116290 }
+  ],
+  "tags": {
+    "building": "university",
+    "building:levels": "3",
+    "operator": "University of Washington",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 222830384,
+  "bounds": {
+    "minlat": 47.6555925,
+    "minlon": -122.3115570,
+    "maxlat": 47.6556770,
+    "maxlon": -122.3114715
+  },
+  "geometry": [
+    { "lat": 47.6555925, "lon": -122.3114715 },
+    { "lat": 47.6555925, "lon": -122.3115569 },
+    { "lat": 47.6556770, "lon": -122.3115570 },
+    { "lat": 47.6556770, "lon": -122.3114717 },
+    { "lat": 47.6555925, "lon": -122.3114715 }
+  ],
+  "tags": {
+    "building": "yes",
+    "operator": "University of Washington",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 222830385,
+  "bounds": {
+    "minlat": 47.6535486,
+    "minlon": -122.3124233,
+    "maxlat": 47.6538175,
+    "maxlon": -122.3123492
+  },
+  "geometry": [
+    { "lat": 47.6538104, "lon": -122.3123492 },
+    { "lat": 47.6535486, "lon": -122.3123523 },
+    { "lat": 47.6535488, "lon": -122.3123876 },
+    { "lat": 47.6535494, "lon": -122.3124133 },
+    { "lat": 47.6535545, "lon": -122.3124233 },
+    { "lat": 47.6538175, "lon": -122.3124181 },
+    { "lat": 47.6538168, "lon": -122.3123582 },
+    { "lat": 47.6538104, "lon": -122.3123492 }
+  ],
+  "tags": {
+    "building": "industrial",
+    "operator": "University of Washington",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 222830386,
+  "bounds": {
+    "minlat": 47.6535313,
+    "minlon": -122.3127235,
+    "maxlat": 47.6537937,
+    "maxlon": -122.3126443
+  },
+  "geometry": [
+    { "lat": 47.6537929, "lon": -122.3126443 },
+    { "lat": 47.6535313, "lon": -122.3126515 },
+    { "lat": 47.6535315, "lon": -122.3126831 },
+    { "lat": 47.6535382, "lon": -122.3127025 },
+    { "lat": 47.6535500, "lon": -122.3127161 },
+    { "lat": 47.6535635, "lon": -122.3127235 },
+    { "lat": 47.6537883, "lon": -122.3127205 },
+    { "lat": 47.6537937, "lon": -122.3127047 },
+    { "lat": 47.6537929, "lon": -122.3126443 }
+  ],
+  "tags": {
+    "building": "industrial",
+    "operator": "University of Washington",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 222831554,
+  "bounds": {
+    "minlat": 47.6551109,
+    "minlon": -122.3074772,
+    "maxlat": 47.6559754,
+    "maxlon": -122.3065718
+  },
+  "geometry": [
+    { "lat": 47.6558897, "lon": -122.3073774 },
+    { "lat": 47.6559264, "lon": -122.3073638 },
+    { "lat": 47.6559754, "lon": -122.3073504 },
+    { "lat": 47.6559698, "lon": -122.3072973 },
+    { "lat": 47.6559644, "lon": -122.3072461 },
+    { "lat": 47.6559127, "lon": -122.3072594 },
+    { "lat": 47.6558635, "lon": -122.3072720 },
+    { "lat": 47.6557913, "lon": -122.3066681 },
+    { "lat": 47.6557065, "lon": -122.3066919 },
+    { "lat": 47.6557228, "lon": -122.3068335 },
+    { "lat": 47.6557098, "lon": -122.3068739 },
+    { "lat": 47.6556337, "lon": -122.3068217 },
+    { "lat": 47.6552691, "lon": -122.3065718 },
+    { "lat": 47.6551109, "lon": -122.3070515 },
+    { "lat": 47.6554890, "lon": -122.3073088 },
+    { "lat": 47.6555528, "lon": -122.3073567 },
+    { "lat": 47.6555182, "lon": -122.3074670 },
+    { "lat": 47.6555261, "lon": -122.3074772 },
+    { "lat": 47.6558897, "lon": -122.3073774 }
+  ],
+  "tags": {
+    "amenity": "library",
+    "building": "university",
+    "building:levels": "5",
+    "building:material": "brick",
+    "name": "Allen Library",
+    "name:etymology": "Kenneth S. Allen",
+    "official_name": "Kenneth S. Allen Library",
+    "opening_hours": "Mo-Th 09:00-20:00; Fr 09:00-17:00; Su 13:00-20:00",
+    "operator": "University of Washington Libraries",
+    "operator:type": "university",
+    "operator:wikidata": "Q7896575",
+    "ref": "ALB",
+    "roof:colour": "gray",
+    "wheelchair": "yes",
+    "wikidata": "Q107290624"
+  }
+},
+{
+  "type": "way",
+  "id": 223361829,
+  "bounds": {
+    "minlat": 47.6580089,
+    "minlon": -122.3126092,
+    "maxlat": 47.6582149,
+    "maxlon": -122.3122059
+  },
+  "geometry": [
+    { "lat": 47.6580169, "lon": -122.3126092 },
+    { "lat": 47.6581926, "lon": -122.3126062 },
+    { "lat": 47.6581919, "lon": -122.3125007 },
+    { "lat": 47.6581959, "lon": -122.3125006 },
+    { "lat": 47.6581946, "lon": -122.3122841 },
+    { "lat": 47.6582042, "lon": -122.3122840 },
+    { "lat": 47.6582149, "lon": -122.3122664 },
+    { "lat": 47.6582137, "lon": -122.3122239 },
+    { "lat": 47.6581967, "lon": -122.3122059 },
+    { "lat": 47.6580089, "lon": -122.3122177 },
+    { "lat": 47.6580169, "lon": -122.3126092 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "1417",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "Northeast 42nd Street",
+    "building": "university",
+    "building:levels": "2",
+    "building:levels:underground": "1",
+    "building:material": "brick",
+    "ele": "48",
+    "name": "Eagleson Hall",
+    "name:en": "Eagleson Hall",
+    "name:etymology": "Jimmy Eagleson",
+    "name:etymology:wikidata": "Q98504885",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "EGL",
+    "roof:levels": "1",
+    "roof:shape": "hipped",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "1922",
+    "wikidata": "Q98504426"
+  }
+},
+{
+  "type": "way",
+  "id": 223361830,
+  "bounds": {
+    "minlat": 47.6576216,
+    "minlon": -122.3128207,
+    "maxlat": 47.6576838,
+    "maxlon": -122.3126974
+  },
+  "geometry": [
+    { "lat": 47.6576216, "lon": -122.3126990 },
+    { "lat": 47.6576231, "lon": -122.3128207 },
+    { "lat": 47.6576838, "lon": -122.3128190 },
+    { "lat": 47.6576823, "lon": -122.3126974 },
+    { "lat": 47.6576216, "lon": -122.3126990 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4128",
+    "addr:postcode": "98105",
+    "addr:street": "University Way Northeast",
+    "building": "yes",
+    "source": "King County GIS;data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 223361831,
+  "bounds": {
+    "minlat": 47.6569481,
+    "minlon": -122.3126113,
+    "maxlat": 47.6579989,
+    "maxlon": -122.3122614
+  },
+  "geometry": [
+    { "lat": 47.6579983, "lon": -122.3123349 },
+    { "lat": 47.6578936, "lon": -122.3123365 },
+    { "lat": 47.6578931, "lon": -122.3122614 },
+    { "lat": 47.6575508, "lon": -122.3122668 },
+    { "lat": 47.6575097, "lon": -122.3123761 },
+    { "lat": 47.6574302, "lon": -122.3123773 },
+    { "lat": 47.6574294, "lon": -122.3122722 },
+    { "lat": 47.6570379, "lon": -122.3122784 },
+    { "lat": 47.6570386, "lon": -122.3123812 },
+    { "lat": 47.6569481, "lon": -122.3123826 },
+    { "lat": 47.6569497, "lon": -122.3126041 },
+    { "lat": 47.6571204, "lon": -122.3126014 },
+    { "lat": 47.6571205, "lon": -122.3126113 },
+    { "lat": 47.6572537, "lon": -122.3126092 },
+    { "lat": 47.6572536, "lon": -122.3125982 },
+    { "lat": 47.6573219, "lon": -122.3125971 },
+    { "lat": 47.6573220, "lon": -122.3126033 },
+    { "lat": 47.6574328, "lon": -122.3126016 },
+    { "lat": 47.6574328, "lon": -122.3125932 },
+    { "lat": 47.6575210, "lon": -122.3125918 },
+    { "lat": 47.6575539, "lon": -122.3124939 },
+    { "lat": 47.6576094, "lon": -122.3124930 },
+    { "lat": 47.6576101, "lon": -122.3125859 },
+    { "lat": 47.6578838, "lon": -122.3125816 },
+    { "lat": 47.6578828, "lon": -122.3124347 },
+    { "lat": 47.6579006, "lon": -122.3123943 },
+    { "lat": 47.6579989, "lon": -122.3123928 },
+    { "lat": 47.6579983, "lon": -122.3123349 }
+  ],
+  "tags": {
+    "addr:state": "WA",
+    "building": "university",
+    "building:levels": "4",
+    "building:levels:underground": "1",
+    "ele": "45",
+    "gnis:feature_id": "2461371",
+    "name": "Social Work Speech and Hearing Sciences Building",
+    "name:en": "Social Work Speech and Hearing Sciences Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "SWS",
+    "source": "data.seattle.gov",
+    "start_date": "1980",
+    "wikidata": "Q17028141",
+    "wikipedia": "en:University of Washington School of Social Work"
+  }
+},
+{
+  "type": "way",
+  "id": 223361832,
+  "bounds": {
+    "minlat": 47.6576871,
+    "minlon": -122.3131010,
+    "maxlat": 47.6578999,
+    "maxlon": -122.3127311
+  },
+  "geometry": [
+    { "lat": 47.6577012, "lon": -122.3131005 },
+    { "lat": 47.6578738, "lon": -122.3130959 },
+    { "lat": 47.6578739, "lon": -122.3131010 },
+    { "lat": 47.6578999, "lon": -122.3131003 },
+    { "lat": 47.6578954, "lon": -122.3127311 },
+    { "lat": 47.6577168, "lon": -122.3127359 },
+    { "lat": 47.6577175, "lon": -122.3127894 },
+    { "lat": 47.6577087, "lon": -122.3127896 },
+    { "lat": 47.6577088, "lon": -122.3127975 },
+    { "lat": 47.6576871, "lon": -122.3127981 },
+    { "lat": 47.6576893, "lon": -122.3129750 },
+    { "lat": 47.6576996, "lon": -122.3129747 },
+    { "lat": 47.6577012, "lon": -122.3131005 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "4130",
+    "addr:postcode": "98105",
+    "addr:street": "University Way Northeast",
+    "amenity": "place_of_worship",
+    "building": "yes",
+    "check_date": "2025-11-08",
+    "denomination": "lutheran",
+    "ele": "42",
+    "gnis:feature_id": "2461393",
+    "name": "Chapel On The Ave",
+    "religion": "christian",
+    "source": "King County GIS;data.seattle.gov",
+    "website": "https://www.churchontheave.org/"
+  }
+},
+{
+  "type": "way",
+  "id": 223361834,
+  "bounds": {
+    "minlat": 47.6571351,
+    "minlon": -122.3131271,
+    "maxlat": 47.6572424,
+    "maxlon": -122.3127272
+  },
+  "geometry": [
+    { "lat": 47.6572424, "lon": -122.3131267 },
+    { "lat": 47.6572384, "lon": -122.3128008 },
+    { "lat": 47.6571697, "lon": -122.3128029 },
+    { "lat": 47.6571686, "lon": -122.3127272 },
+    { "lat": 47.6571351, "lon": -122.3127282 },
+    { "lat": 47.6571406, "lon": -122.3131271 },
+    { "lat": 47.6572424, "lon": -122.3131267 }
+  ],
+  "tags": {
+    "building": "retail"
+  }
+},
+{
+  "type": "way",
+  "id": 223362697,
+  "bounds": {
+    "minlat": 47.6583929,
+    "minlon": -122.3131035,
+    "maxlat": 47.6586102,
+    "maxlon": -122.3126735
+  },
+  "geometry": [
+    { "lat": 47.6586080, "lon": -122.3128708 },
+    { "lat": 47.6586060, "lon": -122.3126735 },
+    { "lat": 47.6584037, "lon": -122.3126780 },
+    { "lat": 47.6583929, "lon": -122.3126782 },
+    { "lat": 47.6583936, "lon": -122.3127461 },
+    { "lat": 47.6583954, "lon": -122.3129242 },
+    { "lat": 47.6583972, "lon": -122.3131035 },
+    { "lat": 47.6584535, "lon": -122.3131023 },
+    { "lat": 47.6585905, "lon": -122.3130992 },
+    { "lat": 47.6585903, "lon": -122.3130844 },
+    { "lat": 47.6586000, "lon": -122.3130842 },
+    { "lat": 47.6586102, "lon": -122.3130839 },
+    { "lat": 47.6586092, "lon": -122.3129825 },
+    { "lat": 47.6586080, "lon": -122.3128708 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "1404",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "Northeast 42nd Street",
+    "building": "retail",
+    "building:levels": "1",
+    "building:material": "brick"
+  }
+},
+{
+  "type": "way",
+  "id": 247147353,
+  "bounds": {
+    "minlat": 47.6554057,
+    "minlon": -122.3089088,
+    "maxlat": 47.6554401,
+    "maxlon": -122.3088842
+  },
+  "geometry": [
+    { "lat": 47.6554057, "lon": -122.3088842 },
+    { "lat": 47.6554401, "lon": -122.3089088 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 261316395,
+  "bounds": {
+    "minlat": 47.6541269,
+    "minlon": -122.3101875,
+    "maxlat": 47.6546036,
+    "maxlon": -122.3095888
+  },
+  "geometry": [
+    { "lat": 47.6546036, "lon": -122.3098044 },
+    { "lat": 47.6545753, "lon": -122.3098939 },
+    { "lat": 47.6545800, "lon": -122.3098972 },
+    { "lat": 47.6545017, "lon": -122.3101443 },
+    { "lat": 47.6544880, "lon": -122.3101875 },
+    { "lat": 47.6544521, "lon": -122.3101624 },
+    { "lat": 47.6544197, "lon": -122.3101398 },
+    { "lat": 47.6544326, "lon": -122.3100989 },
+    { "lat": 47.6544153, "lon": -122.3100868 },
+    { "lat": 47.6541905, "lon": -122.3099298 },
+    { "lat": 47.6541269, "lon": -122.3098854 },
+    { "lat": 47.6541764, "lon": -122.3097293 },
+    { "lat": 47.6541496, "lon": -122.3097106 },
+    { "lat": 47.6541882, "lon": -122.3095888 },
+    { "lat": 47.6542403, "lon": -122.3096252 },
+    { "lat": 47.6544222, "lon": -122.3097522 },
+    { "lat": 47.6544804, "lon": -122.3097929 },
+    { "lat": 47.6544934, "lon": -122.3098019 },
+    { "lat": 47.6545339, "lon": -122.3098302 },
+    { "lat": 47.6545532, "lon": -122.3097692 },
+    { "lat": 47.6546036, "lon": -122.3098044 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3946",
+    "addr:postcode": "98105",
+    "addr:street": "West Stevens Way Northeast",
+    "building": "university",
+    "building:levels": "3",
+    "height": "28",
+    "name": "Molecular Engineering and Sciences",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "ref": "MOL",
+    "roof:levels": "1",
+    "source:addr:id": "982370",
+    "start_date": "2012",
+    "wikidata": "Q98242488"
+  }
+},
+{
+  "type": "way",
+  "id": 261468572,
+  "bounds": {
+    "minlat": 47.6541854,
+    "minlon": -122.3102095,
+    "maxlat": 47.6542159,
+    "maxlon": -122.3099821
+  },
+  "geometry": [
+    { "lat": 47.6542159, "lon": -122.3102095 },
+    { "lat": 47.6541856, "lon": -122.3102064 },
+    { "lat": 47.6541854, "lon": -122.3099822 },
+    { "lat": 47.6542136, "lon": -122.3099821 },
+    { "lat": 47.6542159, "lon": -122.3102095 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "building": "roof"
+  }
+},
+{
+  "type": "way",
+  "id": 277939136,
+  "bounds": {
+    "minlat": 47.6550138,
+    "minlon": -122.3094348,
+    "maxlat": 47.6550474,
+    "maxlon": -122.3094109
+  },
+  "geometry": [
+    { "lat": 47.6550474, "lon": -122.3094348 },
+    { "lat": 47.6550138, "lon": -122.3094109 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 277939139,
+  "bounds": {
+    "minlat": 47.6541345,
+    "minlon": -122.3097117,
+    "maxlat": 47.6541752,
+    "maxlon": -122.3095816
+  },
+  "geometry": [
+    { "lat": 47.6541345, "lon": -122.3097117 },
+    { "lat": 47.6541752, "lon": -122.3095816 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 343381957,
+  "bounds": {
+    "minlat": 47.6568876,
+    "minlon": -122.3066947,
+    "maxlat": 47.6569054,
+    "maxlon": -122.3066689
+  },
+  "geometry": [
+    { "lat": 47.6569054, "lon": -122.3066947 },
+    { "lat": 47.6568876, "lon": -122.3066689 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "name": "King Lane Northeast",
+    "name:etymology": "King County, Washington",
+    "name:etymology:wikidata": "Q108861",
+    "name:etymology:wikipedia": "en:King County, Washington"
+  }
+},
+{
+  "type": "way",
+  "id": 343381961,
+  "bounds": {
+    "minlat": 47.6565890,
+    "minlon": -122.3075025,
+    "maxlat": 47.6566144,
+    "maxlon": -122.3074583
+  },
+  "geometry": [
+    { "lat": 47.6566144, "lon": -122.3075025 },
+    { "lat": 47.6565890, "lon": -122.3074583 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 343381962,
+  "bounds": {
+    "minlat": 47.6570970,
+    "minlon": -122.3082141,
+    "maxlat": 47.6571359,
+    "maxlon": -122.3081586
+  },
+  "geometry": [
+    { "lat": 47.6570970, "lon": -122.3081586 },
+    { "lat": 47.6571359, "lon": -122.3082141 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 343384214,
+  "bounds": {
+    "minlat": 47.6545908,
+    "minlon": -122.3106557,
+    "maxlat": 47.6546263,
+    "maxlon": -122.3105149
+  },
+  "geometry": [
+    { "lat": 47.6546263, "lon": -122.3105149 },
+    { "lat": 47.6545908, "lon": -122.3106557 }
+  ],
+  "tags": {
+    "check_date:ramp": "2025-11-02",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "12",
+    "surface": "paving_stones",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 343397319,
+  "bounds": {
+    "minlat": 47.6553811,
+    "minlon": -122.3114997,
+    "maxlat": 47.6554158,
+    "maxlon": -122.3114682
+  },
+  "geometry": [
+    { "lat": 47.6553811, "lon": -122.3114997 },
+    { "lat": 47.6553974, "lon": -122.3114813 },
+    { "lat": 47.6554158, "lon": -122.3114682 }
+  ],
+  "tags": {
+    "handrail:left": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "surface": "paved",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 343397328,
+  "bounds": {
+    "minlat": 47.6552893,
+    "minlon": -122.3100170,
+    "maxlat": 47.6554816,
+    "maxlon": -122.3100137
+  },
+  "geometry": [
+    { "lat": 47.6554816, "lon": -122.3100137 },
+    { "lat": 47.6552893, "lon": -122.3100170 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "28",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 343397343,
+  "bounds": {
+    "minlat": 47.6571369,
+    "minlon": -122.3110740,
+    "maxlat": 47.6571520,
+    "maxlon": -122.3110740
+  },
+  "geometry": [
+    { "lat": 47.6571369, "lon": -122.3110740 },
+    { "lat": 47.6571520, "lon": -122.3110740 }
+  ],
+  "tags": {
+    "check_date:handrail": "2025-02-24",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 343405381,
+  "bounds": {
+    "minlat": 47.6569459,
+    "minlon": -122.3115393,
+    "maxlat": 47.6569459,
+    "maxlon": -122.3114984
+  },
+  "geometry": [
+    { "lat": 47.6569459, "lon": -122.3115393 },
+    { "lat": 47.6569459, "lon": -122.3114984 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "separate",
+    "step_count": "8",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 343405399,
+  "bounds": {
+    "minlat": 47.6546148,
+    "minlon": -122.3093638,
+    "maxlat": 47.6546374,
+    "maxlon": -122.3092915
+  },
+  "geometry": [
+    { "lat": 47.6546148, "lon": -122.3093638 },
+    { "lat": 47.6546374, "lon": -122.3092915 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 343405406,
+  "bounds": {
+    "minlat": 47.6544230,
+    "minlon": -122.3072872,
+    "maxlat": 47.6544733,
+    "maxlon": -122.3072511
+  },
+  "geometry": [
+    { "lat": 47.6544230, "lon": -122.3072511 },
+    { "lat": 47.6544733, "lon": -122.3072872 }
+  ],
+  "tags": {
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no",
+    "step_count": "4",
+    "surface": "asphalt",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 343611812,
+  "bounds": {
+    "minlat": 47.6561887,
+    "minlon": -122.3115118,
+    "maxlat": 47.6561982,
+    "maxlon": -122.3114614
+  },
+  "geometry": [
+    { "lat": 47.6561982, "lon": -122.3115118 },
+    { "lat": 47.6561887, "lon": -122.3114614 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 343612259,
+  "bounds": {
+    "minlat": 47.6566906,
+    "minlon": -122.3081101,
+    "maxlat": 47.6567021,
+    "maxlon": -122.3080927
+  },
+  "geometry": [
+    { "lat": 47.6566906, "lon": -122.3081101 },
+    { "lat": 47.6567021, "lon": -122.3080927 }
+  ],
+  "tags": {
+    "check_date:handrail": "2025-02-27",
+    "foot": "yes",
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "name": "Northeast Pierce Lane",
+    "name:etymology": "Pierce County, Washington",
+    "name:etymology:wikidata": "Q156459",
+    "name:etymology:wikipedia": "en:Pierce County, Washington",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "step_count": "3",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 343612261,
+  "bounds": {
+    "minlat": 47.6545778,
+    "minlon": -122.3067900,
+    "maxlat": 47.6545938,
+    "maxlon": -122.3067372
+  },
+  "geometry": [
+    { "lat": 47.6545938, "lon": -122.3067372 },
+    { "lat": 47.6545778, "lon": -122.3067900 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 361455664,
+  "bounds": {
+    "minlat": 47.6552920,
+    "minlon": -122.3116336,
+    "maxlat": 47.6553203,
+    "maxlon": -122.3115707
+  },
+  "geometry": [
+    { "lat": 47.6553203, "lon": -122.3116256 },
+    { "lat": 47.6553074, "lon": -122.3116336 },
+    { "lat": 47.6552920, "lon": -122.3115787 },
+    { "lat": 47.6553049, "lon": -122.3115707 },
+    { "lat": 47.6553203, "lon": -122.3116256 }
+  ],
+  "tags": {
+    "building": "gatehouse",
+    "name": "Gatehouse 5",
+    "official_name": "Gatehouse 5 - NE 40th/West Stevens",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "owner": "University of Washington",
+    "ref": "GH5",
+    "start_date": "1969"
+  }
+},
+{
+  "type": "way",
+  "id": 382759627,
+  "bounds": {
+    "minlat": 47.6558456,
+    "minlon": -122.3114399,
+    "maxlat": 47.6562945,
+    "maxlon": -122.3103022
+  },
+  "geometry": [
+    { "lat": 47.6562939, "lon": -122.3113734 },
+    { "lat": 47.6562945, "lon": -122.3114287 },
+    { "lat": 47.6561834, "lon": -122.3114315 },
+    { "lat": 47.6558470, "lon": -122.3114399 },
+    { "lat": 47.6558464, "lon": -122.3113886 },
+    { "lat": 47.6558456, "lon": -122.3113190 },
+    { "lat": 47.6559962, "lon": -122.3109150 },
+    { "lat": 47.6559955, "lon": -122.3108191 },
+    { "lat": 47.6559948, "lon": -122.3107322 },
+    { "lat": 47.6559652, "lon": -122.3107327 },
+    { "lat": 47.6559648, "lon": -122.3106739 },
+    { "lat": 47.6559643, "lon": -122.3106174 },
+    { "lat": 47.6559640, "lon": -122.3105647 },
+    { "lat": 47.6559617, "lon": -122.3103091 },
+    { "lat": 47.6559992, "lon": -122.3103076 },
+    { "lat": 47.6560164, "lon": -122.3103069 },
+    { "lat": 47.6560664, "lon": -122.3103061 },
+    { "lat": 47.6561440, "lon": -122.3103033 },
+    { "lat": 47.6561746, "lon": -122.3103022 },
+    { "lat": 47.6561756, "lon": -122.3104043 },
+    { "lat": 47.6561770, "lon": -122.3105490 },
+    { "lat": 47.6561119, "lon": -122.3105529 },
+    { "lat": 47.6561135, "lon": -122.3107789 },
+    { "lat": 47.6561188, "lon": -122.3108162 },
+    { "lat": 47.6561208, "lon": -122.3108298 },
+    { "lat": 47.6561208, "lon": -122.3109228 },
+    { "lat": 47.6562311, "lon": -122.3111557 },
+    { "lat": 47.6562929, "lon": -122.3112865 },
+    { "lat": 47.6562932, "lon": -122.3113094 },
+    { "lat": 47.6562939, "lon": -122.3113734 }
+  ],
+  "tags": {
+    "area": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 396591852,
+  "bounds": {
+    "minlat": 47.6541795,
+    "minlon": -122.3066415,
+    "maxlat": 47.6542028,
+    "maxlon": -122.3065686
+  },
+  "geometry": [
+    { "lat": 47.6541795, "lon": -122.3066415 },
+    { "lat": 47.6542028, "lon": -122.3065686 }
+  ],
+  "tags": {
+    "check_date:ramp": "2025-03-05",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 396591853,
+  "bounds": {
+    "minlat": 47.6535998,
+    "minlon": -122.3084544,
+    "maxlat": 47.6536181,
+    "maxlon": -122.3083959
+  },
+  "geometry": [
+    { "lat": 47.6536181, "lon": -122.3083959 },
+    { "lat": 47.6535998, "lon": -122.3084544 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 426440873,
+  "bounds": {
+    "minlat": 47.6550097,
+    "minlon": -122.3064649,
+    "maxlat": 47.6550516,
+    "maxlon": -122.3064379
+  },
+  "geometry": [
+    { "lat": 47.6550516, "lon": -122.3064649 },
+    { "lat": 47.6550097, "lon": -122.3064379 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 430647912,
+  "bounds": {
+    "minlat": 47.6543109,
+    "minlon": -122.3128961,
+    "maxlat": 47.6545242,
+    "maxlon": -122.3123197
+  },
+  "geometry": [
+    { "lat": 47.6545179, "lon": -122.3123946 },
+    { "lat": 47.6545242, "lon": -122.3128918 },
+    { "lat": 47.6543739, "lon": -122.3128961 },
+    { "lat": 47.6543733, "lon": -122.3128443 },
+    { "lat": 47.6543179, "lon": -122.3128459 },
+    { "lat": 47.6543177, "lon": -122.3128317 },
+    { "lat": 47.6543165, "lon": -122.3127626 },
+    { "lat": 47.6543109, "lon": -122.3123230 },
+    { "lat": 47.6544266, "lon": -122.3123197 },
+    { "lat": 47.6544279, "lon": -122.3124208 },
+    { "lat": 47.6544400, "lon": -122.3124205 },
+    { "lat": 47.6544499, "lon": -122.3124202 },
+    { "lat": 47.6544496, "lon": -122.3123966 },
+    { "lat": 47.6545179, "lon": -122.3123946 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3939",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "15th Avenue Northeast",
+    "amenity": "police",
+    "building": "yes",
+    "building:levels": "3",
+    "name": "University of Washington Police Department",
+    "opening_hours": "Mo-Fr 08:30-12:00,13:00-16:30",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "UWPD",
+    "start_date": "2016",
+    "website": "https://police.uw.edu/",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 430666194,
+  "bounds": {
+    "minlat": 47.6554797,
+    "minlon": -122.3081007,
+    "maxlat": 47.6555042,
+    "maxlon": -122.3080801
+  },
+  "geometry": [
+    { "lat": 47.6554797, "lon": -122.3080801 },
+    { "lat": 47.6555042, "lon": -122.3081007 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "lit": "yes",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 436159436,
+  "bounds": {
+    "minlat": 47.6557875,
+    "minlon": -122.3119483,
+    "maxlat": 47.6558354,
+    "maxlon": -122.3119243
+  },
+  "geometry": [
+    { "lat": 47.6558354, "lon": -122.3119481 },
+    { "lat": 47.6558353, "lon": -122.3119243 },
+    { "lat": 47.6557875, "lon": -122.3119245 },
+    { "lat": 47.6557875, "lon": -122.3119483 },
+    { "lat": 47.6558354, "lon": -122.3119481 }
+  ],
+  "tags": {
+    "amenity": "shelter",
+    "building": "roof",
+    "layer": "1",
+    "shelter_type": "public_transport"
+  }
+},
+{
+  "type": "way",
+  "id": 436159437,
+  "bounds": {
+    "minlat": 47.6556483,
+    "minlon": -122.3119512,
+    "maxlat": 47.6556961,
+    "maxlon": -122.3119271
+  },
+  "geometry": [
+    { "lat": 47.6556961, "lon": -122.3119506 },
+    { "lat": 47.6556961, "lon": -122.3119271 },
+    { "lat": 47.6556483, "lon": -122.3119271 },
+    { "lat": 47.6556483, "lon": -122.3119512 },
+    { "lat": 47.6556961, "lon": -122.3119506 }
+  ],
+  "tags": {
+    "amenity": "shelter",
+    "building": "roof",
+    "layer": "1",
+    "shelter_type": "public_transport"
+  }
+},
+{
+  "type": "way",
+  "id": 436159438,
+  "bounds": {
+    "minlat": 47.6555792,
+    "minlon": -122.3119532,
+    "maxlat": 47.6556270,
+    "maxlon": -122.3119291
+  },
+  "geometry": [
+    { "lat": 47.6556270, "lon": -122.3119526 },
+    { "lat": 47.6556270, "lon": -122.3119291 },
+    { "lat": 47.6555792, "lon": -122.3119291 },
+    { "lat": 47.6555792, "lon": -122.3119532 },
+    { "lat": 47.6556270, "lon": -122.3119526 }
+  ],
+  "tags": {
+    "amenity": "shelter",
+    "building": "roof",
+    "layer": "1",
+    "shelter_type": "public_transport"
+  }
+},
+{
+  "type": "way",
+  "id": 436172677,
+  "bounds": {
+    "minlat": 47.6536845,
+    "minlon": -122.3096347,
+    "maxlat": 47.6536900,
+    "maxlon": -122.3096143
+  },
+  "geometry": [
+    { "lat": 47.6536900, "lon": -122.3096143 },
+    { "lat": 47.6536845, "lon": -122.3096347 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "4",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 436172679,
+  "bounds": {
+    "minlat": 47.6536570,
+    "minlon": -122.3097312,
+    "maxlat": 47.6536705,
+    "maxlon": -122.3096837
+  },
+  "geometry": [
+    { "lat": 47.6536705, "lon": -122.3096837 },
+    { "lat": 47.6536570, "lon": -122.3097312 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "4",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 436176145,
+  "bounds": {
+    "minlat": 47.6539455,
+    "minlon": -122.3103365,
+    "maxlat": 47.6539623,
+    "maxlon": -122.3102781
+  },
+  "geometry": [
+    { "lat": 47.6539455, "lon": -122.3103365 },
+    { "lat": 47.6539623, "lon": -122.3102781 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 436176147,
+  "bounds": {
+    "minlat": 47.6539825,
+    "minlon": -122.3103127,
+    "maxlat": 47.6540403,
+    "maxlon": -122.3101983
+  },
+  "geometry": [
+    { "lat": 47.6540403, "lon": -122.3103127 },
+    { "lat": 47.6540358, "lon": -122.3102385 },
+    { "lat": 47.6539897, "lon": -122.3101983 },
+    { "lat": 47.6539825, "lon": -122.3102183 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "3",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 436972746,
+  "bounds": {
+    "minlat": 47.6544934,
+    "minlon": -122.3102504,
+    "maxlat": 47.6548083,
+    "maxlon": -122.3094425
+  },
+  "geometry": [
+    { "lat": 47.6545017, "lon": -122.3101443 },
+    { "lat": 47.6545800, "lon": -122.3098972 },
+    { "lat": 47.6545753, "lon": -122.3098939 },
+    { "lat": 47.6546036, "lon": -122.3098044 },
+    { "lat": 47.6545532, "lon": -122.3097692 },
+    { "lat": 47.6545339, "lon": -122.3098302 },
+    { "lat": 47.6544934, "lon": -122.3098019 },
+    { "lat": 47.6545135, "lon": -122.3097384 },
+    { "lat": 47.6546073, "lon": -122.3094425 },
+    { "lat": 47.6546283, "lon": -122.3094572 },
+    { "lat": 47.6546296, "lon": -122.3094532 },
+    { "lat": 47.6547027, "lon": -122.3095042 },
+    { "lat": 47.6547014, "lon": -122.3095082 },
+    { "lat": 47.6547850, "lon": -122.3095666 },
+    { "lat": 47.6547747, "lon": -122.3095993 },
+    { "lat": 47.6547651, "lon": -122.3096296 },
+    { "lat": 47.6548083, "lon": -122.3096598 },
+    { "lat": 47.6546211, "lon": -122.3102504 },
+    { "lat": 47.6545110, "lon": -122.3101734 },
+    { "lat": 47.6545169, "lon": -122.3101549 },
+    { "lat": 47.6545017, "lon": -122.3101443 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "1701",
+    "addr:postcode": "98195",
+    "addr:street": "Northeast Grant Lane",
+    "building": "university",
+    "building:levels": "5",
+    "height": "25.2",
+    "name": "NanoES Building",
+    "official_name": "Nano Engineering and Science Building",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "owner": "University of Washington",
+    "ref": "NAN",
+    "roof:levels": "1",
+    "short_name": "Nanoengineering Bldg",
+    "source": "King County GIS;data.seattle.gov",
+    "start_date": "2017",
+    "wikidata": "Q99705827"
+  }
+},
+{
+  "type": "way",
+  "id": 436978993,
+  "bounds": {
+    "minlat": 47.6542375,
+    "minlon": -122.3095597,
+    "maxlat": 47.6542644,
+    "maxlon": -122.3095394
+  },
+  "geometry": [
+    { "lat": 47.6542375, "lon": -122.3095394 },
+    { "lat": 47.6542644, "lon": -122.3095597 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 436978994,
+  "bounds": {
+    "minlat": 47.6540872,
+    "minlon": -122.3094405,
+    "maxlat": 47.6541034,
+    "maxlon": -122.3094274
+  },
+  "geometry": [
+    { "lat": 47.6541034, "lon": -122.3094405 },
+    { "lat": 47.6540872, "lon": -122.3094274 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 443482651,
+  "bounds": {
+    "minlat": 47.6579067,
+    "minlon": -122.3130972,
+    "maxlat": 47.6580240,
+    "maxlon": -122.3129095
+  },
+  "geometry": [
+    { "lat": 47.6580211, "lon": -122.3129095 },
+    { "lat": 47.6579067, "lon": -122.3129126 },
+    { "lat": 47.6579090, "lon": -122.3130972 },
+    { "lat": 47.6580240, "lon": -122.3130941 },
+    { "lat": 47.6580211, "lon": -122.3129095 }
+  ],
+  "tags": {
+    "building": "yes",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 443482653,
+  "bounds": {
+    "minlat": 47.6574617,
+    "minlon": -122.3128410,
+    "maxlat": 47.6575458,
+    "maxlon": -122.3127016
+  },
+  "geometry": [
+    { "lat": 47.6574673, "lon": -122.3128410 },
+    { "lat": 47.6575458, "lon": -122.3128389 },
+    { "lat": 47.6575441, "lon": -122.3127016 },
+    { "lat": 47.6574617, "lon": -122.3127038 },
+    { "lat": 47.6574632, "lon": -122.3128269 },
+    { "lat": 47.6574671, "lon": -122.3128268 },
+    { "lat": 47.6574673, "lon": -122.3128410 }
+  ],
+  "tags": {
+    "building": "yes",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 443482655,
+  "bounds": {
+    "minlat": 47.6572378,
+    "minlon": -122.3131267,
+    "maxlat": 47.6573624,
+    "maxlon": -122.3127464
+  },
+  "geometry": [
+    { "lat": 47.6572424, "lon": -122.3131267 },
+    { "lat": 47.6573624, "lon": -122.3131235 },
+    { "lat": 47.6573584, "lon": -122.3127935 },
+    { "lat": 47.6573582, "lon": -122.3127747 },
+    { "lat": 47.6573066, "lon": -122.3127761 },
+    { "lat": 47.6573062, "lon": -122.3127464 },
+    { "lat": 47.6572378, "lon": -122.3127482 },
+    { "lat": 47.6572384, "lon": -122.3128008 },
+    { "lat": 47.6572424, "lon": -122.3131267 }
+  ],
+  "tags": {
+    "building": "retail",
+    "building:levels": "1",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 443482656,
+  "bounds": {
+    "minlat": 47.6573584,
+    "minlon": -122.3131367,
+    "maxlat": 47.6574612,
+    "maxlon": -122.3127143
+  },
+  "geometry": [
+    { "lat": 47.6574602, "lon": -122.3127143 },
+    { "lat": 47.6574039, "lon": -122.3127158 },
+    { "lat": 47.6574048, "lon": -122.3127923 },
+    { "lat": 47.6573584, "lon": -122.3127935 },
+    { "lat": 47.6573624, "lon": -122.3131235 },
+    { "lat": 47.6573626, "lon": -122.3131367 },
+    { "lat": 47.6574610, "lon": -122.3131341 },
+    { "lat": 47.6574569, "lon": -122.3127939 },
+    { "lat": 47.6574612, "lon": -122.3127937 },
+    { "lat": 47.6574602, "lon": -122.3127143 }
+  ],
+  "tags": {
+    "building": "retail",
+    "building:levels": "1",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 443482657,
+  "bounds": {
+    "minlat": 47.6580184,
+    "minlon": -122.3131127,
+    "maxlat": 47.6581172,
+    "maxlon": -122.3126958
+  },
+  "geometry": [
+    { "lat": 47.6581087, "lon": -122.3127809 },
+    { "lat": 47.6581071, "lon": -122.3126958 },
+    { "lat": 47.6580424, "lon": -122.3126984 },
+    { "lat": 47.6580435, "lon": -122.3127586 },
+    { "lat": 47.6580184, "lon": -122.3127596 },
+    { "lat": 47.6580211, "lon": -122.3129095 },
+    { "lat": 47.6580240, "lon": -122.3130941 },
+    { "lat": 47.6580245, "lon": -122.3131127 },
+    { "lat": 47.6581172, "lon": -122.3131073 },
+    { "lat": 47.6581087, "lon": -122.3127809 }
+  ],
+  "tags": {
+    "building": "retail",
+    "source": "data.seattle.gov"
+  }
+},
+{
+  "type": "way",
+  "id": 445396671,
+  "bounds": {
+    "minlat": 47.6565689,
+    "minlon": -122.3082954,
+    "maxlat": 47.6565877,
+    "maxlon": -122.3082668
+  },
+  "geometry": [
+    { "lat": 47.6565689, "lon": -122.3082954 },
+    { "lat": 47.6565877, "lon": -122.3082668 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "name": "Northeast Pierce Lane",
+    "name:etymology": "Pierce County, Washington",
+    "name:etymology:wikidata": "Q156459",
+    "name:etymology:wikipedia": "en:Pierce County, Washington",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "step_count": "3",
+    "surface": "paving_stones",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445396676,
+  "bounds": {
+    "minlat": 47.6572428,
+    "minlon": -122.3060369,
+    "maxlat": 47.6572629,
+    "maxlon": -122.3060087
+  },
+  "geometry": [
+    { "lat": 47.6572629, "lon": -122.3060369 },
+    { "lat": 47.6572428, "lon": -122.3060087 }
+  ],
+  "tags": {
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "6",
+    "surface": "paving_stones",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445396677,
+  "bounds": {
+    "minlat": 47.6570159,
+    "minlon": -122.3063302,
+    "maxlat": 47.6570236,
+    "maxlon": -122.3063192
+  },
+  "geometry": [
+    { "lat": 47.6570159, "lon": -122.3063192 },
+    { "lat": 47.6570236, "lon": -122.3063302 }
+  ],
+  "tags": {
+    "handrail:left": "yes",
+    "handrail:right": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "step_count": "5",
+    "surface": "paving_stones",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445396678,
+  "bounds": {
+    "minlat": 47.6565606,
+    "minlon": -122.3061043,
+    "maxlat": 47.6565849,
+    "maxlon": -122.3060701
+  },
+  "geometry": [
+    { "lat": 47.6565606, "lon": -122.3061043 },
+    { "lat": 47.6565849, "lon": -122.3060701 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 445396679,
+  "bounds": {
+    "minlat": 47.6569598,
+    "minlon": -122.3066841,
+    "maxlat": 47.6569869,
+    "maxlon": -122.3066441
+  },
+  "geometry": [
+    { "lat": 47.6569598, "lon": -122.3066841 },
+    { "lat": 47.6569869, "lon": -122.3066441 }
+  ],
+  "tags": {
+    "highway": "steps"
+  }
+},
+{
+  "type": "way",
+  "id": 445396693,
+  "bounds": {
+    "minlat": 47.6545928,
+    "minlon": -122.3061881,
+    "maxlat": 47.6546330,
+    "maxlon": -122.3061619
+  },
+  "geometry": [
+    { "lat": 47.6546330, "lon": -122.3061881 },
+    { "lat": 47.6545928, "lon": -122.3061619 }
+  ],
+  "tags": {
+    "highway": "steps"
+  }
+},
+{
+  "type": "way",
+  "id": 445396695,
+  "bounds": {
+    "minlat": 47.6568754,
+    "minlon": -122.3068091,
+    "maxlat": 47.6568985,
+    "maxlon": -122.3067749
+  },
+  "geometry": [
+    { "lat": 47.6568754, "lon": -122.3068091 },
+    { "lat": 47.6568985, "lon": -122.3067749 }
+  ],
+  "tags": {
+    "highway": "steps"
+  }
+},
+{
+  "type": "way",
+  "id": 445398675,
+  "bounds": {
+    "minlat": 47.6562294,
+    "minlon": -122.3098971,
+    "maxlat": 47.6562581,
+    "maxlon": -122.3098347
+  },
+  "geometry": [
+    { "lat": 47.6562579, "lon": -122.3098971 },
+    { "lat": 47.6562581, "lon": -122.3098350 },
+    { "lat": 47.6562296, "lon": -122.3098347 },
+    { "lat": 47.6562294, "lon": -122.3098969 },
+    { "lat": 47.6562579, "lon": -122.3098971 }
+  ],
+  "tags": {
+    "building": "yes",
+    "building:material": "brick",
+    "height": "42",
+    "operator": "University of Washington",
+    "window": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445398676,
+  "bounds": {
+    "minlat": 47.6561840,
+    "minlon": -122.3098704,
+    "maxlat": 47.6562164,
+    "maxlon": -122.3098353
+  },
+  "geometry": [
+    { "lat": 47.6562163, "lon": -122.3098704 },
+    { "lat": 47.6562164, "lon": -122.3098356 },
+    { "lat": 47.6561841, "lon": -122.3098353 },
+    { "lat": 47.6561840, "lon": -122.3098702 },
+    { "lat": 47.6562163, "lon": -122.3098704 }
+  ],
+  "tags": {
+    "building": "yes",
+    "building:material": "brick",
+    "height": "42",
+    "operator": "University of Washington",
+    "window": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445398677,
+  "bounds": {
+    "minlat": 47.6562081,
+    "minlon": -122.3098247,
+    "maxlat": 47.6562411,
+    "maxlon": -122.3097612
+  },
+  "geometry": [
+    { "lat": 47.6562297, "lon": -122.3097613 },
+    { "lat": 47.6562411, "lon": -122.3098247 },
+    { "lat": 47.6562081, "lon": -122.3098244 },
+    { "lat": 47.6562083, "lon": -122.3097612 },
+    { "lat": 47.6562297, "lon": -122.3097613 }
+  ],
+  "tags": {
+    "building": "yes",
+    "building:material": "brick",
+    "height": "42",
+    "operator": "University of Washington",
+    "window": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445398679,
+  "bounds": {
+    "minlat": 47.6552577,
+    "minlon": -122.3097185,
+    "maxlat": 47.6553091,
+    "maxlon": -122.3097071
+  },
+  "geometry": [
+    { "lat": 47.6553091, "lon": -122.3097071 },
+    { "lat": 47.6552577, "lon": -122.3097185 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 445398689,
+  "bounds": {
+    "minlat": 47.6566313,
+    "minlon": -122.3068868,
+    "maxlat": 47.6566469,
+    "maxlon": -122.3068582
+  },
+  "geometry": [
+    { "lat": 47.6566313, "lon": -122.3068582 },
+    { "lat": 47.6566469, "lon": -122.3068868 }
+  ],
+  "tags": {
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no",
+    "step_count": "3",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 445398692,
+  "bounds": {
+    "minlat": 47.6552920,
+    "minlon": -122.3099184,
+    "maxlat": 47.6553661,
+    "maxlon": -122.3099176
+  },
+  "geometry": [
+    { "lat": 47.6553661, "lon": -122.3099184 },
+    { "lat": 47.6552920, "lon": -122.3099176 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 445398694,
+  "bounds": {
+    "minlat": 47.6550386,
+    "minlon": -122.3091069,
+    "maxlat": 47.6550631,
+    "maxlon": -122.3090895
+  },
+  "geometry": [
+    { "lat": 47.6550386, "lon": -122.3090895 },
+    { "lat": 47.6550631, "lon": -122.3091069 }
+  ],
+  "tags": {
+    "check_date:ramp": "2025-07-12",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no",
+    "step_count": "6",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 445398700,
+  "bounds": {
+    "minlat": 47.6561068,
+    "minlon": -122.3075760,
+    "maxlat": 47.6562156,
+    "maxlon": -122.3074067
+  },
+  "geometry": [
+    { "lat": 47.6561068, "lon": -122.3075454 },
+    { "lat": 47.6561285, "lon": -122.3075760 },
+    { "lat": 47.6561723, "lon": -122.3075074 },
+    { "lat": 47.6562156, "lon": -122.3074396 },
+    { "lat": 47.6561922, "lon": -122.3074067 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "21",
+    "surface": "asphalt",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 446019004,
+  "bounds": {
+    "minlat": 47.6570791,
+    "minlon": -122.3110754,
+    "maxlat": 47.6571075,
+    "maxlon": -122.3110745
+  },
+  "geometry": [
+    { "lat": 47.6571075, "lon": -122.3110745 },
+    { "lat": 47.6570791, "lon": -122.3110754 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "lit": "yes",
+    "ramp": "no",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 446019007,
+  "bounds": {
+    "minlat": 47.6568292,
+    "minlon": -122.3104551,
+    "maxlat": 47.6568600,
+    "maxlon": -122.3104542
+  },
+  "geometry": [
+    { "lat": 47.6568292, "lon": -122.3104551 },
+    { "lat": 47.6568600, "lon": -122.3104542 }
+  ],
+  "tags": {
+    "cutting": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 446019010,
+  "bounds": {
+    "minlat": 47.6573167,
+    "minlon": -122.3109041,
+    "maxlat": 47.6573285,
+    "maxlon": -122.3109040
+  },
+  "geometry": [
+    { "lat": 47.6573285, "lon": -122.3109041 },
+    { "lat": 47.6573167, "lon": -122.3109040 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "6",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 446019011,
+  "bounds": {
+    "minlat": 47.6573031,
+    "minlon": -122.3101197,
+    "maxlat": 47.6573182,
+    "maxlon": -122.3100972
+  },
+  "geometry": [
+    { "lat": 47.6573031, "lon": -122.3100972 },
+    { "lat": 47.6573182, "lon": -122.3101197 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "8",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 446175719,
+  "bounds": {
+    "minlat": 47.6548195,
+    "minlon": -122.3073363,
+    "maxlat": 47.6548239,
+    "maxlon": -122.3073224
+  },
+  "geometry": [
+    { "lat": 47.6548239, "lon": -122.3073224 },
+    { "lat": 47.6548195, "lon": -122.3073363 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate"
+  }
+},
+{
+  "type": "way",
+  "id": 446175720,
+  "bounds": {
+    "minlat": 47.6552406,
+    "minlon": -122.3076066,
+    "maxlat": 47.6553172,
+    "maxlon": -122.3075559
+  },
+  "geometry": [
+    { "lat": 47.6553172, "lon": -122.3076066 },
+    { "lat": 47.6552406, "lon": -122.3075559 }
+  ],
+  "tags": {
+    "check_date:ramp": "2025-03-05",
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "23",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 446932871,
+  "bounds": {
+    "minlat": 47.6545156,
+    "minlon": -122.3079587,
+    "maxlat": 47.6545279,
+    "maxlon": -122.3079191
+  },
+  "geometry": [
+    { "lat": 47.6545279, "lon": -122.3079191 },
+    { "lat": 47.6545156, "lon": -122.3079587 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "lit": "yes",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 446932874,
+  "bounds": {
+    "minlat": 47.6543671,
+    "minlon": -122.3085711,
+    "maxlat": 47.6543785,
+    "maxlon": -122.3085333
+  },
+  "geometry": [
+    { "lat": 47.6543785, "lon": -122.3085333 },
+    { "lat": 47.6543671, "lon": -122.3085711 }
+  ],
+  "tags": {
+    "highway": "steps"
+  }
+},
+{
+  "type": "way",
+  "id": 446932876,
+  "bounds": {
+    "minlat": 47.6545035,
+    "minlon": -122.3079338,
+    "maxlat": 47.6545113,
+    "maxlon": -122.3079077
+  },
+  "geometry": [
+    { "lat": 47.6545035, "lon": -122.3079338 },
+    { "lat": 47.6545113, "lon": -122.3079077 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "lit": "yes",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 447083063,
+  "bounds": {
+    "minlat": 47.6556767,
+    "minlon": -122.3101971,
+    "maxlat": 47.6558175,
+    "maxlon": -122.3101963
+  },
+  "geometry": [
+    { "lat": 47.6556767, "lon": -122.3101971 },
+    { "lat": 47.6558175, "lon": -122.3101963 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "47",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 454017131,
+  "bounds": {
+    "minlat": 47.6537874,
+    "minlon": -122.3092544,
+    "maxlat": 47.6538021,
+    "maxlon": -122.3092081
+  },
+  "geometry": [
+    { "lat": 47.6538021, "lon": -122.3092081 },
+    { "lat": 47.6537874, "lon": -122.3092544 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "name": "Northeast Thurston Lane",
+    "ramp": "no",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 454017133,
+  "bounds": {
+    "minlat": 47.6539847,
+    "minlon": -122.3091154,
+    "maxlat": 47.6540076,
+    "maxlon": -122.3090996
+  },
+  "geometry": [
+    { "lat": 47.6539847, "lon": -122.3090996 },
+    { "lat": 47.6540076, "lon": -122.3091154 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 454017146,
+  "bounds": {
+    "minlat": 47.6539441,
+    "minlon": -122.3105734,
+    "maxlat": 47.6539444,
+    "maxlon": -122.3105453
+  },
+  "geometry": [
+    { "lat": 47.6539441, "lon": -122.3105453 },
+    { "lat": 47.6539444, "lon": -122.3105734 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "step_count": "4"
+  }
+},
+{
+  "type": "way",
+  "id": 459450617,
+  "bounds": {
+    "minlat": 47.6583911,
+    "minlon": -122.3125979,
+    "maxlat": 47.6588340,
+    "maxlon": -122.3121971
+  },
+  "geometry": [
+    { "lat": 47.6588324, "lon": -122.3122544 },
+    { "lat": 47.6587539, "lon": -122.3122553 },
+    { "lat": 47.6587538, "lon": -122.3122365 },
+    { "lat": 47.6587285, "lon": -122.3122368 },
+    { "lat": 47.6587283, "lon": -122.3121971 },
+    { "lat": 47.6586173, "lon": -122.3121983 },
+    { "lat": 47.6586173, "lon": -122.3122041 },
+    { "lat": 47.6583911, "lon": -122.3122065 },
+    { "lat": 47.6583918, "lon": -122.3123670 },
+    { "lat": 47.6583930, "lon": -122.3125979 },
+    { "lat": 47.6584717, "lon": -122.3125970 },
+    { "lat": 47.6585849, "lon": -122.3125958 },
+    { "lat": 47.6585848, "lon": -122.3125702 },
+    { "lat": 47.6588340, "lon": -122.3125675 },
+    { "lat": 47.6588324, "lon": -122.3122544 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "1414",
+    "addr:postcode": "98105-6286",
+    "addr:state": "WA",
+    "addr:street": "Northeast 42nd Street",
+    "building": "apartments",
+    "building:levels": "6",
+    "building:levels:underground": "3",
+    "name": "George F. Russell Jr. Hall",
+    "official_name": "George F. Russell Jr. Hall",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "owner": "University of Washington",
+    "short_name": "Russell Hall",
+    "website": "https://www.russellhallatuw.com/",
+    "wikidata": "Q99248904"
+  }
+},
+{
+  "type": "way",
+  "id": 475714944,
+  "bounds": {
+    "minlat": 47.6538948,
+    "minlon": -122.3088418,
+    "maxlat": 47.6539202,
+    "maxlon": -122.3088252
+  },
+  "geometry": [
+    { "lat": 47.6538948, "lon": -122.3088252 },
+    { "lat": 47.6539202, "lon": -122.3088418 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "step_count": "2",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 475714945,
+  "bounds": {
+    "minlat": 47.6538434,
+    "minlon": -122.3090779,
+    "maxlat": 47.6538632,
+    "maxlon": -122.3090154
+  },
+  "geometry": [
+    { "lat": 47.6538632, "lon": -122.3090154 },
+    { "lat": 47.6538434, "lon": -122.3090779 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "name": "Northeast Thurston Lane",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 478369102,
+  "bounds": {
+    "minlat": 47.6565389,
+    "minlon": -122.3078765,
+    "maxlat": 47.6565586,
+    "maxlon": -122.3078451
+  },
+  "geometry": [
+    { "lat": 47.6565586, "lon": -122.3078451 },
+    { "lat": 47.6565389, "lon": -122.3078765 }
+  ],
+  "tags": {
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no",
+    "step_count": "4",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 499392301,
+  "bounds": {
+    "minlat": 47.6537681,
+    "minlon": -122.3131557,
+    "maxlat": 47.6540838,
+    "maxlon": -122.3128333
+  },
+  "geometry": [
+    { "lat": 47.6540838, "lon": -122.3131508 },
+    { "lat": 47.6537704, "lon": -122.3131557 },
+    { "lat": 47.6537681, "lon": -122.3128382 },
+    { "lat": 47.6540815, "lon": -122.3128333 },
+    { "lat": 47.6540838, "lon": -122.3131508 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3900",
+    "addr:postcode": "98105",
+    "addr:state": "WA",
+    "addr:street": "University Way Northeast",
+    "building": "service",
+    "name": "University of Washington West Campus Utility Plant",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "power": "plant",
+    "ref": "WCUP",
+    "start_date": "2017"
+  }
+},
+{
+  "type": "way",
+  "id": 607193778,
+  "bounds": {
+    "minlat": 47.6546610,
+    "minlon": -122.3103022,
+    "maxlat": 47.6548316,
+    "maxlon": -122.3102391
+  },
+  "geometry": [
+    { "lat": 47.6546610, "lon": -122.3103022 },
+    { "lat": 47.6547706, "lon": -122.3102760 },
+    { "lat": 47.6548316, "lon": -122.3102391 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 608192724,
+  "bounds": {
+    "minlat": 47.6541671,
+    "minlon": -122.3131598,
+    "maxlat": 47.6542302,
+    "maxlon": -122.3128337
+  },
+  "geometry": [
+    { "lat": 47.6541712, "lon": -122.3131598 },
+    { "lat": 47.6542302, "lon": -122.3131581 },
+    { "lat": 47.6542260, "lon": -122.3128337 },
+    { "lat": 47.6541671, "lon": -122.3128352 },
+    { "lat": 47.6541712, "lon": -122.3131598 }
+  ],
+  "tags": {
+    "building": "roof"
+  }
+},
+{
+  "type": "way",
+  "id": 608192727,
+  "bounds": {
+    "minlat": 47.6542750,
+    "minlon": -122.3129352,
+    "maxlat": 47.6543744,
+    "maxlon": -122.3127626
+  },
+  "geometry": [
+    { "lat": 47.6543739, "lon": -122.3128961 },
+    { "lat": 47.6543744, "lon": -122.3129325 },
+    { "lat": 47.6542766, "lon": -122.3129352 },
+    { "lat": 47.6542753, "lon": -122.3128328 },
+    { "lat": 47.6542750, "lon": -122.3128127 },
+    { "lat": 47.6542919, "lon": -122.3128120 },
+    { "lat": 47.6542911, "lon": -122.3127636 },
+    { "lat": 47.6543165, "lon": -122.3127626 },
+    { "lat": 47.6543177, "lon": -122.3128317 },
+    { "lat": 47.6543179, "lon": -122.3128459 },
+    { "lat": 47.6543733, "lon": -122.3128443 },
+    { "lat": 47.6543739, "lon": -122.3128961 }
+  ],
+  "tags": {
+    "building": "roof"
+  }
+},
+{
+  "type": "way",
+  "id": 608468215,
+  "bounds": {
+    "minlat": 47.6545418,
+    "minlon": -122.3124074,
+    "maxlat": 47.6545630,
+    "maxlon": -122.3123567
+  },
+  "geometry": [
+    { "lat": 47.6545630, "lon": -122.3124066 },
+    { "lat": 47.6545624, "lon": -122.3123567 },
+    { "lat": 47.6545418, "lon": -122.3123567 },
+    { "lat": 47.6545418, "lon": -122.3124074 },
+    { "lat": 47.6545630, "lon": -122.3124066 }
+  ],
+  "tags": {
+    "amenity": "bicycle_parking",
+    "building": "roof",
+    "covered": "yes",
+    "operator": "UW Transportation Services"
+  }
+},
+{
+  "type": "way",
+  "id": 702590756,
+  "bounds": {
+    "minlat": 47.6539901,
+    "minlon": -122.3119373,
+    "maxlat": 47.6550339,
+    "maxlon": -122.3114610
+  },
+  "geometry": [
+    { "lat": 47.6550339, "lon": -122.3118658 },
+    { "lat": 47.6548073, "lon": -122.3118667 },
+    { "lat": 47.6548073, "lon": -122.3118885 },
+    { "lat": 47.6547812, "lon": -122.3118886 },
+    { "lat": 47.6547648, "lon": -122.3118887 },
+    { "lat": 47.6547649, "lon": -122.3119041 },
+    { "lat": 47.6542749, "lon": -122.3119060 },
+    { "lat": 47.6542749, "lon": -122.3119362 },
+    { "lat": 47.6539907, "lon": -122.3119373 },
+    { "lat": 47.6539901, "lon": -122.3115908 },
+    { "lat": 47.6540166, "lon": -122.3115907 },
+    { "lat": 47.6540779, "lon": -122.3115905 },
+    { "lat": 47.6540942, "lon": -122.3115904 },
+    { "lat": 47.6540940, "lon": -122.3115166 },
+    { "lat": 47.6541108, "lon": -122.3115165 },
+    { "lat": 47.6545905, "lon": -122.3115146 },
+    { "lat": 47.6545904, "lon": -122.3114616 },
+    { "lat": 47.6547641, "lon": -122.3114610 },
+    { "lat": 47.6547642, "lon": -122.3115140 },
+    { "lat": 47.6548462, "lon": -122.3115137 },
+    { "lat": 47.6548463, "lon": -122.3115405 },
+    { "lat": 47.6548463, "lon": -122.3115601 },
+    { "lat": 47.6548463, "lon": -122.3115875 },
+    { "lat": 47.6549279, "lon": -122.3115872 },
+    { "lat": 47.6550334, "lon": -122.3115868 },
+    { "lat": 47.6550339, "lon": -122.3118658 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3980",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "15th Avenue Northeast",
+    "alt_name": "Population Health Building;Population Health Facility",
+    "building": "university",
+    "building:levels": "9",
+    "name": "Hans Rosling Center",
+    "name:etymology": "Hans Gösta Rosling",
+    "name:etymology:wikidata": "Q588259",
+    "name:etymology:wikipedia": "en:Hans Rosling",
+    "official_name": "Hans Rosling Center for Population Health",
+    "operator": "University of Washington",
+    "operator:abbr": "UW",
+    "operator:type": "public",
+    "operator:wikidata": "Q219563",
+    "operator:wikipedia": "en:University of Washington",
+    "ref": "HRC",
+    "start_date": "2020",
+    "wikidata": "Q104733759"
+  }
+},
+{
+  "type": "way",
+  "id": 746003040,
+  "bounds": {
+    "minlat": 47.6569376,
+    "minlon": -122.3084618,
+    "maxlat": 47.6569703,
+    "maxlon": -122.3084156
+  },
+  "geometry": [
+    { "lat": 47.6569376, "lon": -122.3084156 },
+    { "lat": 47.6569703, "lon": -122.3084618 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 899626209,
+  "bounds": {
+    "minlat": 47.6547936,
+    "minlon": -122.3112930,
+    "maxlat": 47.6547938,
+    "maxlon": -122.3112705
+  },
+  "geometry": [
+    { "lat": 47.6547936, "lon": -122.3112930 },
+    { "lat": 47.6547938, "lon": -122.3112705 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "14",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 932369432,
+  "bounds": {
+    "minlat": 47.6572300,
+    "minlon": -122.3097771,
+    "maxlat": 47.6573114,
+    "maxlon": -122.3096569
+  },
+  "geometry": [
+    { "lat": 47.6572400, "lon": -122.3097568 },
+    { "lat": 47.6572327, "lon": -122.3097391 },
+    { "lat": 47.6572300, "lon": -122.3097189 },
+    { "lat": 47.6572319, "lon": -122.3096984 },
+    { "lat": 47.6572384, "lon": -122.3096801 },
+    { "lat": 47.6572487, "lon": -122.3096661 },
+    { "lat": 47.6572615, "lon": -122.3096581 },
+    { "lat": 47.6572754, "lon": -122.3096569 },
+    { "lat": 47.6572888, "lon": -122.3096628 },
+    { "lat": 47.6573001, "lon": -122.3096749 },
+    { "lat": 47.6573079, "lon": -122.3096920 },
+    { "lat": 47.6573114, "lon": -122.3097121 },
+    { "lat": 47.6573106, "lon": -122.3097304 },
+    { "lat": 47.6573061, "lon": -122.3097474 },
+    { "lat": 47.6572983, "lon": -122.3097617 },
+    { "lat": 47.6572881, "lon": -122.3097719 },
+    { "lat": 47.6572762, "lon": -122.3097771 },
+    { "lat": 47.6572639, "lon": -122.3097768 },
+    { "lat": 47.6572507, "lon": -122.3097699 },
+    { "lat": 47.6572400, "lon": -122.3097568 }
+  ],
+  "tags": {
+    "area": "yes",
+    "highway": "pedestrian",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 940272113,
+  "bounds": {
+    "minlat": 47.6548584,
+    "minlon": -122.3073417,
+    "maxlat": 47.6548787,
+    "maxlon": -122.3073272
+  },
+  "geometry": [
+    { "lat": 47.6548787, "lon": -122.3073417 },
+    { "lat": 47.6548584, "lon": -122.3073272 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "down"
+  }
+},
+{
+  "type": "way",
+  "id": 940272115,
+  "bounds": {
+    "minlat": 47.6548349,
+    "minlon": -122.3072880,
+    "maxlat": 47.6548403,
+    "maxlon": -122.3072711
+  },
+  "geometry": [
+    { "lat": 47.6548349, "lon": -122.3072880 },
+    { "lat": 47.6548403, "lon": -122.3072711 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "up"
+  }
+},
+{
+  "type": "way",
+  "id": 940272119,
+  "bounds": {
+    "minlat": 47.6547629,
+    "minlon": -122.3061959,
+    "maxlat": 47.6547767,
+    "maxlon": -122.3061517
+  },
+  "geometry": [
+    { "lat": 47.6547767, "lon": -122.3061517 },
+    { "lat": 47.6547629, "lon": -122.3061959 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 967015335,
+  "bounds": {
+    "minlat": 47.6568585,
+    "minlon": -122.3066592,
+    "maxlat": 47.6568809,
+    "maxlon": -122.3066269
+  },
+  "geometry": [
+    { "lat": 47.6568809, "lon": -122.3066592 },
+    { "lat": 47.6568585, "lon": -122.3066269 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "name": "King Lane Northeast",
+    "name:etymology": "King County, Washington",
+    "name:etymology:wikidata": "Q108861",
+    "name:etymology:wikipedia": "en:King County, Washington"
+  }
+},
+{
+  "type": "way",
+  "id": 967264649,
+  "bounds": {
+    "minlat": 47.6563466,
+    "minlon": -122.3080237,
+    "maxlat": 47.6563596,
+    "maxlon": -122.3080035
+  },
+  "geometry": [
+    { "lat": 47.6563596, "lon": -122.3080035 },
+    { "lat": 47.6563466, "lon": -122.3080237 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "7",
+    "surface": "asphalt",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 967264651,
+  "bounds": {
+    "minlat": 47.6561621,
+    "minlon": -122.3077175,
+    "maxlat": 47.6561724,
+    "maxlon": -122.3077012
+  },
+  "geometry": [
+    { "lat": 47.6561621, "lon": -122.3077175 },
+    { "lat": 47.6561724, "lon": -122.3077012 }
+  ],
+  "tags": {
+    "handrail": "no",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "5",
+    "surface": "concrete",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 967264666,
+  "bounds": {
+    "minlat": 47.6574907,
+    "minlon": -122.3078941,
+    "maxlat": 47.6574999,
+    "maxlon": -122.3078800
+  },
+  "geometry": [
+    { "lat": 47.6574999, "lon": -122.3078800 },
+    { "lat": 47.6574907, "lon": -122.3078941 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "ramp": "no",
+    "step_count": "4",
+    "surface": "paving_stones",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 967264669,
+  "bounds": {
+    "minlat": 47.6574704,
+    "minlon": -122.3081736,
+    "maxlat": 47.6574738,
+    "maxlon": -122.3081687
+  },
+  "geometry": [
+    { "lat": 47.6574704, "lon": -122.3081687 },
+    { "lat": 47.6574738, "lon": -122.3081736 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "incline": "down",
+    "lit": "yes",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 967264670,
+  "bounds": {
+    "minlat": 47.6574998,
+    "minlon": -122.3082575,
+    "maxlat": 47.6575371,
+    "maxlon": -122.3082093
+  },
+  "geometry": [
+    { "lat": 47.6574998, "lon": -122.3082093 },
+    { "lat": 47.6575371, "lon": -122.3082575 }
+  ],
+  "tags": {
+    "handrail:left": "yes",
+    "handrail:right": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "step_count": "14",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 1089821441,
+  "bounds": {
+    "minlat": 47.6548601,
+    "minlon": -122.3111961,
+    "maxlat": 47.6549612,
+    "maxlon": -122.3111682
+  },
+  "geometry": [
+    { "lat": 47.6548601, "lon": -122.3111701 },
+    { "lat": 47.6548602, "lon": -122.3111831 },
+    { "lat": 47.6548603, "lon": -122.3111961 },
+    { "lat": 47.6548661, "lon": -122.3111960 },
+    { "lat": 47.6549612, "lon": -122.3111940 },
+    { "lat": 47.6549587, "lon": -122.3111811 },
+    { "lat": 47.6549561, "lon": -122.3111682 },
+    { "lat": 47.6548601, "lon": -122.3111701 }
+  ],
+  "tags": {
+    "area:highway": "footway",
+    "landuse": "highway"
+  }
+},
+{
+  "type": "way",
+  "id": 1089821442,
+  "bounds": {
+    "minlat": 47.6549884,
+    "minlon": -122.3111803,
+    "maxlat": 47.6550447,
+    "maxlon": -122.3111104
+  },
+  "geometry": [
+    { "lat": 47.6549947, "lon": -122.3111803 },
+    { "lat": 47.6549961, "lon": -122.3111729 },
+    { "lat": 47.6549977, "lon": -122.3111709 },
+    { "lat": 47.6550300, "lon": -122.3111516 },
+    { "lat": 47.6550335, "lon": -122.3111519 },
+    { "lat": 47.6550363, "lon": -122.3111538 },
+    { "lat": 47.6550447, "lon": -122.3111603 },
+    { "lat": 47.6550378, "lon": -122.3111357 },
+    { "lat": 47.6550307, "lon": -122.3111104 },
+    { "lat": 47.6550298, "lon": -122.3111169 },
+    { "lat": 47.6550278, "lon": -122.3111239 },
+    { "lat": 47.6550253, "lon": -122.3111307 },
+    { "lat": 47.6549916, "lon": -122.3111466 },
+    { "lat": 47.6549899, "lon": -122.3111471 },
+    { "lat": 47.6549884, "lon": -122.3111458 },
+    { "lat": 47.6549914, "lon": -122.3111624 },
+    { "lat": 47.6549947, "lon": -122.3111803 }
+  ],
+  "tags": {
+    "area:highway": "footway",
+    "landuse": "highway"
+  }
+},
+{
+  "type": "way",
+  "id": 1089821443,
+  "bounds": {
+    "minlat": 47.6548909,
+    "minlon": -122.3119159,
+    "maxlat": 47.6552416,
+    "maxlon": -122.3105450
+  },
+  "geometry": [
+    { "lat": 47.6549884, "lon": -122.3111458 },
+    { "lat": 47.6549869, "lon": -122.3111432 },
+    { "lat": 47.6549806, "lon": -122.3111094 },
+    { "lat": 47.6549664, "lon": -122.3110251 },
+    { "lat": 47.6549589, "lon": -122.3109752 },
+    { "lat": 47.6549526, "lon": -122.3109283 },
+    { "lat": 47.6549469, "lon": -122.3108807 },
+    { "lat": 47.6549415, "lon": -122.3108299 },
+    { "lat": 47.6549371, "lon": -122.3107825 },
+    { "lat": 47.6549329, "lon": -122.3107282 },
+    { "lat": 47.6549283, "lon": -122.3106508 },
+    { "lat": 47.6549256, "lon": -122.3105829 },
+    { "lat": 47.6549247, "lon": -122.3105450 },
+    { "lat": 47.6549083, "lon": -122.3105452 },
+    { "lat": 47.6548909, "lon": -122.3105456 },
+    { "lat": 47.6548928, "lon": -122.3105721 },
+    { "lat": 47.6548936, "lon": -122.3106011 },
+    { "lat": 47.6548949, "lon": -122.3106383 },
+    { "lat": 47.6548970, "lon": -122.3106857 },
+    { "lat": 47.6548996, "lon": -122.3107306 },
+    { "lat": 47.6549029, "lon": -122.3107772 },
+    { "lat": 47.6549056, "lon": -122.3108100 },
+    { "lat": 47.6549095, "lon": -122.3108512 },
+    { "lat": 47.6549118, "lon": -122.3108736 },
+    { "lat": 47.6549137, "lon": -122.3108911 },
+    { "lat": 47.6549198, "lon": -122.3109431 },
+    { "lat": 47.6549263, "lon": -122.3109915 },
+    { "lat": 47.6549327, "lon": -122.3110346 },
+    { "lat": 47.6549405, "lon": -122.3110828 },
+    { "lat": 47.6549462, "lon": -122.3111158 },
+    { "lat": 47.6549518, "lon": -122.3111463 },
+    { "lat": 47.6549561, "lon": -122.3111682 },
+    { "lat": 47.6549587, "lon": -122.3111811 },
+    { "lat": 47.6549612, "lon": -122.3111940 },
+    { "lat": 47.6549722, "lon": -122.3112460 },
+    { "lat": 47.6549829, "lon": -122.3112928 },
+    { "lat": 47.6549908, "lon": -122.3113258 },
+    { "lat": 47.6550022, "lon": -122.3113704 },
+    { "lat": 47.6550061, "lon": -122.3113853 },
+    { "lat": 47.6550151, "lon": -122.3114184 },
+    { "lat": 47.6550213, "lon": -122.3114401 },
+    { "lat": 47.6550302, "lon": -122.3114702 },
+    { "lat": 47.6550391, "lon": -122.3115003 },
+    { "lat": 47.6550457, "lon": -122.3115211 },
+    { "lat": 47.6550608, "lon": -122.3115676 },
+    { "lat": 47.6550711, "lon": -122.3115980 },
+    { "lat": 47.6550876, "lon": -122.3116445 },
+    { "lat": 47.6551016, "lon": -122.3116821 },
+    { "lat": 47.6551159, "lon": -122.3117188 },
+    { "lat": 47.6551257, "lon": -122.3117431 },
+    { "lat": 47.6551395, "lon": -122.3117765 },
+    { "lat": 47.6551517, "lon": -122.3118049 },
+    { "lat": 47.6551695, "lon": -122.3118449 },
+    { "lat": 47.6551787, "lon": -122.3118650 },
+    { "lat": 47.6551913, "lon": -122.3118917 },
+    { "lat": 47.6551969, "lon": -122.3119034 },
+    { "lat": 47.6551967, "lon": -122.3119089 },
+    { "lat": 47.6551957, "lon": -122.3119124 },
+    { "lat": 47.6551929, "lon": -122.3119159 },
+    { "lat": 47.6552416, "lon": -122.3119147 },
+    { "lat": 47.6552240, "lon": -122.3118783 },
+    { "lat": 47.6552069, "lon": -122.3118418 },
+    { "lat": 47.6551925, "lon": -122.3118096 },
+    { "lat": 47.6551995, "lon": -122.3118029 },
+    { "lat": 47.6551947, "lon": -122.3117919 },
+    { "lat": 47.6551898, "lon": -122.3117808 },
+    { "lat": 47.6551829, "lon": -122.3117876 },
+    { "lat": 47.6551559, "lon": -122.3117230 },
+    { "lat": 47.6551314, "lon": -122.3116599 },
+    { "lat": 47.6551119, "lon": -122.3116065 },
+    { "lat": 47.6550894, "lon": -122.3115405 },
+    { "lat": 47.6550596, "lon": -122.3114443 },
+    { "lat": 47.6550392, "lon": -122.3113715 },
+    { "lat": 47.6550221, "lon": -122.3113045 },
+    { "lat": 47.6550065, "lon": -122.3112375 },
+    { "lat": 47.6549964, "lon": -122.3111903 },
+    { "lat": 47.6549947, "lon": -122.3111803 },
+    { "lat": 47.6549914, "lon": -122.3111624 },
+    { "lat": 47.6549884, "lon": -122.3111458 }
+  ],
+  "tags": {
+    "area:highway": "footway",
+    "landuse": "highway"
+  }
+},
+{
+  "type": "way",
+  "id": 1104213728,
+  "bounds": {
+    "minlat": 47.6555042,
+    "minlon": -122.3081208,
+    "maxlat": 47.6555334,
+    "maxlon": -122.3081007
+  },
+  "geometry": [
+    { "lat": 47.6555042, "lon": -122.3081007 },
+    { "lat": 47.6555334, "lon": -122.3081208 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "steps",
+    "lit": "yes",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 1106705314,
+  "bounds": {
+    "minlat": 47.6560630,
+    "minlon": -122.3103061,
+    "maxlat": 47.6560664,
+    "maxlon": -122.3101727
+  },
+  "geometry": [
+    { "lat": 47.6560664, "lon": -122.3103061 },
+    { "lat": 47.6560630, "lon": -122.3101727 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "layer": "2",
+    "lit": "yes",
+    "ramp": "no",
+    "step_count": "20",
+    "surface": "concrete",
+    "tactile_paving": "no",
+    "width": "15"
+  }
+},
+{
+  "type": "way",
+  "id": 1106705315,
+  "bounds": {
+    "minlat": 47.6558608,
+    "minlon": -122.3088518,
+    "maxlat": 47.6558766,
+    "maxlon": -122.3087211
+  },
+  "geometry": [
+    { "lat": 47.6558766, "lon": -122.3088518 },
+    { "lat": 47.6558608, "lon": -122.3087211 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "step_count": "14",
+    "surface": "concrete",
+    "tactile_paving": "no",
+    "width": "10"
+  }
+},
+{
+  "type": "way",
+  "id": 1106705316,
+  "bounds": {
+    "minlat": 47.6554663,
+    "minlon": -122.3089488,
+    "maxlat": 47.6554961,
+    "maxlon": -122.3089276
+  },
+  "geometry": [
+    { "lat": 47.6554663, "lon": -122.3089276 },
+    { "lat": 47.6554811, "lon": -122.3089382 },
+    { "lat": 47.6554961, "lon": -122.3089488 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "separate",
+    "ramp:wheelchair": "separate",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 1106705317,
+  "bounds": {
+    "minlat": 47.6554451,
+    "minlon": -122.3090714,
+    "maxlat": 47.6555359,
+    "maxlon": -122.3090101
+  },
+  "geometry": [
+    { "lat": 47.6555359, "lon": -122.3090714 },
+    { "lat": 47.6554451, "lon": -122.3090101 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "lit": "yes",
+    "ramp": "no",
+    "surface": "paved",
+    "tunnel": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 1106705319,
+  "bounds": {
+    "minlat": 47.6561787,
+    "minlon": -122.3099998,
+    "maxlat": 47.6562569,
+    "maxlon": -122.3099983
+  },
+  "geometry": [
+    { "lat": 47.6562569, "lon": -122.3099983 },
+    { "lat": 47.6561787, "lon": -122.3099998 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "ramp": "no",
+    "step_count": "6",
+    "surface": "paving_stones",
+    "tactile_paving": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 1117896577,
+  "bounds": {
+    "minlat": 47.6562718,
+    "minlon": -122.3118006,
+    "maxlat": 47.6563301,
+    "maxlon": -122.3116850
+  },
+  "geometry": [
+    { "lat": 47.6562718, "lon": -122.3117442 },
+    { "lat": 47.6562735, "lon": -122.3117197 },
+    { "lat": 47.6562796, "lon": -122.3116996 },
+    { "lat": 47.6562896, "lon": -122.3116874 },
+    { "lat": 47.6563028, "lon": -122.3116850 },
+    { "lat": 47.6563135, "lon": -122.3116908 },
+    { "lat": 47.6563223, "lon": -122.3117056 },
+    { "lat": 47.6563280, "lon": -122.3117258 },
+    { "lat": 47.6563301, "lon": -122.3117415 },
+    { "lat": 47.6563277, "lon": -122.3117650 },
+    { "lat": 47.6563216, "lon": -122.3117841 },
+    { "lat": 47.6563150, "lon": -122.3117946 },
+    { "lat": 47.6563048, "lon": -122.3118006 },
+    { "lat": 47.6562954, "lon": -122.3118003 },
+    { "lat": 47.6562872, "lon": -122.3117956 },
+    { "lat": 47.6562779, "lon": -122.3117802 },
+    { "lat": 47.6562734, "lon": -122.3117622 },
+    { "lat": 47.6562718, "lon": -122.3117442 }
+  ],
+  "tags": {
+    "building": "yes",
+    "building:levels": "2",
+    "building:material": "glass",
+    "building:min_level": "1",
+    "name": "Light Reign",
+    "operator": "University of Washington",
+    "roof:shape": "dome"
+  }
+},
+{
+  "type": "way",
+  "id": 1204330261,
+  "bounds": {
+    "minlat": 47.6552275,
+    "minlon": -122.3080664,
+    "maxlat": 47.6552412,
+    "maxlon": -122.3080569
+  },
+  "geometry": [
+    { "lat": 47.6552275, "lon": -122.3080569 },
+    { "lat": 47.6552412, "lon": -122.3080664 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "up",
+    "lit": "yes",
+    "ramp": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 1204330262,
+  "bounds": {
+    "minlat": 47.6552636,
+    "minlon": -122.3079405,
+    "maxlat": 47.6552818,
+    "maxlon": -122.3079307
+  },
+  "geometry": [
+    { "lat": 47.6552818, "lon": -122.3079405 },
+    { "lat": 47.6552636, "lon": -122.3079307 }
+  ],
+  "tags": {
+    "highway": "steps",
+    "lit": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 1204330263,
+  "bounds": {
+    "minlat": 47.6552433,
+    "minlon": -122.3080054,
+    "maxlat": 47.6552605,
+    "maxlon": -122.3079925
+  },
+  "geometry": [
+    { "lat": 47.6552605, "lon": -122.3080054 },
+    { "lat": 47.6552433, "lon": -122.3079925 }
+  ],
+  "tags": {
+    "handrail": "yes",
+    "highway": "steps",
+    "incline": "down",
+    "lit": "yes",
+    "ramp": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 1204330266,
+  "bounds": {
+    "minlat": 47.6545520,
+    "minlon": -122.3079712,
+    "maxlat": 47.6545567,
+    "maxlon": -122.3079554
+  },
+  "geometry": [
+    { "lat": 47.6545520, "lon": -122.3079712 },
+    { "lat": 47.6545567, "lon": -122.3079554 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "steps",
+    "lit": "yes",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 1204330267,
+  "bounds": {
+    "minlat": 47.6550992,
+    "minlon": -122.3098895,
+    "maxlat": 47.6551407,
+    "maxlon": -122.3098893
+  },
+  "geometry": [
+    { "lat": 47.6551407, "lon": -122.3098893 },
+    { "lat": 47.6550992, "lon": -122.3098895 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 1204330269,
+  "bounds": {
+    "minlat": 47.6551861,
+    "minlon": -122.3098892,
+    "maxlat": 47.6552191,
+    "maxlon": -122.3098890
+  },
+  "geometry": [
+    { "lat": 47.6552191, "lon": -122.3098890 },
+    { "lat": 47.6551861, "lon": -122.3098892 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "handrail": "yes",
+    "highway": "steps",
+    "surface": "paved"
+  }
+},
+{
+  "type": "way",
+  "id": 1241470969,
+  "bounds": {
+    "minlat": 47.6549432,
+    "minlon": -122.3072943,
+    "maxlat": 47.6551080,
+    "maxlon": -122.3070907
+  },
+  "geometry": [
+    { "lat": 47.6549432, "lon": -122.3072120 },
+    { "lat": 47.6550763, "lon": -122.3072943 },
+    { "lat": 47.6551080, "lon": -122.3071679 },
+    { "lat": 47.6550979, "lon": -122.3071620 },
+    { "lat": 47.6549744, "lon": -122.3070907 },
+    { "lat": 47.6549432, "lon": -122.3072120 }
+  ],
+  "tags": {
+    "amenity": "bicycle_parking",
+    "bicycle_parking": "shed",
+    "building": "yes",
+    "capacity": "105",
+    "colour": "black",
+    "covered": "yes",
+    "fee": "yes",
+    "operator": "UW Transportation Services",
+    "operator:type": "university",
+    "ref": "A15"
+  }
+},
+{
+  "type": "way",
+  "id": 1491155050,
+  "bounds": {
+    "minlat": 47.6551102,
+    "minlon": -122.3099307,
+    "maxlat": 47.6555020,
+    "maxlon": -122.3090288
+  },
+  "geometry": [
+    { "lat": 47.6555014, "lon": -122.3098095 },
+    { "lat": 47.6554283, "lon": -122.3092021 },
+    { "lat": 47.6554391, "lon": -122.3091993 },
+    { "lat": 47.6554287, "lon": -122.3091130 },
+    { "lat": 47.6554050, "lon": -122.3091193 },
+    { "lat": 47.6553806, "lon": -122.3091257 },
+    { "lat": 47.6552438, "lon": -122.3090288 },
+    { "lat": 47.6551956, "lon": -122.3091740 },
+    { "lat": 47.6551896, "lon": -122.3091922 },
+    { "lat": 47.6551102, "lon": -122.3094343 },
+    { "lat": 47.6552153, "lon": -122.3095084 },
+    { "lat": 47.6553125, "lon": -122.3095770 },
+    { "lat": 47.6553156, "lon": -122.3096030 },
+    { "lat": 47.6553188, "lon": -122.3096298 },
+    { "lat": 47.6553445, "lon": -122.3096231 },
+    { "lat": 47.6553714, "lon": -122.3098478 },
+    { "lat": 47.6553849, "lon": -122.3098443 },
+    { "lat": 47.6553952, "lon": -122.3099307 },
+    { "lat": 47.6555020, "lon": -122.3099027 },
+    { "lat": 47.6554912, "lon": -122.3098121 },
+    { "lat": 47.6555014, "lon": -122.3098095 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "1704",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Grant Lane",
+    "building": "university",
+    "building:levels": "4",
+    "building:levels:underground": "1",
+    "building:material": "brick",
+    "name": "Gerberding Hall",
+    "name:etymology": "William Passavant Gerberding",
+    "name:etymology:wikidata": "Q8016461",
+    "name:etymology:wikipedia": "en:William P. Gerberding",
+    "old_name:-1995": "Administration Building",
+    "operator": "University of Washington",
+    "ref": "GRB",
+    "ref:dove": "16423",
+    "roof:levels": "1",
+    "start_date": "1949",
+    "wikidata": "Q49034648",
+    "wikimedia_commons": "Category:Gerberding Hall",
+    "wikipedia": "en:Gerberding Hall"
+  }
+},
+{
+  "type": "way",
+  "id": 1491155057,
+  "bounds": {
+    "minlat": 47.6544075,
+    "minlon": -122.3083396,
+    "maxlat": 47.6552829,
+    "maxlon": -122.3071806
+  },
+  "geometry": [
+    { "lat": 47.6545812, "lon": -122.3079722 },
+    { "lat": 47.6549165, "lon": -122.3082087 },
+    { "lat": 47.6549125, "lon": -122.3082213 },
+    { "lat": 47.6549644, "lon": -122.3082584 },
+    { "lat": 47.6549825, "lon": -122.3082710 },
+    { "lat": 47.6550709, "lon": -122.3083396 },
+    { "lat": 47.6550742, "lon": -122.3083251 },
+    { "lat": 47.6550856, "lon": -122.3083329 },
+    { "lat": 47.6551156, "lon": -122.3082375 },
+    { "lat": 47.6551345, "lon": -122.3082308 },
+    { "lat": 47.6551487, "lon": -122.3081868 },
+    { "lat": 47.6551427, "lon": -122.3081586 },
+    { "lat": 47.6551737, "lon": -122.3080584 },
+    { "lat": 47.6552028, "lon": -122.3079642 },
+    { "lat": 47.6552278, "lon": -122.3078801 },
+    { "lat": 47.6552426, "lon": -122.3078306 },
+    { "lat": 47.6552636, "lon": -122.3078215 },
+    { "lat": 47.6552798, "lon": -122.3077717 },
+    { "lat": 47.6552722, "lon": -122.3077449 },
+    { "lat": 47.6552829, "lon": -122.3077136 },
+    { "lat": 47.6552442, "lon": -122.3076850 },
+    { "lat": 47.6552345, "lon": -122.3076564 },
+    { "lat": 47.6552366, "lon": -122.3076299 },
+    { "lat": 47.6552024, "lon": -122.3076060 },
+    { "lat": 47.6551807, "lon": -122.3075908 },
+    { "lat": 47.6551642, "lon": -122.3075964 },
+    { "lat": 47.6551543, "lon": -122.3075895 },
+    { "lat": 47.6551217, "lon": -122.3075666 },
+    { "lat": 47.6551120, "lon": -122.3075969 },
+    { "lat": 47.6548649, "lon": -122.3074239 },
+    { "lat": 47.6548294, "lon": -122.3073991 },
+    { "lat": 47.6548336, "lon": -122.3073857 },
+    { "lat": 47.6548092, "lon": -122.3073686 },
+    { "lat": 47.6548044, "lon": -122.3073838 },
+    { "lat": 47.6545148, "lon": -122.3071806 },
+    { "lat": 47.6544989, "lon": -122.3072305 },
+    { "lat": 47.6544928, "lon": -122.3072263 },
+    { "lat": 47.6544811, "lon": -122.3072629 },
+    { "lat": 47.6544733, "lon": -122.3072872 },
+    { "lat": 47.6544613, "lon": -122.3073247 },
+    { "lat": 47.6544534, "lon": -122.3073496 },
+    { "lat": 47.6544592, "lon": -122.3073537 },
+    { "lat": 47.6544448, "lon": -122.3073986 },
+    { "lat": 47.6545282, "lon": -122.3074571 },
+    { "lat": 47.6544075, "lon": -122.3078192 },
+    { "lat": 47.6544318, "lon": -122.3078362 },
+    { "lat": 47.6544299, "lon": -122.3078421 },
+    { "lat": 47.6545117, "lon": -122.3079005 },
+    { "lat": 47.6545381, "lon": -122.3079196 },
+    { "lat": 47.6545327, "lon": -122.3079371 },
+    { "lat": 47.6545243, "lon": -122.3079656 },
+    { "lat": 47.6545156, "lon": -122.3079587 },
+    { "lat": 47.6545124, "lon": -122.3079563 },
+    { "lat": 47.6544986, "lon": -122.3079994 },
+    { "lat": 47.6544905, "lon": -122.3080014 },
+    { "lat": 47.6544855, "lon": -122.3080198 },
+    { "lat": 47.6544893, "lon": -122.3080316 },
+    { "lat": 47.6544816, "lon": -122.3080591 },
+    { "lat": 47.6545480, "lon": -122.3081041 },
+    { "lat": 47.6545551, "lon": -122.3080763 },
+    { "lat": 47.6545632, "lon": -122.3080439 },
+    { "lat": 47.6545812, "lon": -122.3079722 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "1851",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Grant Lane",
+    "building": "university",
+    "building:levels": "4",
+    "building:material": "brick",
+    "layer": "1",
+    "name": "Mary Gates Hall",
+    "name:etymology": "Mary Maxwell Gates",
+    "name:etymology:wikidata": "Q454928",
+    "name:etymology:wikipedia": "en:Mary Maxwell Gates",
+    "opening_hours": "Su-Th 07:00-23:00; Fr 07:00-21:30; Sa 07:00-18:00; PH off; \"summer quarter\" 07:00-18:00",
+    "operator": "University of Washington",
+    "ref": "MGH",
+    "wikidata": "Q99017318"
+  }
+},
+{
+  "type": "way",
+  "id": 1491155066,
+  "bounds": {
+    "minlat": 47.6539410,
+    "minlon": -122.3093717,
+    "maxlat": 47.6548902,
+    "maxlon": -122.3084036
+  },
+  "geometry": [
+    { "lat": 47.6543898, "lon": -122.3085868 },
+    { "lat": 47.6544067, "lon": -122.3085989 },
+    { "lat": 47.6544116, "lon": -122.3085837 },
+    { "lat": 47.6544827, "lon": -122.3086335 },
+    { "lat": 47.6544789, "lon": -122.3086455 },
+    { "lat": 47.6546953, "lon": -122.3087969 },
+    { "lat": 47.6546996, "lon": -122.3087836 },
+    { "lat": 47.6548197, "lon": -122.3088677 },
+    { "lat": 47.6548162, "lon": -122.3088786 },
+    { "lat": 47.6548825, "lon": -122.3089250 },
+    { "lat": 47.6548797, "lon": -122.3089337 },
+    { "lat": 47.6548890, "lon": -122.3089402 },
+    { "lat": 47.6548735, "lon": -122.3089891 },
+    { "lat": 47.6548902, "lon": -122.3090008 },
+    { "lat": 47.6548839, "lon": -122.3090206 },
+    { "lat": 47.6548877, "lon": -122.3090232 },
+    { "lat": 47.6548855, "lon": -122.3090300 },
+    { "lat": 47.6548896, "lon": -122.3090329 },
+    { "lat": 47.6548873, "lon": -122.3090402 },
+    { "lat": 47.6548832, "lon": -122.3090374 },
+    { "lat": 47.6548733, "lon": -122.3090685 },
+    { "lat": 47.6548637, "lon": -122.3090987 },
+    { "lat": 47.6548678, "lon": -122.3091015 },
+    { "lat": 47.6548657, "lon": -122.3091083 },
+    { "lat": 47.6548616, "lon": -122.3091054 },
+    { "lat": 47.6548587, "lon": -122.3091147 },
+    { "lat": 47.6548549, "lon": -122.3091120 },
+    { "lat": 47.6548486, "lon": -122.3091318 },
+    { "lat": 47.6548318, "lon": -122.3091200 },
+    { "lat": 47.6547519, "lon": -122.3093717 },
+    { "lat": 47.6546969, "lon": -122.3093332 },
+    { "lat": 47.6546374, "lon": -122.3092915 },
+    { "lat": 47.6546271, "lon": -122.3092843 },
+    { "lat": 47.6546844, "lon": -122.3091037 },
+    { "lat": 47.6546626, "lon": -122.3090885 },
+    { "lat": 47.6546645, "lon": -122.3090826 },
+    { "lat": 47.6546596, "lon": -122.3090792 },
+    { "lat": 47.6546617, "lon": -122.3090724 },
+    { "lat": 47.6543900, "lon": -122.3088823 },
+    { "lat": 47.6543868, "lon": -122.3088923 },
+    { "lat": 47.6543027, "lon": -122.3088335 },
+    { "lat": 47.6543059, "lon": -122.3088234 },
+    { "lat": 47.6543013, "lon": -122.3088202 },
+    { "lat": 47.6543083, "lon": -122.3087981 },
+    { "lat": 47.6543037, "lon": -122.3087948 },
+    { "lat": 47.6543067, "lon": -122.3087854 },
+    { "lat": 47.6542948, "lon": -122.3087770 },
+    { "lat": 47.6542633, "lon": -122.3087550 },
+    { "lat": 47.6541448, "lon": -122.3091283 },
+    { "lat": 47.6541144, "lon": -122.3091071 },
+    { "lat": 47.6540397, "lon": -122.3090548 },
+    { "lat": 47.6539410, "lon": -122.3089857 },
+    { "lat": 47.6539565, "lon": -122.3089369 },
+    { "lat": 47.6539490, "lon": -122.3089316 },
+    { "lat": 47.6539854, "lon": -122.3088169 },
+    { "lat": 47.6539927, "lon": -122.3088220 },
+    { "lat": 47.6540090, "lon": -122.3087707 },
+    { "lat": 47.6540293, "lon": -122.3087849 },
+    { "lat": 47.6540269, "lon": -122.3087923 },
+    { "lat": 47.6540887, "lon": -122.3088356 },
+    { "lat": 47.6542018, "lon": -122.3084794 },
+    { "lat": 47.6542288, "lon": -122.3084983 },
+    { "lat": 47.6542322, "lon": -122.3084874 },
+    { "lat": 47.6542510, "lon": -122.3085006 },
+    { "lat": 47.6542653, "lon": -122.3085106 },
+    { "lat": 47.6542703, "lon": -122.3085141 },
+    { "lat": 47.6543140, "lon": -122.3085446 },
+    { "lat": 47.6543167, "lon": -122.3085359 },
+    { "lat": 47.6543403, "lon": -122.3085524 },
+    { "lat": 47.6543590, "lon": -122.3084871 },
+    { "lat": 47.6543490, "lon": -122.3084804 },
+    { "lat": 47.6543566, "lon": -122.3084553 },
+    { "lat": 47.6543523, "lon": -122.3084442 },
+    { "lat": 47.6543566, "lon": -122.3084298 },
+    { "lat": 47.6543638, "lon": -122.3084303 },
+    { "lat": 47.6543730, "lon": -122.3084036 },
+    { "lat": 47.6544347, "lon": -122.3084420 },
+    { "lat": 47.6544224, "lon": -122.3084819 },
+    { "lat": 47.6544141, "lon": -122.3085087 },
+    { "lat": 47.6544063, "lon": -122.3085340 },
+    { "lat": 47.6543898, "lon": -122.3085868 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:country": "US",
+    "addr:housenumber": "1707",
+    "addr:postcode": "98195",
+    "addr:state": "WA",
+    "addr:street": "Northeast Grant Lane",
+    "building": "university",
+    "building:levels": "4",
+    "building:material": "brick",
+    "layer": "1",
+    "name": "Johnson Hall",
+    "name:etymology": "Orson H. Johnson",
+    "operator": "University of Washington",
+    "ref": "JHN",
+    "wikidata": "Q98700629"
+  }
+}
+
+  ]
+}

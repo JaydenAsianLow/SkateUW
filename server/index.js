@@ -1,0 +1,91 @@
+// Socket.IO relay server.
+// The phone joins as a "controller" and streams tilt data; the laptop joins as a
+// "display" and receives it. Vite's dev server proxies /socket.io and /api here,
+// so the phone only ever talks to one HTTPS origin.
+import { createServer } from 'node:http';
+import os from 'node:os';
+import { Server } from 'socket.io';
+
+const PORT = Number(process.env.PORT) || 3001;
+
+// LAN IPv4 addresses, best guess first (real Wi-Fi/Ethernet before virtual adapters).
+function lanAddresses() {
+  const out = [];
+  for (const [name, infos] of Object.entries(os.networkInterfaces())) {
+    for (const info of infos ?? []) {
+      if (info.family !== 'IPv4' || info.internal) continue;
+      let score = 0;
+      if (/wi-?fi|wlan|wireless|en0|eth|ethernet/i.test(name)) score += 2;
+      if (/vethernet|virtual|vmware|vbox|docker|wsl|hyper-v|loopback|tailscale|zerotier/i.test(name)) score -= 3;
+      if (/^192\.168\./.test(info.address)) score += 1;
+      if (/^169\.254\./.test(info.address)) score -= 5; // link-local, unusable
+      out.push({ name, address: info.address, score });
+    }
+  }
+  return out.sort((a, b) => b.score - a.score).map(({ name, address }) => ({ name, address }));
+}
+
+const httpServer = createServer((req, res) => {
+  if (req.url === '/api/info') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ addresses: lanAddresses() }));
+    return;
+  }
+  res.writeHead(404);
+  res.end('Not found');
+});
+
+const io = new Server(httpServer, { cors: { origin: true } });
+
+const roomSize = (room) => io.sockets.adapter.rooms.get(room)?.size ?? 0;
+const broadcastStatus = () =>
+  io.emit('status', { controllers: roomSize('controllers'), displays: roomSize('displays') });
+
+const TRICK_TYPES = new Set(['kickflip', 'varial', 'tre', 'shove', 'fs180', 'bs180']);
+const num = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : 0);
+
+io.on('connection', (socket) => {
+  socket.on('join', (role) => {
+    if (role !== 'display' && role !== 'controller') return;
+    socket.data.role = role;
+    socket.join(role + 's');
+    console.log(`[socket] ${role} joined (${socket.handshake.address})`);
+    broadcastStatus();
+  });
+
+  // High-rate tilt stream: volatile so stale packets are dropped instead of queued.
+  socket.on('tilt', (d) => {
+    if (socket.data.role !== 'controller' || !d) return;
+    io.to('displays').volatile.emit('tilt', {
+      steer: num(d.steer, -1, 1),
+      lean: num(d.lean, -1, 1),
+      beta: num(d.beta, -180, 180),
+      gamma: num(d.gamma, -90, 90),
+    });
+  });
+
+  // Swipe moves from the deck controller.
+  const relay = (event, build) =>
+    socket.on(event, (d) => {
+      if (socket.data.role === 'controller') io.to('displays').emit(event, build(d ?? {}));
+    });
+  relay('push', (d) => ({ power: num(d.power, 0.5, 1.5) || 1 }));
+  relay('pop', (d) => ({ power: num(d.power, 0.5, 1.5) || 1 }));
+  relay('trick', (d) => ({ type: TRICK_TYPES.has(d.type) ? d.type : 'kickflip', side: d.side < 0 ? -1 : 1 }));
+  relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
+  relay('reset', () => ({}));
+
+  // Round-trip latency check for the controller UI.
+  socket.on('rtt', (ack) => typeof ack === 'function' && ack());
+
+  socket.on('disconnect', () => {
+    if (socket.data.role) console.log(`[socket] ${socket.data.role} left`);
+    broadcastStatus();
+  });
+});
+
+httpServer.listen(PORT, () => {
+  console.log(`[server] Socket.IO relay on http://localhost:${PORT}`);
+  const best = lanAddresses()[0];
+  if (best) console.log(`[server] Phone controller: https://${best.address}:5173/controller`);
+});

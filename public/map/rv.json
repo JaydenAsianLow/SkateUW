@@ -1,0 +1,825 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-11-06T00:12:07Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 4363797795,
+  "lat": 47.6523952,
+  "lon": -122.3062846,
+  "tags": {
+    "bench": "yes",
+    "bin": "separate",
+    "flag": "yes",
+    "gtfs:dataset_id": "KCGIS",
+    "gtfs:stop_id": "75402",
+    "gtfs:stop_id:US-WA-KCM": "75402",
+    "highway": "bus_stop",
+    "lit": "yes",
+    "name": "Stevens Way & Rainier Vista NE",
+    "network": "King County Metro",
+    "network:short": "KCM",
+    "network:wikidata": "Q6411393",
+    "network:wikipedia": "en:King County Metro",
+    "operator": "King County Metro",
+    "operator:short": "KCM",
+    "operator:wikidata": "Q6411393",
+    "operator:wikipedia": "en:King County Metro",
+    "pole": "yes",
+    "public_transport": "platform",
+    "ref": "75402",
+    "route_ref": "45;67;372",
+    "shelter": "yes",
+    "source": "King County GIS",
+    "tactile_paving": "no",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 4475954577,
+  "lat": 47.6523409,
+  "lon": -122.3060433,
+  "tags": {
+    "bench": "separate",
+    "bin": "separate",
+    "flag": "yes",
+    "gtfs:dataset_id": "KCGIS",
+    "gtfs:stop_id": "75415",
+    "gtfs:stop_id:US-WA-KCM": "75415",
+    "highway": "bus_stop",
+    "lit": "yes",
+    "name": "Stevens Way & Rainier Vista NE",
+    "network": "King County Metro",
+    "network:short": "KCM",
+    "network:wikidata": "Q6411393",
+    "network:wikipedia": "en:King County Metro",
+    "operator": "King County Metro",
+    "operator:short": "KCM",
+    "operator:wikidata": "Q6411393",
+    "operator:wikipedia": "en:King County Metro",
+    "pole": "yes",
+    "public_transport": "platform",
+    "ref": "75415",
+    "route_ref": "75;372",
+    "shelter": "separate",
+    "source": "King County GIS",
+    "tactile_paving": "no",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 4511373278,
+  "lat": 47.6523463,
+  "lon": -122.3062235,
+  "tags": {
+    "bus": "yes",
+    "gtfs:stop_id": "75402",
+    "gtfs:stop_id:US-WA-KCM": "75402",
+    "name": "Stevens Way & Rainier Vista NE",
+    "network": "King County Metro",
+    "network:short": "KCM",
+    "network:wikidata": "Q6411393",
+    "network:wikipedia": "en:King County Metro",
+    "operator": "King County Metro",
+    "operator:short": "KCM",
+    "operator:wikidata": "Q6411393",
+    "operator:wikipedia": "en:King County Metro",
+    "public_transport": "stop_position",
+    "ref": "75402",
+    "route_ref": "45;67;372"
+  }
+},
+{
+  "type": "node",
+  "id": 4511376420,
+  "lat": 47.6524159,
+  "lon": -122.3061052,
+  "tags": {
+    "bus": "yes",
+    "gtfs:stop_id": "75415",
+    "gtfs:stop_id:US-WA-KCM": "75415",
+    "name": "Stevens Way & Rainier Vista NE",
+    "network": "King County Metro",
+    "network:short": "KCM",
+    "network:wikidata": "Q6411393",
+    "network:wikipedia": "en:King County Metro",
+    "operator": "King County Metro",
+    "operator:short": "KCM",
+    "operator:wikidata": "Q6411393",
+    "operator:wikipedia": "en:King County Metro",
+    "public_transport": "stop_position",
+    "ref": "75415",
+    "route_ref": "75;372"
+  }
+},
+{
+  "type": "way",
+  "id": 4708383,
+  "bounds": {
+    "minlat": 47.6531274,
+    "minlon": -122.3078777,
+    "maxlat": 47.6535221,
+    "maxlon": -122.3076057
+  },
+  "geometry": [
+    { "lat": 47.6535221, "lon": -122.3078777 },
+    { "lat": 47.6533780, "lon": -122.3077808 },
+    { "lat": 47.6532622, "lon": -122.3076996 },
+    { "lat": 47.6531274, "lon": -122.3076057 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 8097377,
+  "bounds": {
+    "minlat": 47.6535433,
+    "minlon": -122.3082002,
+    "maxlat": 47.6540787,
+    "maxlon": -122.3074099
+  },
+  "geometry": [
+    { "lat": 47.6538369, "lon": -122.3082002 },
+    { "lat": 47.6539003, "lon": -122.3081793 },
+    { "lat": 47.6539584, "lon": -122.3081364 },
+    { "lat": 47.6540078, "lon": -122.3080741 },
+    { "lat": 47.6540457, "lon": -122.3079959 },
+    { "lat": 47.6540698, "lon": -122.3079064 },
+    { "lat": 47.6540787, "lon": -122.3078110 },
+    { "lat": 47.6540718, "lon": -122.3077152 },
+    { "lat": 47.6540497, "lon": -122.3076247 },
+    { "lat": 47.6540135, "lon": -122.3075447 },
+    { "lat": 47.6539654, "lon": -122.3074800 },
+    { "lat": 47.6539082, "lon": -122.3074344 },
+    { "lat": 47.6538454, "lon": -122.3074106 },
+    { "lat": 47.6537805, "lon": -122.3074099 },
+    { "lat": 47.6537181, "lon": -122.3074320 },
+    { "lat": 47.6536610, "lon": -122.3074755 },
+    { "lat": 47.6536125, "lon": -122.3075380 },
+    { "lat": 47.6535755, "lon": -122.3076158 },
+    { "lat": 47.6535520, "lon": -122.3077045 },
+    { "lat": 47.6535433, "lon": -122.3077989 },
+    { "lat": 47.6535501, "lon": -122.3078936 },
+    { "lat": 47.6535719, "lon": -122.3079833 },
+    { "lat": 47.6536074, "lon": -122.3080626 },
+    { "lat": 47.6536546, "lon": -122.3081272 },
+    { "lat": 47.6537108, "lon": -122.3081732 },
+    { "lat": 47.6537728, "lon": -122.3081980 },
+    { "lat": 47.6538369, "lon": -122.3082002 }
+  ],
+  "tags": {
+    "addr:city": "Seattle",
+    "addr:housenumber": "3900",
+    "addr:postcode": "98118",
+    "addr:street": "Rainier Vista Northeast",
+    "alt_name": "Frosh Pond",
+    "amenity": "fountain",
+    "barrier": "kerb",
+    "drinking_water": "no",
+    "fountain": "decorative",
+    "kerb:height": ".4",
+    "name": "Drumheller Fountain",
+    "natural": "water",
+    "ref": "LNDMK-0",
+    "source": "King County GIS;data.seattle.gov",
+    "water": "fountain",
+    "wikidata": "Q21952661"
+  }
+},
+{
+  "type": "way",
+  "id": 313298244,
+  "bounds": {
+    "minlat": 47.6522261,
+    "minlon": -122.3064632,
+    "maxlat": 47.6522878,
+    "maxlon": -122.3064124
+  },
+  "geometry": [
+    { "lat": 47.6522878, "lon": -122.3064632 },
+    { "lat": 47.6522572, "lon": -122.3064380 },
+    { "lat": 47.6522261, "lon": -122.3064124 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "crossing": "marked",
+    "crossing:island": "no",
+    "crossing:markings": "zebra:paired",
+    "footway": "crossing",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista",
+    "segregated": "no",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 369723301,
+  "bounds": {
+    "minlat": 47.6520854,
+    "minlon": -122.3069097,
+    "maxlat": 47.6521486,
+    "maxlon": -122.3068541
+  },
+  "geometry": [
+    { "lat": 47.6521486, "lon": -122.3069097 },
+    { "lat": 47.6521149, "lon": -122.3068866 },
+    { "lat": 47.6520854, "lon": -122.3068541 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "crossing": "marked",
+    "footway": "crossing",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista",
+    "segregated": "no",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 436173891,
+  "bounds": {
+    "minlat": 47.6532708,
+    "minlon": -122.3074005,
+    "maxlat": 47.6536790,
+    "maxlon": -122.3071219
+  },
+  "geometry": [
+    { "lat": 47.6532708, "lon": -122.3071219 },
+    { "lat": 47.6533471, "lon": -122.3071751 },
+    { "lat": 47.6535297, "lon": -122.3073025 },
+    { "lat": 47.6536790, "lon": -122.3074005 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 436173892,
+  "bounds": {
+    "minlat": 47.6521572,
+    "minlon": -122.3076057,
+    "maxlat": 47.6531274,
+    "maxlon": -122.3069299
+  },
+  "geometry": [
+    { "lat": 47.6531274, "lon": -122.3076057 },
+    { "lat": 47.6521572, "lon": -122.3069299 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "surface": "gravel"
+  }
+},
+{
+  "type": "way",
+  "id": 436979001,
+  "bounds": {
+    "minlat": 47.6507566,
+    "minlon": -122.3060611,
+    "maxlat": 47.6509468,
+    "maxlon": -122.3058458
+  },
+  "geometry": [
+    { "lat": 47.6509468, "lon": -122.3060611 },
+    { "lat": 47.6508781, "lon": -122.3060130 },
+    { "lat": 47.6508385, "lon": -122.3059788 },
+    { "lat": 47.6508056, "lon": -122.3059381 },
+    { "lat": 47.6507797, "lon": -122.3058961 },
+    { "lat": 47.6507566, "lon": -122.3058458 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bicycle:signed": "yes",
+    "foot": "designated",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 436979002,
+  "bounds": {
+    "minlat": 47.6507912,
+    "minlon": -122.3056495,
+    "maxlat": 47.6510777,
+    "maxlon": -122.3055691
+  },
+  "geometry": [
+    { "lat": 47.6510777, "lon": -122.3056495 },
+    { "lat": 47.6509848, "lon": -122.3055897 },
+    { "lat": 47.6509557, "lon": -122.3055782 },
+    { "lat": 47.6509133, "lon": -122.3055693 },
+    { "lat": 47.6508691, "lon": -122.3055691 },
+    { "lat": 47.6508384, "lon": -122.3055741 },
+    { "lat": 47.6507912, "lon": -122.3055935 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "foot": "designated",
+    "handrail:left": "yes",
+    "highway": "cycleway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 436979003,
+  "bounds": {
+    "minlat": 47.6523048,
+    "minlon": -122.3071219,
+    "maxlat": 47.6532708,
+    "maxlon": -122.3064688
+  },
+  "geometry": [
+    { "lat": 47.6523048, "lon": -122.3064688 },
+    { "lat": 47.6530645, "lon": -122.3069784 },
+    { "lat": 47.6531238, "lon": -122.3070193 },
+    { "lat": 47.6532708, "lon": -122.3071219 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "surface": "gravel"
+  }
+},
+{
+  "type": "way",
+  "id": 458216721,
+  "bounds": {
+    "minlat": 47.6510203,
+    "minlon": -122.3068541,
+    "maxlat": 47.6520854,
+    "maxlon": -122.3061137
+  },
+  "geometry": [
+    { "lat": 47.6520854, "lon": -122.3068541 },
+    { "lat": 47.6520661, "lon": -122.3068377 },
+    { "lat": 47.6520253, "lon": -122.3068094 },
+    { "lat": 47.6516332, "lon": -122.3065380 },
+    { "lat": 47.6516233, "lon": -122.3065311 },
+    { "lat": 47.6516134, "lon": -122.3065243 },
+    { "lat": 47.6514139, "lon": -122.3063862 },
+    { "lat": 47.6513202, "lon": -122.3063213 },
+    { "lat": 47.6510575, "lon": -122.3061395 },
+    { "lat": 47.6510203, "lon": -122.3061137 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "segregated": "no",
+    "smoothness": "good",
+    "surface": "concrete",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 458216722,
+  "bounds": {
+    "minlat": 47.6511499,
+    "minlon": -122.3064202,
+    "maxlat": 47.6522261,
+    "maxlon": -122.3057011
+  },
+  "geometry": [
+    { "lat": 47.6511499, "lon": -122.3057011 },
+    { "lat": 47.6511871, "lon": -122.3057269 },
+    { "lat": 47.6517430, "lon": -122.3061117 },
+    { "lat": 47.6517529, "lon": -122.3061185 },
+    { "lat": 47.6517628, "lon": -122.3061254 },
+    { "lat": 47.6521549, "lon": -122.3063968 },
+    { "lat": 47.6521819, "lon": -122.3064155 },
+    { "lat": 47.6522034, "lon": -122.3064202 },
+    { "lat": 47.6522261, "lon": -122.3064124 }
+  ],
+  "tags": {
+    "bicycle": "yes",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 477382198,
+  "bounds": {
+    "minlat": 47.6522878,
+    "minlon": -122.3064688,
+    "maxlat": 47.6523048,
+    "maxlon": -122.3064632
+  },
+  "geometry": [
+    { "lat": 47.6522878, "lon": -122.3064632 },
+    { "lat": 47.6523048, "lon": -122.3064688 }
+  ],
+  "tags": {
+    "check_date:surface": "2025-01-06",
+    "footway": "sidewalk",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 477382199,
+  "bounds": {
+    "minlat": 47.6521486,
+    "minlon": -122.3069299,
+    "maxlat": 47.6521572,
+    "maxlon": -122.3069097
+  },
+  "geometry": [
+    { "lat": 47.6521572, "lon": -122.3069299 },
+    { "lat": 47.6521486, "lon": -122.3069097 }
+  ],
+  "tags": {
+    "footway": "sidewalk",
+    "highway": "footway",
+    "lit": "yes",
+    "name": "Rainier Vista",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 524280885,
+  "bounds": {
+    "minlat": 47.6506193,
+    "minlon": -122.3056470,
+    "maxlat": 47.6507086,
+    "maxlon": -122.3055832
+  },
+  "geometry": [
+    { "lat": 47.6507086, "lon": -122.3056470 },
+    { "lat": 47.6506193, "lon": -122.3055832 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bridge": "yes",
+    "foot": "designated",
+    "handrail:left": "yes",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "layer": "1",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "concrete",
+    "width": "33'"
+  }
+},
+{
+  "type": "way",
+  "id": 524280886,
+  "bounds": {
+    "minlat": 47.6505190,
+    "minlon": -122.3056462,
+    "maxlat": 47.6506193,
+    "maxlon": -122.3055832
+  },
+  "geometry": [
+    { "lat": 47.6506193, "lon": -122.3055832 },
+    { "lat": 47.6505703, "lon": -122.3056136 },
+    { "lat": 47.6505475, "lon": -122.3056306 },
+    { "lat": 47.6505190, "lon": -122.3056462 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bicycle:signed": "yes",
+    "bridge": "yes",
+    "foot": "designated",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "layer": "1",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "concrete",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 524280887,
+  "bounds": {
+    "minlat": 47.6505721,
+    "minlon": -122.3055832,
+    "maxlat": 47.6506193,
+    "maxlon": -122.3053833
+  },
+  "geometry": [
+    { "lat": 47.6505721, "lon": -122.3053833 },
+    { "lat": 47.6505893, "lon": -122.3054351 },
+    { "lat": 47.6506060, "lon": -122.3054965 },
+    { "lat": 47.6506193, "lon": -122.3055832 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bridge": "yes",
+    "foot": "designated",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "layer": "1",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "concrete",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 952810855,
+  "bounds": {
+    "minlat": 47.6504287,
+    "minlon": -122.3053833,
+    "maxlat": 47.6505721,
+    "maxlon": -122.3051998
+  },
+  "geometry": [
+    { "lat": 47.6504287, "lon": -122.3051998 },
+    { "lat": 47.6504761, "lon": -122.3052392 },
+    { "lat": 47.6505099, "lon": -122.3052757 },
+    { "lat": 47.6505403, "lon": -122.3053194 },
+    { "lat": 47.6505721, "lon": -122.3053833 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "foot": "designated",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "concrete",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 952810856,
+  "bounds": {
+    "minlat": 47.6503004,
+    "minlon": -122.3056625,
+    "maxlat": 47.6505190,
+    "maxlon": -122.3056133
+  },
+  "geometry": [
+    { "lat": 47.6505190, "lon": -122.3056462 },
+    { "lat": 47.6504741, "lon": -122.3056594 },
+    { "lat": 47.6504321, "lon": -122.3056625 },
+    { "lat": 47.6503920, "lon": -122.3056568 },
+    { "lat": 47.6503606, "lon": -122.3056461 },
+    { "lat": 47.6503004, "lon": -122.3056133 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bicycle:signed": "yes",
+    "foot": "designated",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "smoothness": "good",
+    "surface": "concrete",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 952810857,
+  "bounds": {
+    "minlat": 47.6507086,
+    "minlon": -122.3056470,
+    "maxlat": 47.6507912,
+    "maxlon": -122.3055935
+  },
+  "geometry": [
+    { "lat": 47.6507912, "lon": -122.3055935 },
+    { "lat": 47.6507624, "lon": -122.3056064 },
+    { "lat": 47.6507086, "lon": -122.3056470 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bridge": "yes",
+    "foot": "designated",
+    "handrail:left": "yes",
+    "highway": "cycleway",
+    "layer": "1",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 952810858,
+  "bounds": {
+    "minlat": 47.6507086,
+    "minlon": -122.3058458,
+    "maxlat": 47.6507566,
+    "maxlon": -122.3056470
+  },
+  "geometry": [
+    { "lat": 47.6507566, "lon": -122.3058458 },
+    { "lat": 47.6507399, "lon": -122.3057973 },
+    { "lat": 47.6507281, "lon": -122.3057476 },
+    { "lat": 47.6507198, "lon": -122.3057069 },
+    { "lat": 47.6507086, "lon": -122.3056470 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bicycle:signed": "yes",
+    "bridge": "yes",
+    "foot": "designated",
+    "handrail:right": "yes",
+    "highway": "cycleway",
+    "layer": "1",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 969657923,
+  "bounds": {
+    "minlat": 47.6510777,
+    "minlon": -122.3057011,
+    "maxlat": 47.6511499,
+    "maxlon": -122.3056495
+  },
+  "geometry": [
+    { "lat": 47.6511499, "lon": -122.3057011 },
+    { "lat": 47.6511127, "lon": -122.3056754 },
+    { "lat": 47.6510777, "lon": -122.3056495 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "foot": "designated",
+    "highway": "cycleway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "way",
+  "id": 969657924,
+  "bounds": {
+    "minlat": 47.6509468,
+    "minlon": -122.3061137,
+    "maxlat": 47.6510203,
+    "maxlon": -122.3060611
+  },
+  "geometry": [
+    { "lat": 47.6510203, "lon": -122.3061137 },
+    { "lat": 47.6509831, "lon": -122.3060879 },
+    { "lat": 47.6509468, "lon": -122.3060611 }
+  ],
+  "tags": {
+    "bicycle": "designated",
+    "bicycle:signed": "yes",
+    "foot": "designated",
+    "highway": "cycleway",
+    "lit": "yes",
+    "name": "Rainier Vista Northeast",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "oneway": "no",
+    "segregated": "no",
+    "surface": "asphalt",
+    "width": "15'"
+  }
+},
+{
+  "type": "relation",
+  "id": 6461651,
+  "bounds": {
+    "minlat": 47.6498132,
+    "minlon": -122.3077172,
+    "maxlat": 47.6534568,
+    "maxlon": -122.3048858
+  },
+  "tags": {
+    "landuse": "grass",
+    "layer": "1",
+    "name": "Rainier Vista",
+    "name:etymology": "Mount Rainier",
+    "name:etymology:wikidata": "Q194057",
+    "name:etymology:wikipedia": "en:Mount Rainier",
+    "type": "multipolygon",
+    "wikidata": "Q107290566"
+  }
+}
+
+  ]
+}
