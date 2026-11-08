@@ -129,6 +129,11 @@ check image `art/renders/05_parts.png`. Cross-sections showed the legs separate 
 separate from the torso from 1.15 m to the fingertips, so no seams needed splitting. Parts: head, hair, cap,
 torso (shirt, hem at 0.86 m), hips (jeans top + belt), arm/hand/leg/shoe L and R.
 
+**5b. Skin clean-up** (`art/scripts/05b_skin.py`): the projection smeared shirt orange onto the arms and dark
+edges onto the fingertips. Past the end of each short sleeve (found at 12–13 cm along the arm) and on the
+hands, the texture is repainted one even skin tone sampled from the bare forearms in `reference/front.png`.
+It works from `tex/skater_basecolor_raw.png` (the untouched bake), so it can be rerun on its own.
+
 ```
 Tag every face as one part: head, hair, cap, torso (hoodie body), hood, arm L/R,
 hand L/R, jeans leg L/R, shoe L/R. Use texture colour AND position on the body.
@@ -170,7 +175,7 @@ In the game: `?oldskater` shows the old primitive skater, `?sidecam` views the r
 If the GLB fails to load, the game falls back to the primitive skater automatically.
 
 To change the character later: edit the turnaround sheet and rerun the scripts in order
-(02 → 03 → 03c → 04 → 05 → 06 → 07 → 08 → 10). Each step reads the previous step's file.
+(02 → 03 → 03c → 04 → 05 → 05b → 06 → 07 → 08 → 10). Each step reads the previous step's file.
 
 <details><summary>Original plan for steps 7–10</summary>
 
