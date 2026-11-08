@@ -4,6 +4,7 @@ import { KeyboardControls } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import { connect } from '../socket.js';
 import { board, phone, net } from '../state.js';
+import { commands, settings } from '../settings.js';
 import World from './World.jsx';
 import Skateboard, { GRAVITY } from './Skateboard.jsx';
 import CameraRig from './CameraRig.jsx';
@@ -16,14 +17,13 @@ const keyMap = [
   { name: 'back', keys: ['ArrowDown', 'KeyS'] },
   { name: 'left', keys: ['ArrowLeft', 'KeyA'] },
   { name: 'right', keys: ['ArrowRight', 'KeyD'] },
-  { name: 'pop', keys: ['Space'] },
+  { name: 'pop', keys: ['ShiftLeft', 'ShiftRight'] }, // Space is the default return-to-spawn key
   { name: 'kickflip', keys: ['KeyF'] },
   { name: 'varial', keys: ['KeyG'] },
   { name: 'tre', keys: ['KeyT'] },
   { name: 'shove', keys: ['KeyV'] },
   { name: 'fs180', keys: ['KeyE'] },
   { name: 'revert', keys: ['KeyQ'] },
-  { name: 'reset', keys: ['KeyR'] },
 ];
 
 // Dev-only handle for poking at the live state from the browser console.
@@ -46,6 +46,19 @@ export default function Display() {
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
     s.on('reset', () => (phone.resetQueued = true));
     return () => s.disconnect();
+  }, []);
+
+  // Rebindable spawn keys (settings.js; change them in the HUD's Controls panel).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (commands.rebinding || e.repeat) return;
+      if (e.code === settings.returnKey) commands.toSpawn = true;
+      else if (e.code === settings.setSpawnKey) commands.setSpawn = true;
+      else return;
+      e.preventDefault(); // e.g. stop Space from scrolling or re-clicking a focused button
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   return (

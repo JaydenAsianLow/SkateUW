@@ -82,12 +82,17 @@ export default function Skater() {
     if (a.air) crouchT = 0.62;
     if (pushU >= 0) crouchT = 0.42 + pushW * 0.12;
     crouchT += s.land * 0.35;
+    const fall = a.fall ?? 0; // bail: 0 riding → 1 on the ground
+    if (fall > 0) crouchT = Math.max(crouchT, 0.5);
     s.crouch = damp(s.crouch, crouchT, a.air ? 14 : 9, dt);
-    s.armOut = damp(s.armOut, a.air ? 0.75 : Math.abs(a.steer) * 0.3 + (a.flip >= 0 ? 0.3 : 0), 8, dt);
+    s.armOut = damp(s.armOut, fall > 0 ? 1 : a.air ? 0.75 : Math.abs(a.steer) * 0.3 + (a.flip >= 0 ? 0.3 : 0), fall > 0 ? 14 : 8, dt);
     s.lean = damp(s.lean, a.steer, 6, dt);
 
-    // Whole rider rolls into turns with the deck.
-    root.current.rotation.z = -s.lean * 0.12;
+    // Whole rider rolls into turns with the deck. On a bail they topple off the toe side (+X),
+    // pivoting at the feet, and land on their side next to the board, arms out to catch themselves.
+    root.current.rotation.z = -s.lean * 0.12 - fall * 1.42;
+    root.current.rotation.x = fall * 0.22;
+    root.current.position.set(fall * 0.22, fall * 0.07, 0);
 
     // --- Pelvis / torso / head
     const yaw = -0.85 + pushW * 0.35; // hips mostly toward the toe side, open up forward when pushing

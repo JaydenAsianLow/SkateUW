@@ -23,8 +23,10 @@ const CURVE_DEG = 15; // a stroke that has curved this much might be a half circ
 const ARC_DEG = 115; // smooth turning that counts as a half circle (fires before you finish drawing it)
 const ARC_MIN_PX = 55;
 const COMBO_GAP_MS = 550; // max time between segments of one combo
-const TRICK_WINDOW_MS = 480; // after the pop, trick swipes still upgrade the ollie
-const ARC_WINDOW_MS = 700; // half circles take longer to draw
+// After the pop, trick swipes still upgrade the ollie. Sized for the display's default airtime
+// (~0.9 s in the air, settings.js); the display still rejects a trick that comes too late for its setting.
+const TRICK_WINDOW_MS = 820;
+const ARC_WINDOW_MS = 1050; // half circles take longer to draw
 const MULTI_MS = 130; // two fingers within this time count as "at the same time"
 
 const RAD = Math.PI / 180;

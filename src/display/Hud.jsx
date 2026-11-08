@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { Bar } from '../Bar.jsx';
 import { board, net, phone, phoneIsLive } from '../state.js';
+import { AIRTIME_MAX, AIRTIME_MIN, RESERVED_KEYS, commands, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
 
 // ?clean hides the overlay (for screenshots against the DESIGN.md reference).
 const CLEAN = new URLSearchParams(window.location.search).has('clean');
@@ -98,9 +99,10 @@ export default function Hud() {
           {snap.fakie ? ' · FAKIE' : ''}
         </div>
         <div className="hud-small muted">
-          Keyboard: tap W = push · S = brake · A/D = steer · Space = ollie · F = kickflip · G = varial flip · T = tre flip ·
-          V = pop shove-it · E = frontside 180 · Q = revert · R = reset
+          Keyboard: tap W = push · S = brake · A/D = steer · Shift = ollie · F = kickflip · G = varial flip · T = tre flip ·
+          V = pop shove-it · E = frontside 180 · Q = revert
         </div>
+        <Controls />
         {!showQr && (
           <button className="link" onClick={() => setShowQr(true)}>
             Show phone QR
@@ -130,5 +132,101 @@ export default function Hud() {
         </div>
       )}
     </>
+  );
+}
+
+// Airtime slider, spawn point buttons and the rebindable spawn keys.
+function Controls() {
+  const [cfg, setCfg] = useState({ ...settings });
+  const [open, setOpen] = useState(false);
+  const [binding, setBinding] = useState(null); // 'returnKey' | 'setSpawnKey' | null
+  const [note, setNote] = useState('');
+  useEffect(() => onSettings(setCfg), []);
+
+  // Waiting for a key: the next key press becomes the binding (Esc cancels).
+  useEffect(() => {
+    commands.rebinding = !!binding;
+    if (!binding) return;
+    const other = binding === 'returnKey' ? 'setSpawnKey' : 'returnKey';
+    const onKey = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.code === 'Escape') return setBinding(null);
+      if (RESERVED_KEYS[e.code]) return setNote(`${keyLabel(e.code)} is already ${RESERVED_KEYS[e.code]}. Pick another key.`);
+      if (e.code === settings[other]) return setNote(`${keyLabel(e.code)} is already the other spawn key.`);
+      updateSettings({ [binding]: e.code });
+      setNote('');
+      setBinding(null);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      commands.rebinding = false;
+    };
+  }, [binding]);
+
+  // Buttons lose focus after a click so Space doesn't press them again.
+  const btn = (label, onClick, extra = '') => (
+    <button className={`chip ${extra}`} onClick={(e) => (onClick(), e.currentTarget.blur())}>
+      {label}
+    </button>
+  );
+  const keyBtn = (field) =>
+    btn(binding === field ? 'Press a key…' : keyLabel(cfg[field]), () => {
+      setNote(binding === field ? '' : 'Press the new key (Esc to cancel).');
+      setBinding(binding === field ? null : field);
+    }, binding === field ? 'on' : '');
+
+  if (!open)
+    return (
+      <div className="hud-row ctl-summary">
+        <span className="hud-small muted">
+          {keyLabel(cfg.returnKey)} = back to spawn · {keyLabel(cfg.setSpawnKey)} = set spawn
+        </span>
+        <button className="link" onClick={() => setOpen(true)}>
+          Controls
+        </button>
+      </div>
+    );
+
+  return (
+    <div className="ctl">
+      <div className="ctl-head">
+        <b>Controls</b>
+        <button className="link" onClick={() => (setOpen(false), setBinding(null), setNote(''))}>
+          Close
+        </button>
+      </div>
+      <label className="ctl-row">
+        <span>Airtime</span>
+        <input
+          type="range"
+          min={AIRTIME_MIN}
+          max={AIRTIME_MAX}
+          step={0.1}
+          value={cfg.airtime}
+          onChange={(e) => updateSettings({ airtime: Number(e.target.value) })}
+          onPointerUp={(e) => e.currentTarget.blur()}
+        />
+        <span className="ctl-val">{cfg.airtime.toFixed(1)}×</span>
+      </label>
+      <div className="ctl-row">
+        <span>Back to spawn</span>
+        {keyBtn('returnKey')}
+      </div>
+      <div className="ctl-row">
+        <span>Set spawn here</span>
+        {keyBtn('setSpawnKey')}
+      </div>
+      <div className="ctl-row">
+        <span className="muted">{cfg.spawn ? 'Custom spawn' : 'Default spawn'}</span>
+        <span className="ctl-btns">
+          {btn('Set here', () => (commands.setSpawn = true))}
+          {cfg.spawn && btn('Use default', () => (commands.clearSpawn = true))}
+        </span>
+      </div>
+      {note && <div className="hud-small muted">{note}</div>}
+      <div className="hud-small muted">Shaking the phone also takes you back to the spawn.</div>
+    </div>
   );
 }

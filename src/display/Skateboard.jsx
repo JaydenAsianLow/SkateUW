@@ -4,9 +4,10 @@ import { useKeyboardControls } from '@react-three/drei';
 import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier';
 import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Shape } from 'three';
 import { board, phone, phoneIsLive } from '../state.js';
+import { commands, settings, updateSettings } from '../settings.js';
 import { DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
-import Skater from './Skater.jsx';
+import Rider from './RiderModel.jsx';
 
 // Tuning
 export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy without floating.
@@ -21,10 +22,20 @@ const STEER_RESPONSE = 16; // how fast the board follows the phone tilt (higher 
 // Ollie: apex = v² / 2g. 3.7 m/s → ~0.45 m at a normal swipe, ~0.3–0.6 m from a lazy to a hard swipe
 // (a typical street ollie). Power scales the apex height linearly, so v ∝ √power.
 const POP_VELOCITY = 3.7;
-const TRICK_WINDOW = 0.5; // seconds after the pop that a trick swipe still upgrades the ollie
+const TRICK_WINDOW = 0.5; // seconds after the pop that a trick swipe still upgrades the ollie (at airtime 1)
+// Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
+// so the jump also gets a bit higher (∝ A^¾) instead of just floating in slow motion.
+// A = 1.7 → ~0.9 s in the air and ~0.75 m apex (vs ~0.5 s / 0.45 m at A = 1).
+const airPhysics = () => {
+  const A = settings.airtime;
+  return { pop: POP_VELOCITY * A ** -0.25, g: GRAVITY * A ** -1.25, window: TRICK_WINDOW * A };
+};
 const LAND_OK = 0.78; // a trick at least this far through its rotation when you land still counts
 const ASSIST_MAX = 1.2; // m/s of extra lift a late trick may get so it can finish (keeps tricks landable)
 const BAIL_SPEED_KEEP = 0.25; // speed kept after landing mid-rotation
+const BAIL_TIME = 1.7; // seconds on the ground after a bail before you're back on the board
+const BAIL_FALL = 0.4; // seconds to hit the ground / to get back up
+const BAIL_DRAG = 3; // the board skids to a stop while you're down
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
 const HALF = { x: 0.12, y: 0.08, z: 0.42 }; // collider half extents (real-size board)
 const START = [SPAWN.position[0], HALF.y + 0.05, SPAWN.position[1]];
@@ -70,6 +81,7 @@ export default function Skateboard() {
     air: false,
     airT: 0,
     pushT: -1, // seconds since the current push stroke started (rider animation)
+    bail: -1, // seconds since bailing, -1 when riding
   });
 
   // Distance from a point straight down to the nearest collider (ignoring the board itself).
@@ -120,14 +132,36 @@ export default function Skateboard() {
     st.steer = damp(st.steer, targetSteer, STEER_RESPONSE, dt);
     st.lean = damp(st.lean, targetLean, STEER_RESPONSE, dt);
 
-    // --- Reset if requested or fell out of the world.
+    // --- Spawn point: set it where you are, or teleport back to it (spawn key, phone shake, falling out).
     const p = rb.translation();
-    if (keys.reset || phone.resetQueued || p.y < LOW - 10) {
+    if (commands.setSpawn) {
+      commands.setSpawn = false;
+      updateSettings({ spawn: { x: p.x, y: p.y, z: p.z, heading: st.heading } });
+      board.trick = { name: 'SPAWN SET', at: performance.now() };
+    }
+    if (commands.clearSpawn) {
+      commands.clearSpawn = false;
+      updateSettings({ spawn: null });
+    }
+    if (commands.toSpawn || phone.resetQueued || p.y < LOW - 10) {
+      commands.toSpawn = false;
       phone.resetQueued = false;
-      rb.setTranslation({ x: START[0], y: START[1], z: START[2] }, true);
+      const sp = settings.spawn ?? { x: START[0], y: START[1], z: START[2], heading: SPAWN.heading };
+      rb.setTranslation({ x: sp.x, y: sp.y + 0.05, z: sp.z }, true);
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      Object.assign(st, { heading: SPAWN.heading, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, air: false, pushT: -1 });
+      rb.setGravityScale(1, true);
+      Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, air: false, airT: 0, pushT: -1, bail: -1 });
       return;
+    }
+
+    // --- Bailed: you're on the ground, the board skids to a stop, inputs are ignored until you get up.
+    if (st.bail >= 0) {
+      st.bail += dt;
+      push = pop = revertReq = 0;
+      trickReq = null;
+      targetSteer = targetLean = 0;
+      st.steer = st.lean = 0;
+      if (st.bail >= BAIL_TIME) st.bail = -1; // back on the board, right where you fell
     }
 
     // --- Ground contact: rays down from the middle, nose and tail of the board.
@@ -169,8 +203,9 @@ export default function Skateboard() {
     let vy = v.y;
 
     // --- Tricks.
+    const air = airPhysics();
     const doPop = (power) => {
-      vy = POP_VELOCITY * Math.sqrt(power);
+      vy = air.pop * Math.sqrt(power);
       st.popT = 0;
       st.trick = null;
       st.pushLeft = 0;
@@ -182,12 +217,12 @@ export default function Skateboard() {
       st.trick = { def, side: side < 0 ? -1 : 1, t: 0 };
       // Late trick: make sure there is just enough air time left to finish it.
       const need = def.time * LAND_OK;
-      const left = (vy + Math.sqrt(Math.max(0, vy * vy + 2 * GRAVITY * heightAbove))) / GRAVITY;
-      if (left < need) vy = Math.min(vy + ASSIST_MAX, (GRAVITY * need) / 2 - heightAbove / need);
+      const left = (vy + Math.sqrt(Math.max(0, vy * vy + 2 * air.g * heightAbove))) / air.g;
+      if (left < need) vy = Math.min(vy + ASSIST_MAX, (air.g * need) / 2 - heightAbove / need);
     };
-    const canPop = grounded && st.popT < 0 && !st.revert;
+    const canPop = grounded && st.popT < 0 && !st.revert && st.bail < 0;
     if (pop && canPop) doPop(pop);
-    if (revertReq && st.popT >= 0 && st.popT < TRICK_WINDOW && !st.trick) {
+    if (revertReq && st.popT >= 0 && st.popT < air.window && !st.trick) {
       trickReq = { type: revertReq > 0 ? 'fs180' : 'bs180', side: 1 }; // a half-circle in the air is a 180
       revertReq = 0;
     }
@@ -195,7 +230,7 @@ export default function Skateboard() {
       if (grounded && st.popT < 0 && !st.revert) {
         doPop(0.9); // a trick from flat ground pops by itself (e.g. the two-finger pop shove-it)
         startTrick(trickReq.type, trickReq.side);
-      } else if (st.popT >= 0 && st.popT < TRICK_WINDOW && !st.trick) {
+      } else if (st.popT >= 0 && st.popT < air.window && !st.trick) {
         startTrick(trickReq.type, trickReq.side);
       }
     }
@@ -225,8 +260,11 @@ export default function Skateboard() {
       if (st.popT >= 0 || tr) {
         let name = (st.popFakie ? 'FAKIE ' : '') + (tr ? tr.def.name : 'OLLIE');
         if (tr && tr.t / tr.def.time < LAND_OK) {
-          name = 'BAIL'; // landed mid-rotation
+          name = 'BAIL'; // landed mid-rotation: you hit the ground, then get back up
           speed *= BAIL_SPEED_KEEP;
+          st.bail = 0;
+          st.pushLeft = 0;
+          st.pushT = -1;
         } else if (tr?.def.spin) st.stance ^= 1;
         board.trick = { name, at: performance.now() };
       }
@@ -236,11 +274,16 @@ export default function Skateboard() {
     // A pop that never left the ground (e.g. under a ledge) shouldn't lock tricks forever.
     if (st.popT > 1.5 && grounded) (st.popT = -1), (st.trick = null);
 
+    if (st.bail >= 0) speed *= Math.exp(-BAIL_DRAG * dt);
+    // Popped jumps use the lighter airtime gravity; rolling off a ledge falls normally.
+    rb.setGravityScale(st.popT >= 0 && !grounded ? air.g / GRAVITY : 1, true);
     rb.setLinvel({ x: nfx * speed, y: vy, z: nfz * speed }, true);
     rb.setRotation({ x: 0, y: Math.sin(st.heading / 2), z: 0, w: Math.cos(st.heading / 2) }, true);
 
     // --- Visuals.
     const tr = st.trick;
+    // Fall weight for the rider: 0 riding → 1 lying on the ground → 0 back up.
+    const fall = st.bail < 0 ? 0 : Math.min(1, st.bail / BAIL_FALL, (BAIL_TIME - st.bail) / BAIL_FALL);
     const u = tr ? Math.min(1, tr.t / tr.def.time) : 0;
     const ease = u * u * (3 - 2 * u) * 0.35 + u * 0.65; // quick start, soft catch
     let spinYaw = 0;
@@ -256,7 +299,8 @@ export default function Skateboard() {
     }
     if (boardTrick) pitch *= 1 - Math.sin(Math.PI * u); // level the board while it rotates
     if (shoveG.current) {
-      shoveG.current.rotation.y = boardTrick ? -tr.side * (tr.def.shove ?? 0) * ease * Math.PI * 2 : 0;
+      // On a bail the board kicks out sideways from under you.
+      shoveG.current.rotation.y = boardTrick ? -tr.side * (tr.def.shove ?? 0) * ease * Math.PI * 2 : fall * 0.5;
       shoveG.current.position.y = -HALF.y + (boardTrick ? Math.sin(Math.PI * u) * 0.16 : 0);
     }
     if (deck.current) {
@@ -274,6 +318,7 @@ export default function Skateboard() {
       air: !grounded && (st.popT >= 0 || st.airT > 0.12),
       pitch,
       steer: st.steer,
+      fall: fall * fall * (3 - 2 * fall),
     });
   });
 
@@ -300,7 +345,7 @@ export default function Skateboard() {
           </group>
         </group>
         <group position={[0, -HALF.y, 0]}>
-          <Skater />
+          <Rider />
         </group>
       </group>
     </RigidBody>

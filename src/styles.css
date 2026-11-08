@@ -51,6 +51,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .qr-note { font-size: 11px; color: var(--muted); text-align: center; }
 .chip { font-size: 11px; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.15); background: transparent; }
 .chip.on { border-color: var(--accent); color: var(--accent); }
+.ctl-summary { justify-content: space-between; }
+.ctl { display: grid; gap: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 12px; }
+.ctl-head { display: flex; justify-content: space-between; align-items: center; }
+.ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ctl-row input[type='range'] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.ctl-val { width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.ctl-btns { display: flex; gap: 4px; }
 
 /* ---------- Phone controller ---------- */
 .ctrl {

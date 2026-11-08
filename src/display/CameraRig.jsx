@@ -21,6 +21,8 @@ const TOP_DOWN = (() => {
   return q.has('topdown') ? Number(q.get('topdown')) || 260 : 0;
 })();
 
+const SIDE_CAM = new URLSearchParams(window.location.search).has('sidecam');
+
 export default function CameraRig() {
   const look = useRef(new Vector3());
   const target = useRef(new Vector3());
@@ -43,6 +45,15 @@ export default function CameraRig() {
     const fz = -Math.cos(board.heading);
     const rx = -fz; // right vector
     const rz = fx;
+    if (SIDE_CAM) {
+      // Debug view of the rider (?sidecam): from the toe side, 3 m out, looking at the rider's front.
+      camera.position.set(board.x + rx * 3, board.y + 0.9, board.z + rz * 3);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(board.x, board.y + 0.8, board.z);
+      camera.updateMatrixWorld();
+      sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
+      return;
+    }
     const back = 2.5 + Math.min(board.speed, 14) * 0.04;
     target.current.set(board.x - fx * back + rx * RIGHT, board.y + HEIGHT, board.z - fz * back + rz * RIGHT);
     aim.set(board.x + fx * LOOK_AHEAD + rx * LOOK_RIGHT, board.y + LOOK_Y, board.z + fz * LOOK_AHEAD + rz * LOOK_RIGHT);

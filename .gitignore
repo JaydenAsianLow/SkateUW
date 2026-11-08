@@ -1,2 +1,15 @@
 node_modules
 dist
+
+# Character pipeline (CHARACTER.md): big intermediates, all regenerable by art/scripts/
+art/character/*.glb
+art/character/*.blend
+art/character/*.blend1
+art/character/tex/
+art/renders/
+art/reference/view_*.png
+art/reference/front.png
+art/reference/back.png
+art/reference/right.png
+# Personal photos: kept local only
+art/reference/photo_*.jpg
