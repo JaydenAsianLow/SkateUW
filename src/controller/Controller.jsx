@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { connect } from '../socket.js';
 import { createComboReader, createStrokeTracker } from './gestures.js';
 
@@ -217,8 +217,25 @@ const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
 function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
-  const deckRef = useRef(null);
+  const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
+  const boardRef = useRef(null);
+  const shadowRef = useRef(null);
+  // Latest deck rotation from the laptop (radians / metres), and what's currently drawn (smoothed).
+  const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 } });
+  const steerRef = useRef(steer);
+  steerRef.current = steer;
+
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s) return;
+    const onBoard = (d) => {
+      mirror.current.target = d;
+      mirror.current.at = performance.now();
+    };
+    s.on('board', onBoard);
+    return () => s.off('board', onBoard);
+  }, [socketRef]);
   const trail = useRef([]); // { x, y, t, id }
   const touches = useRef(new Map()); // id -> { x0, y0, t0, x, y, moved }
   const [flash, setFlash] = useState(null); // { label, key }
@@ -304,6 +321,7 @@ function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
       const dpr = window.devicePixelRatio || 1;
       const r = el.getBoundingClientRect();
       if (c.width !== Math.round(r.width * dpr)) (c.width = Math.round(r.width * dpr)), (c.height = Math.round(r.height * dpr));
+      drawBoard(r);
       const ctx = c.getContext('2d');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, r.width, r.height);
@@ -331,6 +349,35 @@ function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
         ctx.beginPath();
         ctx.arc(t.x - r.left, t.y - r.top, 30 + Math.sin(now / 120) * 3, 0, Math.PI * 2);
         ctx.stroke();
+      }
+    };
+    // The 3D board: same rotation as the deck on the laptop (or just the local tilt with no laptop data).
+    // Deck axes -> screen: deck +X (toe side) = right, deck -Z (nose) = up, deck +Y (grip side) = toward you,
+    // a mirror swap, so every rotation flips sign.
+    const drawBoard = (r) => {
+      const b = boardRef.current;
+      if (!b) return;
+      const m = mirror.current;
+      const live = m.target && performance.now() - m.at < 600;
+      const t = live ? m.target : { roll: -steerRef.current * 0.12, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 };
+      const sh = m.shown;
+      for (const k of Object.keys(sh)) {
+        const d = t[k] - sh[k];
+        // Follow closely; snap on big jumps (a finished flip resets from 2π to 0 and must not spin back).
+        sh[k] = Math.abs(d) > 1.5 ? t[k] : sh[k] + d * 0.45;
+      }
+      const pxPerM = b.offsetHeight / 0.8; // the deck is 0.8 m long
+      const up = (sh.lift + Math.min(sh.height, 1.2)) * pxPerM * 0.25; // rises toward you in the air
+      b.style.transform =
+        `translate(-50%, -50%) rotateZ(${-(sh.spin + sh.yaw)}rad) translateZ(${up}px) ` +
+        `rotateX(${-sh.pitch}rad) rotateY(${-sh.roll}rad)`;
+      const sd = shadowRef.current;
+      if (sd) {
+        const k = 1 / (1 + up / 400);
+        sd.style.transform =
+          `translate(-50%, -50%) translate(${up * 0.25}px, ${up * 0.35}px) rotateZ(${-(sh.spin + sh.yaw)}rad) ` +
+          `scale(${k * Math.max(0.15, Math.abs(Math.cos(sh.roll)))}, ${k * Math.max(0.3, Math.abs(Math.cos(sh.pitch)))})`;
+        sd.style.opacity = String(0.55 * k);
       }
     };
     draw();
@@ -364,23 +411,24 @@ function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
     tracker.up(e.pointerId);
   };
 
+  const reset = () => {
+    socketRef.current?.emit('reset');
+    navigator.vibrate?.([40, 40, 40]);
+    setFlash({ label: 'RESET', key: performance.now() });
+  };
+
   return (
     <div className="deck-wrap">
       <div
         ref={deckRef}
-        className="deck"
-        style={{ transform: `perspective(900px) rotateY(${steer * 14}deg)` }}
+        className="deck-stage"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <div className="deck-kick nose" />
-        <div className="deck-kick tail" />
-        <Bolts top />
-        <Bolts />
-        <div className="deck-label nose-label">NOSE</div>
-        <div className="deck-label tail-label">TAIL</div>
+        <div ref={shadowRef} className="board-shadow" />
+        <Board3D ref={boardRef} />
         <div className="hold-zone">HOLD</div>
         <div className="combo">
           {['↓', '↑', '★'].map((g, i) => (
@@ -398,20 +446,53 @@ function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
       </div>
       <div className="deck-foot">
         <button className="secondary small-btn" onClick={onCalibrate}>
-          Calibrate tilt
+          Calibrate
         </button>
         <button className="secondary small-btn" onClick={onSens}>
-          Sensitivity: {SENSITIVITY[sens].label}
+          {SENSITIVITY[sens].label}
         </button>
         <span className="muted small">
           {steer >= 0 ? '+' : ''}
           {steer.toFixed(2)}
         </span>
+        <button className="reset-btn" onClick={reset}>
+          Reset
+        </button>
       </div>
       {error && <p className="error">{error}</p>}
     </div>
   );
 }
+
+// A skateboard built from layers in CSS 3D: grip on top, maple plies for thickness, graphic + trucks underneath.
+const PLIES = [1.5, 3, 4.5, 6, 7.5];
+const Board3D = forwardRef(function Board3D(_, ref) {
+  return (
+    <div ref={ref} className="board3d">
+      {PLIES.map((z, i) => (
+        <div key={z} className="board-ply" style={{ transform: `translateZ(${-z}px)`, filter: `brightness(${1 - i * 0.06})` }} />
+      ))}
+      <div className="board-face board-under">
+        <div className="under-graphic">
+          <span>RED</span>
+          <span>SQUARE</span>
+        </div>
+        {['nose', 'tail'].map((end) => (
+          <div key={end} className={`truck ${end}`}>
+            <i className="wheel l" />
+            <i className="hanger" />
+            <i className="wheel r" />
+            <i className="baseplate" />
+          </div>
+        ))}
+      </div>
+      <div className="board-face board-grip">
+        <Bolts top />
+        <Bolts />
+      </div>
+    </div>
+  );
+});
 
 function Bolts({ top }) {
   return (

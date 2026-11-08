@@ -307,6 +307,14 @@ export default function Skateboard() {
       deck.current.rotation.x = pitch;
       deck.current.rotation.z = -st.steer * 0.12 + (boardTrick ? tr.side * (tr.def.flip ?? 0) * ease * Math.PI * 2 : 0);
     }
+    Object.assign(board.view, {
+      roll: deck.current?.rotation.z ?? 0, // carve tilt + flip roll
+      pitch,
+      yaw: shoveG.current?.rotation.y ?? 0, // shove-it
+      spin: spinYaw, // 180s / reverts (not the fakie stance itself)
+      lift: shoveG.current ? shoveG.current.position.y + HALF.y : 0, // board rising off the feet in flips
+      height: grounded ? 0 : Math.min(2, heightAbove),
+    });
     st.wheelSpin += (speed / 0.028) * dt;
     for (const w of wheels.current) if (w) w.rotation.x = -st.wheelSpin;
 

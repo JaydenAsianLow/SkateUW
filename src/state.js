@@ -21,6 +21,8 @@ export const board = {
   speed: 0, x: 0, y: 0, z: 0, heading: 0, steer: 0, lean: 0, source: 'none', trick: null, fakie: false,
   // Read by the rider animation each frame.
   anim: { pushT: -1, popT: -1, flip: -1, air: false, pitch: 0, steer: 0, fall: 0 },
+  // The deck's own rotation (radians) and height (m), mirrored by the 3D board on the phone.
+  view: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 },
 };
 // board.trick = { name, at } is set on landing for the HUD callout.
 

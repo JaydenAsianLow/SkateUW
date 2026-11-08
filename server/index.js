@@ -75,6 +75,19 @@ io.on('connection', (socket) => {
   relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
   relay('reset', () => ({}));
 
+  // Deck rotation from the display, mirrored by the phone's 3D board.
+  socket.on('board', (d) => {
+    if (socket.data.role !== 'display' || !d) return;
+    io.to('controllers').volatile.emit('board', {
+      roll: num(d.roll, -20, 20),
+      pitch: num(d.pitch, -3, 3),
+      yaw: num(d.yaw, -20, 20),
+      spin: num(d.spin, -20, 20),
+      lift: num(d.lift, -1, 1),
+      height: num(d.height, 0, 2),
+    });
+  });
+
   // Round-trip latency check for the controller UI.
   socket.on('rtt', (ack) => typeof ack === 'function' && ack());
 

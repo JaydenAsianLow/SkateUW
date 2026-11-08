@@ -45,7 +45,14 @@ export default function Display() {
     s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
     s.on('reset', () => (phone.resetQueued = true));
-    return () => s.disconnect();
+    // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
+    const mirror = setInterval(() => {
+      if (net.connected && net.controllers > 0) s.volatile.emit('board', board.view);
+    }, 33);
+    return () => {
+      clearInterval(mirror);
+      s.disconnect();
+    };
   }, []);
 
   // Rebindable spawn keys (settings.js; change them in the HUD's Controls panel).
