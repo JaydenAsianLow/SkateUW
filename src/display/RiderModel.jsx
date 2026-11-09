@@ -190,7 +190,8 @@ function RiderModel() {
     crouchT += s.land * 0.45; // absorb the landing
     if (fall > 0) crouchT = Math.max(crouchT, 0.5);
     s.crouch = damp(s.crouch, Math.min(1, crouchT), a.air || popT >= 0 ? 16 : 9, dt);
-    s.armOut = damp(s.armOut, fall > 0 ? 1.4 : a.air ? 1.0 : 0.25 + Math.abs(a.steer) * 0.35 + (a.flip >= 0 ? 0.3 : 0), 8, dt);
+    const balance = Math.min(1, Math.abs(a.manual ?? 0)) * 0.55; // arms out to balance a manual
+    s.armOut = damp(s.armOut, fall > 0 ? 1.4 : a.air ? 1.0 : 0.25 + Math.abs(a.steer) * 0.35 + (a.flip >= 0 ? 0.3 : 0) + balance, 8, dt);
     s.lean = damp(s.lean, a.steer, 6, dt);
 
     // Whole rider rolls into turns with the deck; on a bail topples off the toe side (+X), pivoting at the feet.
@@ -231,7 +232,9 @@ function RiderModel() {
     const legLen = rig.thigh + rig.shin;
     const baseY = pushU >= 0 ? ankleY(zf) - lift : (ankleY(zf) + ankleY(BACK_Z)) / 2 - lift;
     const hipZ = (FRONT_Z + BACK_Z) / 2 + 0.02 + ((FRONT_Z + 0.06) - (FRONT_Z + BACK_Z) / 2) * s.open;
-    P.Hips.set(-0.03 - s.crouch * 0.05, baseY + rig.hipDrop + legLen * (0.94 - 0.4 * s.crouch), hipZ);
+    // Manual: weight over the back foot (nose manual: over the front foot).
+    const manual = a.manual ?? 0;
+    P.Hips.set(-0.03 - s.crouch * 0.05, baseY + rig.hipDrop + legLen * (0.94 - 0.4 * s.crouch), hipZ + manual * 0.09);
 
     // --- Facing: pelvis open a little toward the nose, chest more, head looks where you're going.
     const pelvisAng = -(0.25 + s.open * 0.9);

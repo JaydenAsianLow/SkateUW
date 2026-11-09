@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { connect } from '../socket.js';
 import { createComboReader, createStrokeTracker } from './gestures.js';
+import { MOVES } from '../moves.js';
 
 const SEND_HZ = 50;
 
@@ -182,17 +183,11 @@ export default function Controller() {
           <h1>Skate Controller</h1>
           <p>Hold the phone flat in portrait. Your screen is the deck: nose at the top, tail at the bottom.</p>
           <ul className="moves">
-            <li><b>Push</b> swipe ↓</li>
-            <li><b>Ollie</b> ↓ then ↑</li>
-            <li><b>Kickflip</b> ↓ ↑ then a diagonal</li>
-            <li><b>Varial flip</b> ↓ ↑ then ↗ and ↙ together (two fingers)</li>
-            <li><b>Tre flip</b> hold a finger top-right, then ↓ ↑ ↙</li>
-            <li><b>Pop shove-it</b> → and ↙ together (two fingers)</li>
-            <li><b>Revert</b> one finger draws a half circle</li>
-            <li><b>Frontside 180</b> ↓ ↑, then left finger half-circles down while the right half-circles up</li>
-            <li><b>Steer</b> tilt left / right</li>
-            <li><b>Brake</b> tilt the top edge toward you</li>
-            <li><b>Respawn</b> shake the phone</li>
+            {MOVES.map(([name, how]) => (
+              <li key={name}>
+                <b>{name}</b> {how}
+              </li>
+            ))}
           </ul>
           <button className="big" onClick={start}>
             Tap to start

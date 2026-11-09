@@ -1,66 +1,29 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Bar } from '../Bar.jsx';
-import { board, net, phone, phoneIsLive } from '../state.js';
+import { board, net, phoneIsLive } from '../state.js';
+import { MOVES } from '../moves.js';
 import { AIRTIME_MAX, AIRTIME_MIN, RESERVED_KEYS, commands, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
 
 // ?clean hides the overlay (for screenshots against the DESIGN.md reference).
 const CLEAN = new URLSearchParams(window.location.search).has('clean');
 
-// 2D overlay: connection status, live tilt values, and a QR code for the phone.
+// 2D overlay: a slim bar (phone status + Controls / QR code / Options buttons), one panel open at a time.
 export default function Hud() {
   const [snap, setSnap] = useState(null);
-  const [addresses, setAddresses] = useState([]);
-  const [pick, setPick] = useState(0);
-  const [qr, setQr] = useState(null);
-  const [showQr, setShowQr] = useState(true);
+  const [panel, setPanel] = useState(null); // 'controls' | 'qr' | 'options' | null
 
   // Poll the shared mutable state at 10Hz for display.
   useEffect(() => {
-    let last = 0;
-    let lastT = performance.now();
     const id = setInterval(() => {
-      const now = performance.now();
-      const rate = ((phone.packets - last) * 1000) / (now - lastT);
-      last = phone.packets;
-      lastT = now;
-      setSnap({
-        connected: net.connected,
-        controllers: net.controllers,
-        live: phoneIsLive(),
-        rate: Math.round(rate),
-        beta: phone.beta,
-        gamma: phone.gamma,
-        steer: board.steer,
-        lean: board.lean,
-        speed: board.speed,
-        source: board.source,
-        trick: board.trick,
-        fakie: board.fakie,
-      });
+      setSnap({ connected: net.connected, controllers: net.controllers, live: phoneIsLive(), trick: board.trick });
     }, 100);
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    fetch('/api/info')
-      .then((r) => r.json())
-      .then((d) => setAddresses(d.addresses ?? []))
-      .catch(() => setAddresses([]));
-  }, []);
-
-  const port = window.location.port || '443';
-  const url = addresses[pick] ? `https://${addresses[pick].address}:${port}/controller` : null;
-
-  useEffect(() => {
-    if (!url) return;
-    QRCode.toDataURL(url, { margin: 1, width: 220, color: { dark: '#0b0d12', light: '#ffffff' } }).then(setQr);
-  }, [url]);
-
-  // Hide the QR automatically once a phone connects (can be reopened).
+  // Close the QR panel once a phone connects.
   const controllers = snap?.controllers ?? 0;
   useEffect(() => {
-    if (controllers > 0) setShowQr(false);
+    if (controllers > 0) setPanel((p) => (p === 'qr' ? null : p));
   }, [controllers]);
 
   // ODbL attribution for the OpenStreetMap layout (MAP.md §6). Always visible.
@@ -68,6 +31,17 @@ export default function Hud() {
   if (!snap || CLEAN) return credit;
 
   const trick = snap.trick && performance.now() - snap.trick.at < 1400 ? snap.trick : null;
+  const status = !snap.connected
+    ? ['bad', 'Server offline']
+    : snap.live
+      ? ['ok', 'Phone connected']
+      : snap.controllers
+        ? ['warn', 'Phone: tap Start']
+        : ['bad', 'No phone'];
+  const toggle = (p) => (e) => {
+    setPanel((cur) => (cur === p ? null : p));
+    e.currentTarget.blur(); // so Space doesn't press it again
+  };
 
   return (
     <>
@@ -77,68 +51,79 @@ export default function Hud() {
           {trick.name}
         </div>
       )}
-      <div className="hud">
-        <div className="hud-row">
-          <span className={`dot ${snap.connected ? 'ok' : 'bad'}`} />
-          <span>{snap.connected ? 'Server connected' : 'Server offline'}</span>
-        </div>
-        <div className="hud-row">
-          <span className={`dot ${snap.live ? 'ok' : snap.controllers ? 'warn' : 'bad'}`} />
-          <span>
-            {snap.live
-              ? `Phone streaming · ${snap.rate} Hz`
-              : snap.controllers
-                ? 'Phone connected, tap Start on it'
-                : 'No phone connected'}
-          </span>
-        </div>
-        <Bar label="Steer" value={snap.steer} />
-        <Bar label="Lean" value={snap.lean} />
-        <div className="hud-small">
-          β {snap.beta.toFixed(1)}° · γ {snap.gamma.toFixed(1)}° · {(snap.speed * 3.6).toFixed(0)} km/h · input: {snap.source}
-          {snap.fakie ? ' · FAKIE' : ''}
-        </div>
-        <div className="hud-small muted">
-          Keyboard: tap W = push · S = brake · A/D = steer · Shift = ollie · F = kickflip · G = varial flip · T = tre flip ·
-          V = pop shove-it · E = frontside 180 · Q = revert
-        </div>
-        <Controls />
-        {!showQr && (
-          <button className="link" onClick={() => setShowQr(true)}>
-            Show phone QR
-          </button>
-        )}
+      <div className="hud-bar">
+        <span className="hud-pill">
+          <span className={`dot ${status[0]}`} />
+          {status[1]}
+        </span>
+        <button className={`hud-btn ${panel === 'controls' ? 'on' : ''}`} onClick={toggle('controls')}>
+          Controls
+        </button>
+        <button
+          className={`hud-btn ${panel === 'qr' ? 'on' : ''} ${!snap.controllers ? 'glow' : ''}`}
+          onClick={toggle('qr')}
+        >
+          QR code
+        </button>
+        <button className={`hud-btn ${panel === 'options' ? 'on' : ''}`} onClick={toggle('options')}>
+          Options
+        </button>
       </div>
-
-      {showQr && (
-        <div className="qr-panel">
-          <div className="qr-title">Scan with your phone</div>
-          {qr ? <img src={qr} alt="QR code for controller URL" width={220} height={220} /> : <div className="qr-ph" />}
-          <div className="qr-url">{url ?? 'Looking up LAN address…'}</div>
-          {addresses.length > 1 && (
-            <div className="qr-alt">
-              Wrong network? Try:
-              {addresses.map((a, i) => (
-                <button key={a.address} className={`chip ${i === pick ? 'on' : ''}`} onClick={() => setPick(i)}>
-                  {a.address}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="qr-note">Same Wi-Fi required. Accept the certificate warning on the phone.</div>
-          <button className="link" onClick={() => setShowQr(false)}>
-            Hide
-          </button>
+      {panel === 'controls' && (
+        <div className="hud-panel">
+          <div className="hud-panel-title">Phone controls</div>
+          <ul className="moves-list">
+            {MOVES.map(([name, how]) => (
+              <li key={name}>
+                <b>{name}</b> {how}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
+      {panel === 'qr' && <QrPanel />}
+      {panel === 'options' && <Options />}
     </>
   );
 }
 
-// Airtime slider, spawn point buttons and the rebindable spawn keys.
-function Controls() {
+function QrPanel() {
+  const [addresses, setAddresses] = useState([]);
+  const [pick, setPick] = useState(0);
+  const [qr, setQr] = useState(null);
+  useEffect(() => {
+    fetch('/api/info')
+      .then((r) => r.json())
+      .then((d) => setAddresses(d.addresses ?? []))
+      .catch(() => setAddresses([]));
+  }, []);
+  const port = window.location.port || '443';
+  const url = addresses[pick] ? `https://${addresses[pick].address}:${port}/controller` : null;
+  useEffect(() => {
+    if (url) QRCode.toDataURL(url, { margin: 1, width: 180, color: { dark: '#0b0d12', light: '#ffffff' } }).then(setQr);
+  }, [url]);
+  return (
+    <div className="hud-panel qr">
+      {qr ? <img src={qr} alt="QR code for the phone controller" width={160} height={160} /> : <div className="qr-ph" />}
+      <div className="qr-url">{url ?? 'Looking up LAN address…'}</div>
+      {addresses.length > 1 && (
+        <div className="qr-alt">
+          Wrong network?
+          {addresses.map((a, i) => (
+            <button key={a.address} className={`chip ${i === pick ? 'on' : ''}`} onClick={() => setPick(i)}>
+              {a.address}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="qr-note">Same Wi-Fi. Accept the certificate warning on the phone.</div>
+    </div>
+  );
+}
+
+// Airtime, what leaning the phone back does, the spawn point and its keys.
+function Options() {
   const [cfg, setCfg] = useState({ ...settings });
-  const [open, setOpen] = useState(false);
   const [binding, setBinding] = useState(null); // 'returnKey' | 'setSpawnKey' | null
   const [note, setNote] = useState('');
   useEffect(() => onSettings(setCfg), []);
@@ -165,7 +150,6 @@ function Controls() {
     };
   }, [binding]);
 
-  // Buttons lose focus after a click so Space doesn't press them again.
   const btn = (label, onClick, extra = '') => (
     <button className={`chip ${extra}`} onClick={(e) => (onClick(), e.currentTarget.blur())}>
       {label}
@@ -177,26 +161,8 @@ function Controls() {
       setBinding(binding === field ? null : field);
     }, binding === field ? 'on' : '');
 
-  if (!open)
-    return (
-      <div className="hud-row ctl-summary">
-        <span className="hud-small muted">
-          {keyLabel(cfg.returnKey)} = back to spawn · {keyLabel(cfg.setSpawnKey)} = set spawn
-        </span>
-        <button className="link" onClick={() => setOpen(true)}>
-          Controls
-        </button>
-      </div>
-    );
-
   return (
-    <div className="ctl">
-      <div className="ctl-head">
-        <b>Controls</b>
-        <button className="link" onClick={() => (setOpen(false), setBinding(null), setNote(''))}>
-          Close
-        </button>
-      </div>
+    <div className="hud-panel ctl">
       <label className="ctl-row">
         <span>Airtime</span>
         <input
@@ -210,6 +176,19 @@ function Controls() {
         />
         <span className="ctl-val">{cfg.airtime.toFixed(1)}×</span>
       </label>
+      <div className="ctl-row">
+        <span>Lean phone back</span>
+        <span className="ctl-btns">
+          {btn('Brake', () => updateSettings({ leanBack: 'brake' }), cfg.leanBack === 'brake' ? 'on' : '')}
+          {btn('Manual', () => updateSettings({ leanBack: 'manual' }), cfg.leanBack === 'manual' ? 'on' : '')}
+        </span>
+      </div>
+      {cfg.leanBack === 'manual' && (
+        <div className="hud-small muted">
+          Lean back to balance on the back wheels, forward for a nose manual. Lean all the way back to drag the tail
+          and slow down.
+        </div>
+      )}
       <div className="ctl-row">
         <span>Back to spawn</span>
         {keyBtn('returnKey')}
@@ -226,7 +205,6 @@ function Controls() {
         </span>
       </div>
       {note && <div className="hud-small muted">{note}</div>}
-      <div className="hud-small muted">Shaking the phone also takes you back to the spawn.</div>
     </div>
   );
 }

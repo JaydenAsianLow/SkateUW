@@ -11,6 +11,7 @@ const DEFAULTS = {
   returnKey: 'Space', // teleport back to the spawn point
   setSpawnKey: 'KeyP', // make the current spot the spawn point
   spawn: null, // { x, y, z, heading } or null for the level's default spawn
+  leanBack: 'brake', // what leaning the phone back does: 'brake' or 'manual'
 };
 
 // Keys the fixed keyboard controls already use (Display.jsx keyMap). Spawn keys can't take these.
@@ -29,6 +30,7 @@ try {
   /* unreadable or blocked storage: use defaults */
 }
 settings.airtime = Math.min(AIRTIME_MAX, Math.max(AIRTIME_MIN, Number(settings.airtime) || DEFAULTS.airtime));
+if (settings.leanBack !== 'manual') settings.leanBack = 'brake';
 
 const listeners = new Set();
 export const onSettings = (fn) => (listeners.add(fn), () => listeners.delete(fn));
