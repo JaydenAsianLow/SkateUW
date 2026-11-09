@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { board, net, phoneIsLive } from '../state.js';
 import { MOVES } from '../moves.js';
@@ -82,6 +82,7 @@ export default function Hud() {
         </div>
       )}
       {panel === 'qr' && <QrPanel />}
+      <BalanceMeter />
       {panel === 'options' && <Options />}
     </>
   );
@@ -185,8 +186,8 @@ function Options() {
       </div>
       {cfg.leanBack === 'manual' && (
         <div className="hud-small muted">
-          Lean back to balance on the back wheels, forward for a nose manual. Lean all the way back to drag the tail
-          and slow down.
+          Tilt the top of the phone up a little to lift the front wheels and ride a manual. Keep it in the balance
+          zone: lean too far back and you fall.
         </div>
       )}
       <div className="ctl-row">
@@ -205,6 +206,31 @@ function Options() {
         </span>
       </div>
       {note && <div className="hud-small muted">{note}</div>}
+    </div>
+  );
+}
+
+// Manual balance meter: shows while in a manual; the marker slides toward the red end as you lean further back.
+function BalanceMeter() {
+  const wrap = useRef(null);
+  const marker = useRef(null);
+  useEffect(() => {
+    let raf;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const b = board.anim.balance ?? -1;
+      if (wrap.current) wrap.current.style.opacity = b >= 0 ? '1' : '0';
+      if (marker.current && b >= 0) marker.current.style.left = `${b * 100}%`;
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div ref={wrap} className="balance">
+      <div className="balance-label">MANUAL</div>
+      <div className="balance-track">
+        <div ref={marker} className="balance-marker" />
+      </div>
     </div>
   );
 }

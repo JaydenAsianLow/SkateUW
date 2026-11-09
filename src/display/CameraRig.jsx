@@ -9,7 +9,7 @@ const aim = new Vector3();
 // Low over-the-shoulder chase camera (DESIGN.md §3): hip height, ~2.5–3 m behind and a little
 // to the right so the skater sits left of centre, nearly level with a slight downward tilt,
 // lagging on turns and rolling a few degrees into them.
-const HEIGHT = 1.1;
+const HEIGHT = 1.2;
 const RIGHT = 0.55;
 const LOOK_AHEAD = 4;
 const LOOK_RIGHT = 0.35;
@@ -57,7 +57,7 @@ export default function CameraRig() {
     }
     // Fixed distance at any speed. The camera eases toward its target (rate FOLLOW), which on its own would
     // trail speed/FOLLOW metres further back when moving fast; leading the target by that much cancels it.
-    const back = 2.3 - Math.min(board.speed, 10) / FOLLOW;
+    const back = 2.7 - Math.min(board.speed, 10) / FOLLOW;
     target.current.set(board.x - fx * back + rx * RIGHT, board.y + HEIGHT, board.z - fz * back + rz * RIGHT);
     aim.set(board.x + fx * LOOK_AHEAD + rx * LOOK_RIGHT, board.y + LOOK_Y, board.z + fz * LOOK_AHEAD + rz * LOOK_RIGHT);
 

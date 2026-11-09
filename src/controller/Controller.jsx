@@ -89,8 +89,8 @@ export default function Controller() {
       if (!offset.current) offset.current = a; // auto-calibrate on first reading
       const range = tiltRange.current;
       sm.steer += (shape(a.x - offset.current.x, range) - sm.steer) * SMOOTH;
-      // Tilting the top edge away from you lowers y, so negate: forward = push.
-      sm.lean += (shape(-(a.y - offset.current.y), range) - sm.lean) * SMOOTH;
+      // lean < 0 = leaning back (top edge tilted up toward you): brake or manual. Sign checked on a real phone.
+      sm.lean += (shape(a.y - offset.current.y, range) - sm.lean) * SMOOTH;
       const steer = clamp(Math.abs(sm.steer) < 0.01 ? 0 : sm.steer);
       const lean = clamp(Math.abs(sm.lean) < 0.01 ? 0 : sm.lean);
       const packet = { steer, lean, beta: r.beta, gamma: r.gamma };

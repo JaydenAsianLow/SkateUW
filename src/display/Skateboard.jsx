@@ -37,14 +37,14 @@ const BAIL_TIME = 1.7; // seconds on the ground after a bail before you're back 
 const BAIL_FALL = 0.4; // seconds to hit the ground / to get back up
 const BAIL_DRAG = 3; // the board skids to a stop while you're down
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
-// Manuals (Options -> Lean phone back: Manual): lean back = balance on the back wheels, forward = nose manual,
-// all the way back = tail drag (slows you down). Leaning past MANUAL_IN starts one.
-const MANUAL_IN = 0.3;
-const TAIL_DRAG_IN = 0.85;
-const MANUAL_PITCH = 0.2; // rad, nose up on a manual
-const TAIL_DRAG_PITCH = 0.3; // rad, tail on the ground
-const TAIL_DRAG_DECEL = 5; // m/s²
-const MANUAL_DRAG = 0.15; // extra fraction of speed lost per second while balancing
+// Manuals (Options -> Lean phone back: Manual). Leaning back between MANUAL_IN and MANUAL_FALL is the balance
+// zone: the front wheels come up and you keep rolling; the nose rises the deeper you lean. Past MANUAL_FALL you
+// lean too far back and bail.
+const MANUAL_IN = 0.25;
+const MANUAL_FALL = 0.85;
+const MANUAL_PITCH_MIN = 0.12; // rad, nose up at the start of the zone
+const MANUAL_PITCH_MAX = 0.3; // rad, nose up at the edge (tail almost on the ground)
+const MANUAL_DRAG = 0.03; // tiny extra speed loss per second while balancing
 const MANUAL_MIN_SPEED = 0.6; // m/s; slower than this you just stand on it
 const MANUAL_CALLOUT = 0.6; // s held before it counts as a manual
 const HALF = { x: 0.12, y: 0.08, z: 0.42 }; // collider half extents (real-size board)
@@ -92,9 +92,9 @@ export default function Skateboard() {
     airT: 0,
     pushT: -1, // seconds since the current push stroke started (rider animation)
     bail: -1, // seconds since bailing, -1 when riding
-    manual: 0, // -1 nose manual .. 0 flat .. 1 manual (smoothed)
+    manual: 0, // 0 flat .. 1 nose fully up (smoothed)
     manualT: 0, // seconds the current manual has been held
-    manualDir: 0,
+    manualBalance: -1,
   });
 
   // Distance from a point straight down to the nearest collider (ignoring the board itself).
@@ -210,29 +210,35 @@ export default function Skateboard() {
       speed *= 1 - ROLL_DRAG * dt;
     }
 
-    // --- Manuals: balance on two wheels while the phone is leant (Manual mode only).
-    let manualTarget = 0;
-    let tailDrag = false;
-    if (manualMode && grounded && st.popT < 0 && !st.revert && st.bail < 0 && !push && speed > MANUAL_MIN_SPEED) {
-      if (leanIn < -MANUAL_IN) manualTarget = 1;
-      else if (leanIn > MANUAL_IN) manualTarget = -1;
-      tailDrag = leanIn < -TAIL_DRAG_IN;
+    // --- Manuals: balance on the back wheels while the phone is leant back (Manual mode only).
+    let inManual = false;
+    let balance = 0; // 0 at the start of the balance zone .. 1 at the falling edge
+    if (manualMode && grounded && st.popT < 0 && !st.revert && st.bail < 0 && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED) {
+      const back = -leanIn;
+      if (back > MANUAL_FALL && st.manualT > 0) {
+        // Leaned too far back: the board shoots out and you fall.
+        st.bail = 0;
+        st.pushLeft = 0;
+        speed *= BAIL_SPEED_KEEP;
+        board.trick = { name: 'BAIL', at: performance.now() };
+        st.manualT = 0;
+      } else if (back > MANUAL_IN) {
+        inManual = true;
+        balance = Math.min(1, (back - MANUAL_IN) / (MANUAL_FALL - MANUAL_IN));
+      }
     }
-    if (manualTarget && st.pushT < 0) {
-      if (manualTarget !== st.manualDir) st.manualT = 0;
-      st.manualDir = manualTarget;
+    if (inManual) {
       st.manualT += dt;
       speed *= 1 - MANUAL_DRAG * dt;
-      if (tailDrag) speed = Math.max(0, speed - TAIL_DRAG_DECEL * dt);
-    } else if (st.manualDir) {
-      if (st.manualT > MANUAL_CALLOUT && st.popT < 0) {
-        const name = st.manualDir > 0 ? 'MANUAL' : 'NOSE MANUAL';
-        board.trick = { name: `${name} ${st.manualT.toFixed(1)}s`, at: performance.now() };
+    } else if (st.manualT > 0) {
+      if (st.manualT > MANUAL_CALLOUT && st.popT < 0 && st.bail < 0) {
+        board.trick = { name: `MANUAL ${st.manualT.toFixed(1)}s`, at: performance.now() };
       }
-      st.manualDir = 0;
       st.manualT = 0;
     }
-    st.manual = damp(st.manual, manualTarget * (tailDrag ? TAIL_DRAG_PITCH / MANUAL_PITCH : 1), 10, dt);
+    st.manualBalance = inManual ? balance : -1;
+    const manualPitch = inManual ? MANUAL_PITCH_MIN + (MANUAL_PITCH_MAX - MANUAL_PITCH_MIN) * balance : 0;
+    st.manual = damp(st.manual, manualPitch / MANUAL_PITCH_MAX, 10, dt);
     if (grounded) {
       speed = Math.min(MAX_SPEED, Math.max(0, speed));
     }
@@ -335,7 +341,7 @@ export default function Skateboard() {
     if (stanceG.current) stanceG.current.rotation.y = st.stance * Math.PI + spinYaw;
 
     const boardTrick = tr && (tr.def.flip || tr.def.shove);
-    let pitch = st.lean * 0.12 + st.manual * MANUAL_PITCH;
+    let pitch = st.lean * 0.12 + st.manual * MANUAL_PITCH_MAX;
     if (st.popT >= 0) {
       const t = st.popT;
       pitch += t < 0.08 ? (t / 0.08) * 0.5 : 0.5 * Math.exp(-(t - 0.08) * 8); // tail snap, then level out
@@ -370,7 +376,8 @@ export default function Skateboard() {
       pitch,
       steer: st.steer,
       fall: fall * fall * (3 - 2 * fall),
-      manual: st.manual,
+      manual: st.manual, // 0..1 nose-up amount (rider leans back over the tail)
+      balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 toward falling (HUD meter)
     });
   });
 
