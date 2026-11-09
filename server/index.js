@@ -35,9 +35,10 @@ const httpServer = createServer((req, res) => {
   res.end('Not found');
 });
 
-// Short heartbeat so a laptop or phone that vanishes without closing its socket (crash, sleep, lost Wi-Fi)
-// is noticed within ~10 s and the other side can show its reconnect screen.
-const io = new Server(httpServer, { cors: { origin: true }, pingInterval: 5000, pingTimeout: 5000 });
+// Heartbeat: forgiving enough that a Wi-Fi hiccup or a long frame on the laptop doesn't drop the socket.
+// Closing a tab is still noticed at once (both pages disconnect on pagehide); only a crash or lost Wi-Fi
+// waits for this (~10-25 s).
+const io = new Server(httpServer, { cors: { origin: true }, pingInterval: 10000, pingTimeout: 15000 });
 
 const roomSize = (room) => io.sockets.adapter.rooms.get(room)?.size ?? 0;
 const broadcastStatus = () =>

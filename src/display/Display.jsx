@@ -27,6 +27,8 @@ const keyMap = [
   { name: 'revert', keys: ['KeyQ'] },
 ];
 
+const LOST_GRACE_MS = 2000; // phone silent this long mid-game -> pause and show "Reconnect phone"
+
 // Dev-only handle for poking at the live state from the browser console.
 if (import.meta.env.DEV) window.__skate = { board, phone };
 
@@ -48,7 +50,16 @@ export default function Display() {
   const [screen, setScreen] = useState('menu'); // 'menu' | 'pair' | 'play'
   const [keyboard, setKeyboard] = useState(false);
   const status = usePhoneStatus();
-  const phoneLost = screen === 'play' && !keyboard && !status.ready;
+  // Only call the phone lost after a short grace period, so Wi-Fi blips don't flash the red card.
+  const [lostLong, setLostLong] = useState(false);
+  const waiting = screen === 'play' && !keyboard && !status.ready;
+  useEffect(() => {
+    setLostLong(false);
+    if (!waiting) return;
+    const t = setTimeout(() => setLostLong(true), LOST_GRACE_MS);
+    return () => clearTimeout(t);
+  }, [waiting]);
+  const phoneLost = waiting && lostLong;
   const running = screen === 'play' && !phoneLost;
   game.running = running;
   game.keyboard = keyboard;

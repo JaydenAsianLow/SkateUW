@@ -37,6 +37,8 @@ export default function Controller() {
   const [displays, setDisplays] = useState(0);
   const [statusKnown, setStatusKnown] = useState(false); // got at least one status from the server
   const [leftOnPurpose, setLeftOnPurpose] = useState(false); // the player tapped Disconnect
+  const leftRef = useRef(false);
+  leftRef.current = leftOnPurpose;
   const [rtt, setRtt] = useState(null);
   const [started, setStarted] = useState(false);
   const [error, setError] = useState(null);
@@ -57,12 +59,22 @@ export default function Controller() {
       setStatusKnown(true);
     });
     s.on('config', (c) => setSens(clampSensitivity(c?.sensitivity)));
+    // Closing the tab: tell the server right away instead of waiting for its heartbeat.
+    const bye = () => s.disconnect();
+    window.addEventListener('pagehide', bye);
+    // Coming back to the tab (after locking the phone or switching apps): reconnect at once.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && !s.connected && !leftRef.current) s.connect();
+    };
+    document.addEventListener('visibilitychange', onVisible);
     const ping = setInterval(() => {
       if (!s.connected) return;
       const t0 = performance.now();
       s.emit('rtt', () => setRtt(Math.round(performance.now() - t0)));
     }, 2000);
     return () => {
+      window.removeEventListener('pagehide', bye);
+      document.removeEventListener('visibilitychange', onVisible);
       clearInterval(ping);
       s.disconnect();
     };
@@ -119,12 +131,16 @@ export default function Controller() {
       if (e.beta == null || e.gamma == null) return;
       raw.current = { beta: e.beta, gamma: e.gamma, has: true };
     });
-    // Keep the screen awake while riding (best effort).
-    try {
-      await navigator.wakeLock?.request('screen');
-    } catch {
-      /* not supported, ignore */
-    }
+    // Keep the screen awake while riding (best effort). The browser drops the lock whenever the tab is hidden,
+    // so take it again each time the page comes back (otherwise the screen sleeps and the socket goes with it).
+    const keepAwake = () => {
+      if (document.visibilityState !== 'visible') return;
+      navigator.wakeLock?.request('screen').catch(() => {
+        /* not supported or refused, ignore */
+      });
+    };
+    keepAwake();
+    document.addEventListener('visibilitychange', keepAwake);
     setStarted(true);
     setTimeout(() => {
       if (!raw.current.has) setError('No sensor data is arriving. Are you on a phone? Laptops have no tilt sensor.');
@@ -150,8 +166,16 @@ export default function Controller() {
 
   // The game (laptop page or server) went away: shade the phone until it's back. Not while connecting at first,
   // and not after a deliberate Disconnect.
-  const gameGone =
+  // Debounced like the laptop's card, so a quick reconnect doesn't flash it.
+  const gone =
     !leftOnPurpose && (conn === 'disconnected' || conn === 'error' || (conn === 'connected' && statusKnown && displays === 0));
+  const [gameGone, setGameGone] = useState(false);
+  useEffect(() => {
+    setGameGone(false);
+    if (!gone) return;
+    const t = setTimeout(() => setGameGone(true), 2000);
+    return () => clearTimeout(t);
+  }, [gone]);
 
   const connLabel =
     conn === 'connected'
