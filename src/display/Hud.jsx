@@ -197,14 +197,12 @@ function Options() {
   );
 }
 
-// Manual meter (vertical, right side): the arrow follows how far the phone is leant back. Top = level / too far
-// forward (the front wheels drop), green middle = keep manualing, red bottom = too far back (bail).
-const RED_AT = 0.82; // keep in sync with .balance-red height (18%)
-
+// Manual meter (top centre, styled like a game "accuracy" bar): the needle follows how far the phone is leant
+// back. Middle green = keep manualing, yellow = getting close, left end = front wheels drop, right end = bail.
+// Hides straight away on a push (which ends the manual), otherwise lingers a moment after the wheels come down.
 function BalanceMeter() {
   const wrap = useRef(null);
-  const arrow = useRef(null);
-  const green = useRef(null);
+  const needle = useRef(null);
   useEffect(() => {
     let raf;
     let shownUntil = 0;
@@ -212,22 +210,24 @@ function BalanceMeter() {
       raf = requestAnimationFrame(tick);
       const a = board.anim;
       const now = performance.now();
-      if ((a.balance ?? -1) >= 0) shownUntil = now + 900; // stays up a moment after the wheels come down
+      if ((a.balance ?? -1) >= 0) shownUntil = now + 700;
+      if (a.pushT >= 0 || a.air) shownUntil = 0;
       if (wrap.current) wrap.current.style.opacity = now < shownUntil ? '1' : '0';
-      // The falling point (meter = 1) sits where the red starts (RED_AT down the bar).
-      if (arrow.current) arrow.current.style.top = `${Math.min(1, (a.meter ?? 0) * RED_AT) * 100}%`;
-      if (green.current) green.current.style.top = `${(a.manualIn ?? 0.3) * RED_AT * 100}%`;
+      if (needle.current) needle.current.style.left = `${(a.meter ?? 0) * 100}%`;
     };
     tick();
     return () => cancelAnimationFrame(raf);
   }, []);
   return (
     <div ref={wrap} className="balance">
-      <div className="balance-label">MANUAL</div>
-      <div className="balance-track">
-        <div ref={green} className="balance-green" />
-        <div className="balance-red" />
-        <div ref={arrow} className="balance-arrow" />
+      <div className="balance-label">★ MANUAL ★</div>
+      <div className="balance-frame">
+        <div className="balance-bar" />
+        <div ref={needle} className="balance-needle" />
+      </div>
+      <div className="balance-ends">
+        <span>WHEELS DOWN</span>
+        <span>BAIL</span>
       </div>
     </div>
   );

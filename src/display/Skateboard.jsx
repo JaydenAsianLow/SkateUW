@@ -42,7 +42,6 @@ const MANUAL_IN = 0.25;
 const MANUAL_FALL = 0.85;
 const MANUAL_PITCH_MIN = 0.12; // rad, nose up at the start of the zone
 const MANUAL_PITCH_MAX = 0.3; // rad, nose up at the edge (tail almost on the ground)
-const MANUAL_DRAG = 0.03; // tiny extra speed loss per second while balancing
 const MANUAL_MIN_SPEED = 0.6; // m/s; slower than this you just stand on it
 const MANUAL_CALLOUT = 0.6; // s held before it counts as a manual
 const HALF = { x: 0.12, y: 0.08, z: 0.42 }; // collider half extents (real-size board)
@@ -201,7 +200,6 @@ export default function Skateboard() {
         speed += st.pushAccel * Math.min(dt, st.pushLeft);
         st.pushLeft -= dt;
       }
-      speed *= 1 - ROLL_DRAG * dt;
     }
 
     // --- Manuals: balance on the back wheels while the phone is leant back.
@@ -222,8 +220,7 @@ export default function Skateboard() {
       }
     }
     if (inManual) {
-      st.manualT += dt;
-      speed *= 1 - MANUAL_DRAG * dt;
+      st.manualT += dt; // no slowdown while manualing (rolling friction is skipped below)
     } else if (st.manualT > 0) {
       if (st.manualT > MANUAL_CALLOUT && st.popT < 0 && st.bail < 0) {
         board.trick = { name: `MANUAL ${st.manualT.toFixed(1)}s`, at: performance.now() };
@@ -231,11 +228,13 @@ export default function Skateboard() {
       st.manualT = 0;
     }
     st.manualBalance = inManual ? balance : -1;
-    // Meter arrow: where the lean sits on the whole scale (0 = level / forward .. 1 = the falling edge and past it).
-    st.meter = Math.max(0, Math.min(1.08, -leanIn / MANUAL_FALL));
+    // Meter needle (0..1 across the bar): 0.2..0.8 is the manual zone (yellow edges, green middle); left of it the
+    // front wheels drop, right of it you bail.
+    st.meter = Math.max(0, Math.min(1, 0.2 + ((-leanIn - MANUAL_IN) / (MANUAL_FALL - MANUAL_IN)) * 0.6));
     const manualPitch = inManual ? MANUAL_PITCH_MIN + (MANUAL_PITCH_MAX - MANUAL_PITCH_MIN) * balance : 0;
     st.manual = damp(st.manual, manualPitch / MANUAL_PITCH_MAX, 10, dt);
     if (grounded) {
+      if (!inManual) speed *= 1 - ROLL_DRAG * dt;
       speed = Math.min(MAX_SPEED, Math.max(0, speed));
     }
 
@@ -374,8 +373,7 @@ export default function Skateboard() {
       fall: fall * fall * (3 - 2 * fall),
       manual: st.manual, // 0..1 nose-up amount (rider leans back over the tail)
       balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 through the green zone
-      meter: st.meter ?? 0, // arrow position on the HUD meter
-      manualIn: MANUAL_IN / MANUAL_FALL, // where the green zone starts on the meter
+      meter: st.meter ?? 0, // needle position on the HUD meter
     });
   });
 

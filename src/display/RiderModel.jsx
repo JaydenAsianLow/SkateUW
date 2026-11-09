@@ -147,8 +147,9 @@ function RiderModel() {
     };
   }, [rig]);
 
-  useFrame((_, rawDt) => {
+  useFrame((state, rawDt) => {
     if (!root.current) return;
+    const time = state.clock.elapsedTime;
     const dt = Math.min(rawDt, 1 / 30);
     const s = st.current;
     const a = board.anim;
@@ -190,12 +191,17 @@ function RiderModel() {
     crouchT += s.land * 0.45; // absorb the landing
     if (fall > 0) crouchT = Math.max(crouchT, 0.5);
     s.crouch = damp(s.crouch, Math.min(1, crouchT), a.air || popT >= 0 ? 16 : 9, dt);
-    const balance = Math.min(1, Math.abs(a.manual ?? 0)) * 0.55; // arms out to balance a manual
+    // Manual: m = how far the nose is up (0..1); edge = how close to losing it (0 sweet spot .. 1 either edge).
+    const m = Math.min(1, Math.abs(a.manual ?? 0));
+    const edge = (a.balance ?? -1) >= 0 ? Math.abs(a.balance - 0.5) * 2 : 0;
+    const balance = m * 0.6; // arms out to balance a manual
     s.armOut = damp(s.armOut, fall > 0 ? 1.4 : a.air ? 1.0 : 0.25 + Math.abs(a.steer) * 0.35 + (a.flip >= 0 ? 0.3 : 0) + balance, 8, dt);
     s.lean = damp(s.lean, a.steer, 6, dt);
 
     // Whole rider rolls into turns with the deck; on a bail topples off the toe side (+X), pivoting at the feet.
-    root.current.rotation.z = -s.lean * 0.12 - fall * 1.42;
+    // Balancing a manual: small side-to-side sway, bigger near the edges of the meter.
+    const sway = Math.sin(time * 4.3) * 0.035 * m * (0.5 + edge);
+    root.current.rotation.z = -s.lean * 0.12 - fall * 1.42 + sway;
     root.current.rotation.x = fall * 0.22;
     root.current.position.set(fall * 0.22, fall * 0.07, 0);
 
@@ -232,9 +238,8 @@ function RiderModel() {
     const legLen = rig.thigh + rig.shin;
     const baseY = pushU >= 0 ? ankleY(zf) - lift : (ankleY(zf) + ankleY(BACK_Z)) / 2 - lift;
     const hipZ = (FRONT_Z + BACK_Z) / 2 + 0.02 + ((FRONT_Z + 0.06) - (FRONT_Z + BACK_Z) / 2) * s.open;
-    // Manual: weight over the back foot (nose manual: over the front foot).
-    const manual = a.manual ?? 0;
-    P.Hips.set(-0.03 - s.crouch * 0.05, baseY + rig.hipDrop + legLen * (0.94 - 0.4 * s.crouch), hipZ + manual * 0.09);
+    // Manual: weight right over the back foot, hips a little lower (back knee bends, front leg reaches out).
+    P.Hips.set(-0.03 - s.crouch * 0.05, baseY + rig.hipDrop + legLen * (0.94 - 0.4 * s.crouch - 0.06 * m), hipZ + m * 0.17);
 
     // --- Facing: pelvis open a little toward the nose, chest more, head looks where you're going.
     const pelvisAng = -(0.25 + s.open * 0.9);
@@ -249,7 +254,7 @@ function RiderModel() {
     yawDir(pelvisAng + (chestAng - pelvisAng) * 0.66, w.fSpine[1]);
 
     // --- Spine: forward bend grows with the crouch, spread down the back; head stays up, eyes slightly down.
-    const bend = 0.12 + 0.45 * s.crouch + pushW * 0.2;
+    const bend = 0.12 + 0.45 * s.crouch + pushW * 0.2 - m * 0.4; // a manual leans the upper body back
     aim('Hips', tilt(w.fPelvis, bend * 0.35, w.prim), w.fPelvis);
     fk('Spine');
     aim('Spine', tilt(w.fSpine[0], bend * 0.55, w.prim), w.fSpine[0]);
@@ -270,8 +275,10 @@ function RiderModel() {
       follow(side + 'Shoulder');
       fk(side + 'Shoulder');
       fk(side + 'Arm');
-      const abd = 0.3 + s.armOut * 0.75;
-      const sw = (pushU >= 0 ? Math.sin(pushU * Math.PI * 2) * 0.5 * sgn : 0) + (a.air ? 0.2 : 0.08);
+      // Balancing arms in a manual: out and forward, waving (more near the edges), the two arms out of phase.
+      const wave = Math.sin(time * 6.5 + (sgn > 0 ? 0 : 2.1)) * m * (0.15 + 0.35 * edge);
+      const abd = 0.3 + s.armOut * 0.75 + wave;
+      const sw = (pushU >= 0 ? Math.sin(pushU * Math.PI * 2) * 0.5 * sgn : 0) + (a.air ? 0.2 : 0.08) + m * 0.35 + wave * 0.6;
       w.upper.copy(w.up).multiplyScalar(-Math.cos(abd)).addScaledVector(w.left, sgn * Math.sin(abd)).normalize();
       w.upper.multiplyScalar(Math.cos(sw)).addScaledVector(fwdC, Math.sin(sw)).normalize();
       w.bend.copy(fwdC).addScaledVector(w.upper, -fwdC.dot(w.upper)).normalize();

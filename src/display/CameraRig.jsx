@@ -28,6 +28,7 @@ export default function CameraRig() {
   const look = useRef(new Vector3());
   const target = useRef(new Vector3());
   const roll = useRef(0);
+  const angle = useRef(0); // camera swing toward the side during a manual (rad)
   const first = useRef(true);
 
   useFrame(({ camera, scene }, rawDt) => {
@@ -42,6 +43,9 @@ export default function CameraRig() {
       sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
       return;
     }
+    // Manual: swing round toward the toe side (a slight side angle) so you can see the board on its back wheels.
+    const side = board.fakie ? -1 : 1;
+    angle.current += ((board.anim.manual ?? 0) * 0.75 * side - angle.current) * (1 - Math.exp(-3 * dt));
     const fx = -Math.sin(board.heading);
     const fz = -Math.cos(board.heading);
     const rx = -fz; // right vector
@@ -58,8 +62,13 @@ export default function CameraRig() {
     // Fixed distance at any speed. The camera eases toward its target (rate FOLLOW), which on its own would
     // trail speed/FOLLOW metres further back when moving fast; leading the target by that much cancels it.
     const back = 2.7 - Math.min(board.speed, 10) / FOLLOW;
-    target.current.set(board.x - fx * back + rx * RIGHT, board.y + HEIGHT, board.z - fz * back + rz * RIGHT);
-    aim.set(board.x + fx * LOOK_AHEAD + rx * LOOK_RIGHT, board.y + LOOK_Y, board.z + fz * LOOK_AHEAD + rz * LOOK_RIGHT);
+    const ca = Math.cos(angle.current);
+    const sa = Math.sin(angle.current);
+    const offX = (-fx * ca + rx * sa) * 2.7 + fx * (2.7 - back) + rx * RIGHT * ca;
+    const offZ = (-fz * ca + rz * sa) * 2.7 + fz * (2.7 - back) + rz * RIGHT * ca;
+    target.current.set(board.x + offX, board.y + HEIGHT - Math.abs(sa) * 0.25, board.z + offZ);
+    const ahead = LOOK_AHEAD * (1 - 0.75 * Math.abs(sa)); // look closer to the board from the side, to keep it centred
+    aim.set(board.x + fx * ahead + rx * LOOK_RIGHT, board.y + LOOK_Y, board.z + fz * ahead + rz * LOOK_RIGHT);
 
     // Snap on the first frames and after a reset/teleport instead of swooping across the map.
     if (first.current || camera.position.distanceTo(target.current) > 6) {
