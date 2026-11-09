@@ -267,7 +267,10 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
   const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 } });
   const steerRef = useRef(steer);
   steerRef.current = steer;
-  const [mode, setMode] = useState('ride'); // 'ride' | 'walk' (board in hand) | 'off' (bailed), from the laptop
+  // From the laptop: 'ride' | 'walk' (board in hand) | 'find' (walking back to the board after a fall) |
+  // 'near' (next to it) | 'off' (down on the ground)
+  const [mode, setMode] = useState('ride');
+  const onFoot = mode === 'walk' || mode === 'find' || mode === 'near';
 
   useEffect(() => {
     const s = socketRef.current;
@@ -433,7 +436,7 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
   const carry = () => {
     socketRef.current?.emit('carry');
     navigator.vibrate?.(25);
-    setFlash({ label: mode === 'walk' ? 'DROP IN' : 'STEP OFF', key: performance.now() });
+    setFlash({ label: onFoot ? 'DROP IN' : 'STEP OFF', key: performance.now() });
   };
 
   const reset = () => {
@@ -468,11 +471,11 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
           </div>
         )}
         <canvas ref={canvasRef} className="deck-trail" />
-        {mode === 'walk' && (
+        {onFoot && (
           <div className="walk-hint">
-            <b>WALKING</b>
+            <b>{mode === 'walk' ? 'WALKING' : 'GET YOUR BOARD'}</b>
             <span>Tilt forward to walk, further to run. Tilt sideways to turn.</span>
-            <span>Tap Ride to drop back in.</span>
+            <span>{mode === 'find' ? 'Walk back to your board.' : mode === 'near' ? 'Tap Ride to hop on.' : 'Tap Ride to drop back in.'}</span>
           </div>
         )}
       </div>
@@ -487,8 +490,8 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
           {steer >= 0 ? '+' : ''}
           {steer.toFixed(2)}
         </span>
-        <button className={`walk-btn ${mode === 'walk' ? 'on' : ''}`} onClick={carry} disabled={mode === 'off'}>
-          {mode === 'walk' ? 'Ride' : 'Walk'}
+        <button className={`walk-btn ${onFoot ? 'on' : ''}`} onClick={carry} disabled={mode === 'off' || mode === 'find'}>
+          {onFoot ? 'Ride' : 'Walk'}
         </button>
         <button className="reset-btn" onClick={reset}>
           Reset

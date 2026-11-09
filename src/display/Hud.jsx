@@ -9,12 +9,14 @@ const CLEAN = new URLSearchParams(window.location.search).has('clean');
 export default function Hud({ onMenu }) {
   const [trick, setTrick] = useState(null);
   const [open, setOpen] = useState(false);
+  const [foot, setFoot] = useState('ride'); // board.view.mode: walking back to the board after a fall?
 
   // Poll the shared mutable state at 10Hz for the trick callout.
   useEffect(() => {
     const id = setInterval(() => {
       const t = board.trick && performance.now() - board.trick.at < 1400 ? board.trick : null;
       setTrick((cur) => (cur?.at === t?.at ? cur : t));
+      setFoot(board.view.mode ?? 'ride');
     }, 100);
     return () => clearInterval(id);
   }, []);
@@ -41,6 +43,9 @@ export default function Hud({ onMenu }) {
         <div className="hud-panel">
           <SettingsPanel inGame />
         </div>
+      )}
+      {(foot === 'find' || foot === 'near') && (
+        <div className="foot-hint">{foot === 'near' ? 'Tap Ride on the phone (or B) to hop on' : 'Walk back to your board'}</div>
       )}
       <BalanceMeter />
     </>

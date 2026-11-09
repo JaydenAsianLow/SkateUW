@@ -43,7 +43,8 @@ const WALK_SPEED = 1.5;
 const RUN_SPEED = 4.2;
 const BACK_SPEED = 0.8;
 const WALK_TURN = 2.6; // rad/s at full steer
-const JOG_TO_BOARD = 2.4; // m/s, walking back to the board after a bail
+const JOG_TO_BOARD = 1.6; // m/s, the last steps onto the board after you tap Ride next to it
+const NEAR_BOARD = 1.6; // m: close enough to the loose board that Ride steps onto it
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
 // Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
 // The meter: below MANUAL_IN (too far forward) the front wheels drop back down; MANUAL_IN..MANUAL_FALL is the
@@ -122,8 +123,8 @@ export default function Skateboard() {
     air: false,
     airT: 0,
     pushT: -1, // seconds since the current push stroke started (rider animation)
-    // Off the board: mode 'ride' | 'bail' (falling + getting up) | 'toBoard' (walking back to it) | 'dismount' |
-    // 'walk' (board in hand) | 'mount' (stepping back on). track = the choreo.js animation being played.
+    // Off the board: mode 'ride' | 'bail' (falling + getting up) | 'dismount' | 'walk' (board in hand, or walking
+    // back to it after a bail while it's loose) | 'toBoard' (the last steps onto it after Ride) | 'mount'. track = the choreo.js animation being played.
     mode: 'ride',
     modeT: 0,
     track: null,
@@ -432,9 +433,12 @@ export default function Skateboard() {
         turn = -st.steer * WALK_TURN;
         st.heading += turn * dt;
         fwdSpeed = st.walkSpeed;
-        if (carryReq && v.y > -1) startMount(true);
+        if (carryReq && v.y > -1) {
+          if (!st.loose) startMount(true);
+          else if (Math.hypot(st.loose.x - p.x, st.loose.z - p.z) < NEAR_BOARD) Object.assign(st, { mode: 'toBoard', modeT: 0 });
+        }
       } else if (st.mode === 'toBoard') {
-        // Jog back to the board: to a spot just behind it, facing the way you'll ride it.
+        // Ride tapped next to the loose board: step to a spot just behind it, facing the way you'll ride it.
         const L = st.loose;
         const nx = -Math.sin(L.yaw);
         const nz = -Math.cos(L.yaw);
@@ -463,7 +467,7 @@ export default function Skateboard() {
           latZ = (mz - fz * along) * 4;
         }
         const ready = dist < 0.07 && Math.abs(wrapAngle(rideHeading - st.heading)) < 0.1 && Math.hypot(L.vx, L.vz) < 0.4;
-        if (ready || st.modeT > 10) {
+        if (ready || st.modeT > 3) {
           st.heading = rideHeading;
           startMount(false);
         }
@@ -479,7 +483,7 @@ export default function Skateboard() {
         if (st.modeT >= st.track.dur) {
           if (st.mode === 'bail') {
             if (st.stance === 1) (st.heading += Math.PI), (st.stance = 0); // walk nose first (same look)
-            Object.assign(st, { mode: 'toBoard', walkSpeed: 0, walkPhase: 0, offSpeed: 0 });
+            Object.assign(st, { mode: 'walk', walkSpeed: 0, walkPhase: 0, offSpeed: 0 }); // you walk back to the board
           } else if (st.mode === 'dismount') {
             Object.assign(st, { mode: 'walk', walkSpeed: Math.max(0, st.offSpeed), walkPhase: 0, offSpeed: 0 });
           } else {
@@ -493,7 +497,11 @@ export default function Skateboard() {
         const pace = Math.max(Math.abs(st.walkSpeed), Math.abs(turn) * 0.35);
         st.walkPhase += (Math.sign(st.walkSpeed || 1) * pace * dt) / strideLength(st.walkSpeed);
       }
-      if (st.loose) updateLoose(rb, dt);
+      if (st.loose) {
+        updateLoose(rb, dt);
+        // Lost the board off the edge of the map: it turns up in front of you.
+        if (st.loose.y < LOW - 10) Object.assign(st.loose, { x: p.x - Math.sin(st.heading) * 1.2, y: p.y - HALF.y, z: p.z - Math.cos(st.heading) * 1.2, vx: 0, vy: 0, vz: 0, vyaw: 0, yaw: st.heading });
+      }
 
       const fx = -Math.sin(st.heading);
       const fz = -Math.cos(st.heading);
@@ -508,7 +516,7 @@ export default function Skateboard() {
         pose = evalTrack(st.track, st.modeT);
         w = trackWeight(st.track, st.modeT);
       } else if (st.mode !== 'ride') {
-        pose = finish(walkPose(st.walkPhase, st.walkSpeed, st.mode === 'walk', turn));
+        pose = finish(walkPose(st.walkPhase, st.walkSpeed, !st.loose, turn));
       }
       board.pose = pose && { w, ...pose };
       resetBoardVisuals();
@@ -520,9 +528,15 @@ export default function Skateboard() {
         for (const wh of wheels.current) if (wh) wh.rotation.x = -st.wheelSpin;
       }
 
-      const offMode = st.mode === 'walk' || st.mode === 'dismount' ? 'walk' : st.mode === 'ride' ? 'ride' : 'off';
+      // For the phone's button: 'walk' board in hand (Ride drops in), 'find' walking back to the loose board,
+      // 'near' close enough to step on, 'off' down on the ground. Stepping on counts as riding.
+      let offMode = 'off';
+      if (st.mode === 'ride' || st.mode === 'mount') offMode = 'ride';
+      else if (st.mode === 'dismount' || (st.mode === 'walk' && !st.loose)) offMode = 'walk';
+      else if (st.mode === 'toBoard') offMode = 'near';
+      else if (st.mode === 'walk') offMode = Math.hypot(st.loose.x - p.x, st.loose.z - p.z) < NEAR_BOARD ? 'near' : 'find';
       Object.assign(board.view, { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0, mode: offMode });
-      Object.assign(board, { speed: fwdSpeed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: false, mode: st.mode });
+      Object.assign(board, { speed: fwdSpeed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: false, mode: st.mode, loose: st.loose });
       Object.assign(board.anim, {
         pushT: -1,
         popT: -1,
@@ -733,7 +747,7 @@ export default function Skateboard() {
     st.wheelSpin += (speed / 0.028) * dt;
     for (const w of wheels.current) if (w) w.rotation.x = -st.wheelSpin;
 
-    Object.assign(board, { speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: st.lean, fakie: st.stance === 1, mode: 'ride' });
+    Object.assign(board, { speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: st.lean, fakie: st.stance === 1, mode: 'ride', loose: null });
     Object.assign(board.anim, {
       pushT: st.pushT,
       popT: st.popT,

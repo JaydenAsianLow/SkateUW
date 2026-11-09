@@ -326,6 +326,22 @@ function backFall(s) {
     knees: [norm([-0.25, 0, -1]), norm([0.25, 0, -1])],
     toes: [norm([-0.1, 0, -1]), norm([0.1, 0, -1])],
   };
+  // Rock forward: chest over the knees, hands down ahead of the feet, hips come off the ground only once the
+  // weight is over the feet (rising straight out of the sit looked like floating).
+  const hr = [h2[0] + fw[0] * 0.28, 0.3, h2[2] + fw[2] * 0.28];
+  const fr = frame(tiltUp(-1.35, 0.9), tiltFront(-1.35, 0.9));
+  const handAhead = (lat) => [h2[0] + fw[0] * 0.68 + lft[0] * lat, 0.09, h2[2] + fw[2] * 0.68 + lft[2] * lat];
+  const g15 = {
+    ...g1,
+    root: [hr[0], hr[2]],
+    hips: hr,
+    up: fr.U,
+    front: fr.F,
+    bend: 0.35,
+    headPitch: -0.2,
+    hands: [handAhead(0.3), handAhead(-0.3)],
+    elbows: [norm([-fw[0], 0.3, -fw[2]]), norm([-fw[0], 0.3, -fw[2]])],
+  };
   const t2 = 0.34;
   const t3 = 0.5;
   const tUp = t3 + down;
@@ -336,8 +352,9 @@ function backFall(s) {
     [t3, k3, 'out'],
     [tUp, k4],
     [tUp + 0.45 + 0.25 * s, g1],
-    [tUp + 0.95 + 0.25 * s, g2],
-    [tUp + 1.45 + 0.25 * s, idle(E[0], E[1])],
+    [tUp + 0.85 + 0.25 * s, g15],
+    [tUp + 1.2 + 0.25 * s, g2],
+    [tUp + 1.7 + 0.25 * s, idle(E[0], E[1])],
   ];
   return { keys, dur: keys[keys.length - 1][0], blendIn: 0.1 };
 }
@@ -507,29 +524,59 @@ function slam(s) {
     ankles: [at(-0.06, 0.1, z5 + 0.72), at(0.16, 0.1, z5 + 0.72)],
     knees: [[0, -1, -0.3], [0, -1, -0.3]],
   };
-  const E = [0.05, z5 + 0.12];
-  const hc = [E[0], 0.5, E[1] + 0.1];
-  const fc = frame(tiltUp(WALK_FACE, 0.9), tiltFront(WALK_FACE, 0.9));
+  // All fours: hips back over the knees (the shins stay where they are), hands planted.
+  const h4 = [0.05, 0.46, z5 + 0.3];
+  const f4 = frame(tiltUp(WALK_FACE, 1.15), tiltFront(WALK_FACE, 1.15));
   const g2 = {
     ...g1,
-    root: [E[0], E[1]],
-    hips: hc,
-    up: fc.U,
-    front: fc.F,
+    root: [0.05, z5 + 0.2],
+    hips: h4,
+    up: f4.U,
+    front: f4.F,
     bend: 0.3,
-    headPitch: -0.35,
-    hands: [rel(hc, fc, 0.15, 0.12, 0.38), rel(hc, fc, -0.15, 0.12, 0.38)],
-    elbows: [norm([-0.6, 0, 1]), norm([0.6, 0, 1])],
-    ankles: [at(E[0] - 0.13, ANK, E[1]), at(E[0] + 0.13, ANK, E[1] + 0.05)],
-    knees: [norm([-0.25, 0, -1]), norm([0.25, 0, -1])],
-    toes: [norm([-0.1, 0, -1]), norm([0.1, 0, -1])],
+    headPitch: -0.4,
+    hands: [at(-0.17, 0.1, z5 - 0.22), at(0.27, 0.1, z5 - 0.22)],
+    elbows: [norm([-0.3, 0.2, 1]), norm([0.3, 0.2, 1])],
+    knees: [norm([0, -1, -0.5]), norm([0, -1, -0.5])],
+  };
+  // Lunge: left foot planted under the chest, right knee still down, hand on the knee.
+  const hl = [0.05, 0.5, z5 + 0.38];
+  const fl = frame(tiltUp(WALK_FACE, 0.55), tiltFront(WALK_FACE, 0.55));
+  const lf = at(-0.07, ANK, z5 + 0.12);
+  const g3 = {
+    ...g2,
+    root: [0.05, z5 + 0.25],
+    hips: hl,
+    up: fl.U,
+    front: fl.F,
+    bend: 0.25,
+    headPitch: 0,
+    hands: [at(-0.09, 0.5, z5 + 0.14), at(0.27, 0.42, z5 + 0.36)],
+    elbows: [norm([-0.6, 0, 1]), norm([0.4, 0, 1])],
+    ankles: [lf, at(0.16, 0.1, z5 + 0.72)],
+    knees: [norm([-0.1, 0.4, -1]), norm([0, -1, -0.5])],
+    toes: [norm([-0.1, 0, -1]), norm([0, -0.25, 1])],
+    soles: [UP, [0, -1, 0]],
+  };
+  // Push up off the front foot, swinging the back foot through.
+  const E = [0.05, z5 + 0.16];
+  const g4 = {
+    ...g3,
+    root: [0.05, z5 + 0.2],
+    hips: [0.05, 0.74, z5 + 0.2],
+    ...torso(WALK_FACE, 0.3),
+    bend: 0.15,
+    hands: [at(-0.2, 0.7, z5 + 0.12), at(0.24, 0.72, z5 + 0.26)],
+    ankles: [lf, at(0.12, 0.26, z5 + 0.38)],
+    knees: [norm([-0.1, 0, -1]), norm([0.1, 0.3, -1])],
+    toes: [norm([-0.1, 0, -1]), norm([0.1, -0.4, -1])],
     soles: [UP, UP],
   };
   const keys = [[0, k0], [0.12, k1, 'out'], [0.26, k2, 'in']];
   let t = 0.26;
   if (roll) keys.push([(t += 0.14), k3, 'lin'], [(t += 0.14), k4, 'lin']);
   keys.push([(t += roll ? 0.14 : 0.18), k5, roll ? 'out' : undefined]);
-  keys.push([(t += down), k6], [(t += 0.45), g1], [(t += 0.45), g2], [(t += 0.5), idle(E[0], E[1])]);
+  keys.push([(t += down), k6], [(t += 0.4), g1], [(t += 0.4), g2], [(t += 0.35), g3], [(t += 0.3), g4, 'out'], [(t += 0.3), idle(E[0], E[1])]);
   return { keys, dur: t, blendIn: 0.08 };
 }
 

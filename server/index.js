@@ -92,7 +92,7 @@ io.on('connection', (socket) => {
       spin: num(d.spin, -20, 20),
       lift: num(d.lift, -1, 1),
       height: num(d.height, 0, 2),
-      mode: ['ride', 'walk', 'off'].includes(d.mode) ? d.mode : 'ride',
+      mode: ['ride', 'walk', 'find', 'near', 'off'].includes(d.mode) ? d.mode : 'ride',
     });
   });
 
