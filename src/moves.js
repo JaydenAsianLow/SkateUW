@@ -9,6 +9,6 @@ export const MOVES = [
   ['Revert', 'one finger draws a half circle'],
   ['Frontside 180', '↓ ↑, then left finger half-circles down while the right half-circles up'],
   ['Steer', 'tilt left / right'],
-  ['Tilt top up', 'brake, or ride a manual (Options)'],
+  ['Manual', 'tilt the top of the phone up; keep the arrow in the green'],
   ['Respawn', 'shake the phone, or Reset'],
 ];

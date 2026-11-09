@@ -178,19 +178,6 @@ function Options() {
         <span className="ctl-val">{cfg.airtime.toFixed(1)}×</span>
       </label>
       <div className="ctl-row">
-        <span>Lean phone back</span>
-        <span className="ctl-btns">
-          {btn('Brake', () => updateSettings({ leanBack: 'brake' }), cfg.leanBack === 'brake' ? 'on' : '')}
-          {btn('Manual', () => updateSettings({ leanBack: 'manual' }), cfg.leanBack === 'manual' ? 'on' : '')}
-        </span>
-      </div>
-      {cfg.leanBack === 'manual' && (
-        <div className="hud-small muted">
-          Tilt the top of the phone up a little to lift the front wheels and ride a manual. Keep it in the balance
-          zone: lean too far back and you fall.
-        </div>
-      )}
-      <div className="ctl-row">
         <span>Back to spawn</span>
         {keyBtn('returnKey')}
       </div>
@@ -210,17 +197,26 @@ function Options() {
   );
 }
 
-// Manual balance meter: shows while in a manual; the marker slides toward the red end as you lean further back.
+// Manual meter (vertical, right side): the arrow follows how far the phone is leant back. Top = level / too far
+// forward (the front wheels drop), green middle = keep manualing, red bottom = too far back (bail).
+const RED_AT = 0.82; // keep in sync with .balance-red height (18%)
+
 function BalanceMeter() {
   const wrap = useRef(null);
-  const marker = useRef(null);
+  const arrow = useRef(null);
+  const green = useRef(null);
   useEffect(() => {
     let raf;
+    let shownUntil = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
-      const b = board.anim.balance ?? -1;
-      if (wrap.current) wrap.current.style.opacity = b >= 0 ? '1' : '0';
-      if (marker.current && b >= 0) marker.current.style.left = `${b * 100}%`;
+      const a = board.anim;
+      const now = performance.now();
+      if ((a.balance ?? -1) >= 0) shownUntil = now + 900; // stays up a moment after the wheels come down
+      if (wrap.current) wrap.current.style.opacity = now < shownUntil ? '1' : '0';
+      // The falling point (meter = 1) sits where the red starts (RED_AT down the bar).
+      if (arrow.current) arrow.current.style.top = `${Math.min(1, (a.meter ?? 0) * RED_AT) * 100}%`;
+      if (green.current) green.current.style.top = `${(a.manualIn ?? 0.3) * RED_AT * 100}%`;
     };
     tick();
     return () => cancelAnimationFrame(raf);
@@ -229,7 +225,9 @@ function BalanceMeter() {
     <div ref={wrap} className="balance">
       <div className="balance-label">MANUAL</div>
       <div className="balance-track">
-        <div ref={marker} className="balance-marker" />
+        <div ref={green} className="balance-green" />
+        <div className="balance-red" />
+        <div ref={arrow} className="balance-arrow" />
       </div>
     </div>
   );

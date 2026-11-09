@@ -14,8 +14,6 @@ export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy with
 const MAX_SPEED = 8; // m/s (~29 km/h)
 const PUSH_GAIN = 1.9; // m/s added per push swipe (scaled by swipe power)
 const PUSH_TIME = 0.28; // seconds a push is spread over, so it feels like a kick, not a teleport
-const BRAKE_DECEL = 14; // m/s² at full back tilt
-const BRAKE_DEADZONE = 0.3; // tilt back past this to brake (so holding the phone loosely doesn't)
 const ROLL_DRAG = 0.22; // fraction of speed lost per second while coasting
 const TURN_RATE = 2.0; // rad/s at full steer
 const STEER_RESPONSE = 7; // how fast the board follows the phone tilt (lower = stiffer, heavier)
@@ -37,9 +35,9 @@ const BAIL_TIME = 1.7; // seconds on the ground after a bail before you're back 
 const BAIL_FALL = 0.4; // seconds to hit the ground / to get back up
 const BAIL_DRAG = 3; // the board skids to a stop while you're down
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
-// Manuals (Options -> Lean phone back: Manual). Leaning back between MANUAL_IN and MANUAL_FALL is the balance
-// zone: the front wheels come up and you keep rolling; the nose rises the deeper you lean. Past MANUAL_FALL you
-// lean too far back and bail.
+// Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
+// The meter: below MANUAL_IN (too far forward) the front wheels drop back down; MANUAL_IN..MANUAL_FALL is the
+// green zone where you keep manualing (the nose rises the deeper you lean); past MANUAL_FALL you bail.
 const MANUAL_IN = 0.25;
 const MANUAL_FALL = 0.85;
 const MANUAL_PITCH_MIN = 0.12; // rad, nose up at the start of the zone
@@ -123,17 +121,14 @@ export default function Skateboard() {
     let pop = 0;
     let trickReq = null;
     let revertReq = 0;
-    const manualMode = settings.leanBack === 'manual';
-    let leanIn = 0; // -1 leaning back .. 1 leaning forward
+    let leanIn = 0; // -1 leaning back (top of the phone up) .. 1 leaning forward
     if (phoneIsLive()) {
       targetSteer = phone.steer;
       leanIn = phone.lean;
-      targetLean = !manualMode && phone.lean < -BRAKE_DEADZONE ? phone.lean : 0;
       board.source = 'phone';
     } else {
       targetSteer = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-      leanIn = keys.back ? (manualMode ? -0.6 : -1) : 0;
-      targetLean = !manualMode && keys.back ? -1 : 0;
+      leanIn = keys.back ? -0.55 : 0; // S = manual in the middle of the green
       board.source = keys.forward || keys.back || keys.left || keys.right ? 'keyboard' : 'none';
     }
     if (phone.pushQueued) (push = phone.pushQueued), (phone.pushQueued = 0);
@@ -206,14 +201,13 @@ export default function Skateboard() {
         speed += st.pushAccel * Math.min(dt, st.pushLeft);
         st.pushLeft -= dt;
       }
-      if (st.lean < -0.05) speed -= -st.lean * BRAKE_DECEL * dt;
       speed *= 1 - ROLL_DRAG * dt;
     }
 
-    // --- Manuals: balance on the back wheels while the phone is leant back (Manual mode only).
+    // --- Manuals: balance on the back wheels while the phone is leant back.
     let inManual = false;
     let balance = 0; // 0 at the start of the balance zone .. 1 at the falling edge
-    if (manualMode && grounded && st.popT < 0 && !st.revert && st.bail < 0 && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED) {
+    if (grounded && st.popT < 0 && !st.revert && st.bail < 0 && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED) {
       const back = -leanIn;
       if (back > MANUAL_FALL && st.manualT > 0) {
         // Leaned too far back: the board shoots out and you fall.
@@ -237,6 +231,8 @@ export default function Skateboard() {
       st.manualT = 0;
     }
     st.manualBalance = inManual ? balance : -1;
+    // Meter arrow: where the lean sits on the whole scale (0 = level / forward .. 1 = the falling edge and past it).
+    st.meter = Math.max(0, Math.min(1.08, -leanIn / MANUAL_FALL));
     const manualPitch = inManual ? MANUAL_PITCH_MIN + (MANUAL_PITCH_MAX - MANUAL_PITCH_MIN) * balance : 0;
     st.manual = damp(st.manual, manualPitch / MANUAL_PITCH_MAX, 10, dt);
     if (grounded) {
@@ -377,7 +373,9 @@ export default function Skateboard() {
       steer: st.steer,
       fall: fall * fall * (3 - 2 * fall),
       manual: st.manual, // 0..1 nose-up amount (rider leans back over the tail)
-      balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 toward falling (HUD meter)
+      balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 through the green zone
+      meter: st.meter ?? 0, // arrow position on the HUD meter
+      manualIn: MANUAL_IN / MANUAL_FALL, // where the green zone starts on the meter
     });
   });
 
