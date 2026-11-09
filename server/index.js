@@ -35,11 +35,15 @@ const httpServer = createServer((req, res) => {
   res.end('Not found');
 });
 
-const io = new Server(httpServer, { cors: { origin: true } });
+// Short heartbeat so a laptop or phone that vanishes without closing its socket (crash, sleep, lost Wi-Fi)
+// is noticed within ~10 s and the other side can show its reconnect screen.
+const io = new Server(httpServer, { cors: { origin: true }, pingInterval: 5000, pingTimeout: 5000 });
 
 const roomSize = (room) => io.sockets.adapter.rooms.get(room)?.size ?? 0;
 const broadcastStatus = () =>
   io.emit('status', { controllers: roomSize('controllers'), displays: roomSize('displays') });
+
+let config = null; // last phone config from a display
 
 const TRICK_TYPES = new Set(['kickflip', 'varial', 'tre', 'shove', 'fs180', 'bs180']);
 const num = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : 0);
@@ -50,6 +54,7 @@ io.on('connection', (socket) => {
     socket.data.role = role;
     socket.join(role + 's');
     console.log(`[socket] ${role} joined (${socket.handshake.address})`);
+    if (role === 'controller' && config) socket.emit('config', config);
     broadcastStatus();
   });
 
@@ -86,6 +91,13 @@ io.on('connection', (socket) => {
       lift: num(d.lift, -1, 1),
       height: num(d.height, 0, 2),
     });
+  });
+
+  // Phone settings chosen on the laptop (sensitivity preset). Cached so a phone that joins later gets them too.
+  socket.on('config', (d) => {
+    if (socket.data.role !== 'display' || !d) return;
+    config = { sensitivity: Math.round(num(d.sensitivity, 0, 2)) };
+    io.to('controllers').emit('config', config);
   });
 
   // Round-trip latency check for the controller UI.

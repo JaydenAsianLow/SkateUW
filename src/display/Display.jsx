@@ -1,15 +1,16 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { KeyboardControls } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import { connect } from '../socket.js';
-import { board, phone, net } from '../state.js';
-import { commands, settings } from '../settings.js';
+import { board, game, phone, net, phoneIsLive } from '../state.js';
+import { commands, onSettings, settings } from '../settings.js';
 import World from './World.jsx';
 import Skateboard, { GRAVITY } from './Skateboard.jsx';
 import CameraRig from './CameraRig.jsx';
 import Effects from './Effects.jsx';
 import Hud from './Hud.jsx';
+import { MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
 
 // Keyboard fallback so the scene can be tested without a phone.
 const keyMap = [
@@ -29,10 +30,45 @@ const keyMap = [
 // Dev-only handle for poking at the live state from the browser console.
 if (import.meta.env.DEV) window.__skate = { board, phone };
 
+// Poll the shared mutable phone/server state at 10 Hz for the menus.
+function usePhoneStatus() {
+  const read = () => ({ connected: net.connected, controllers: net.controllers, live: phoneIsLive() });
+  const [st, setSt] = useState(read);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const n = read();
+      setSt((c) => (c.connected === n.connected && c.controllers === n.controllers && c.live === n.live ? c : n));
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
+  return { ...st, ready: st.connected && st.controllers > 0 && st.live };
+}
+
 export default function Display() {
+  const [screen, setScreen] = useState('menu'); // 'menu' | 'pair' | 'play'
+  const [keyboard, setKeyboard] = useState(false);
+  const status = usePhoneStatus();
+  const phoneLost = screen === 'play' && !keyboard && !status.ready;
+  const running = screen === 'play' && !phoneLost;
+  game.running = running;
+  game.keyboard = keyboard;
+
+  // Pairing finishes on its own once the phone is streaming tilt.
+  useEffect(() => {
+    if (screen === 'pair' && status.ready) setScreen('play');
+  }, [screen, status.ready]);
+
+  const toMenu = () => {
+    setKeyboard(false);
+    setScreen('menu');
+  };
+
   useEffect(() => {
     const s = connect('display');
-    s.on('connect', () => (net.connected = true));
+    // Phone settings picked on the laptop (sensitivity) go to the phone; the server caches them for late joiners.
+    const sendConfig = () => s.emit('config', { sensitivity: settings.sensitivity });
+    const offSettings = onSettings(sendConfig);
+    s.on('connect', () => ((net.connected = true), sendConfig()));
     s.on('disconnect', () => (net.connected = false));
     s.on('status', (st) => (net.controllers = st.controllers));
     s.on('tilt', (d) => {
@@ -49,16 +85,22 @@ export default function Display() {
     const mirror = setInterval(() => {
       if (net.connected && net.controllers > 0) s.volatile.emit('board', board.view);
     }, 33);
+    // Closing the tab: say goodbye straight away so the phone shows "Reconnect device" at once
+    // (otherwise the server only notices on its heartbeat timeout).
+    const bye = () => s.disconnect();
+    window.addEventListener('pagehide', bye);
     return () => {
+      window.removeEventListener('pagehide', bye);
       clearInterval(mirror);
+      offSettings();
       s.disconnect();
     };
   }, []);
 
-  // Rebindable spawn keys (settings.js; change them in the HUD's Controls panel).
+  // Rebindable spawn keys (settings.js; change them in Settings). Only while riding.
   useEffect(() => {
     const onKey = (e) => {
-      if (commands.rebinding || e.repeat) return;
+      if (commands.rebinding || e.repeat || !game.running) return;
       if (e.code === settings.returnKey) commands.toSpawn = true;
       else if (e.code === settings.setSpawnKey) commands.setSpawn = true;
       else return;
@@ -80,7 +122,7 @@ export default function Display() {
           onCreated={({ gl }) => (gl.toneMappingExposure = 1.1)}
         >
           <Suspense fallback={null}>
-            <Physics gravity={[0, -GRAVITY, 0]}>
+            <Physics gravity={[0, -GRAVITY, 0]} paused={!running}>
               <World />
               <Skateboard />
             </Physics>
@@ -88,7 +130,21 @@ export default function Display() {
             <Effects />
           </Suspense>
         </Canvas>
-        <Hud />
+        {screen === 'play' && <Hud onMenu={toMenu} />}
+        {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} />}
+        {screen === 'pair' && (
+          <PairScreen
+            status={status}
+            onBack={toMenu}
+            onKeyboard={() => {
+              setKeyboard(true);
+              setScreen('play');
+            }}
+          />
+        )}
+        {phoneLost && <PhoneLost status={status} onMenu={toMenu} />}
+        {/* ODbL attribution for the OpenStreetMap layout (MAP.md §6). Always visible. */}
+        <div className="osm-credit">Red Square, UW · Map data © OpenStreetMap contributors</div>
       </div>
     </KeyboardControls>
   );

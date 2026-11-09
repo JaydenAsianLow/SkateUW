@@ -48,11 +48,11 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
 | Revert | One finger draws a **half circle** (on the ground). You ride away fakie; revert again to go back |
 | Frontside 180 | Down, up, then the **left finger half-circles down while the right finger half-circles up** (one counter-clockwise half circle also works; clockwise = backside 180) |
 | Steer / brake | Tilt left / right; tilt the top edge toward you to brake |
-| Respawn | **Shake** the phone (or R on the laptop) |
+| Respawn | Tap **Reset** on the phone (or the back-to-spawn key on the laptop, Space by default) |
 
 Land before a trick finishes rotating and you bail. Ollies pop about 0.3–0.6 m depending on how hard you swipe.
 
-The laptop HUD should switch to **Phone streaming · ~30 Hz** and the Steer/Lean bars should move with the phone.
+The laptop opens on the **Skate UW** main menu. **Play** shows a QR code; scan it, tap Start on the phone, and the game begins. Sensitivity and airtime are in **Settings** (main menu, or the Settings button in game). If the phone drops out mid-game the laptop pauses with a red *Reconnect phone* card and carries on as soon as it's back; the phone's **Disconnect** button does the same on purpose. If the game closes, the phone shows a red *Reconnect device* card until it's open again.
 
 ## Troubleshooting
 
@@ -60,11 +60,11 @@ The laptop HUD should switch to **Phone streaming · ~30 Hz** and the Steer/Lean
 |---|---|
 | Phone can't load the page | Campus/enterprise Wi-Fi (e.g. eduroam) often blocks device-to-device traffic. Use a home network, or turn on your **phone's hotspot** and join it from the laptop, then rescan the new QR. |
 | Still can't connect | Windows Firewall: allow Node.js on *Private* networks when prompted. Also make sure the network profile is Private (Settings → Network → Wi-Fi → Network profile type). |
-| QR shows the wrong IP | Click a different address under "Wrong network? Try:" in the QR panel. |
+| QR shows the wrong IP | Click a different address under "Wrong network? Try:" on the QR screen. |
 | "Tilt sensors need HTTPS" | You opened `http://`. Use `https://`. |
 | iPhone: permission denied | Close the tab, reopen the page, and tap Allow. Or check Settings → Safari → Motion & Orientation Access. |
-| Board doesn't move | Swipe down on the deck to push. Check the laptop HUD says "Phone streaming". |
-| Stuck at the bottom of the Rainier Vista steps | You can't ride up stairs. Shake the phone (or press R) to respawn. |
+| Board doesn't move | Swipe down on the deck to push. If the laptop shows *Reconnect phone*, tap Start on the phone. |
+| Stuck at the bottom of the Rainier Vista steps | You can't ride up stairs. Tap Reset on the phone (or press Space) to respawn. |
 
 ## The map: Red Square (MAP.md)
 

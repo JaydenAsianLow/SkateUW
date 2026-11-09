@@ -28,3 +28,7 @@ export const board = {
 
 export const PHONE_TIMEOUT_MS = 1000;
 export const phoneIsLive = () => performance.now() - phone.lastUpdate < PHONE_TIMEOUT_MS;
+
+// Whether the game is actually running (not on a menu, not paused waiting for the phone).
+// keyboard = the player chose "Play with keyboard" on the pairing screen, so no phone is required.
+export const game = { running: false, keyboard: false };

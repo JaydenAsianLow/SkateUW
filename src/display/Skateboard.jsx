@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier';
 import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Shape } from 'three';
-import { board, phone, phoneIsLive } from '../state.js';
+import { board, game, phone, phoneIsLive } from '../state.js';
 import { commands, settings, updateSettings } from '../settings.js';
 import { DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
@@ -113,6 +113,13 @@ export default function Skateboard() {
     const keys = getKeys();
     const pressed = (k) => keys[k] && !st.held[k];
 
+    // Paused (menu, pairing, phone disconnected): freeze, and drop moves sent meanwhile so nothing fires on resume.
+    if (!game.running) {
+      Object.assign(phone, { pushQueued: 0, popQueued: 0, trickQueued: null, revertQueued: 0, resetQueued: false });
+      for (const k of ['forward', 'pop', 'revert', ...KEY_TRICKS]) st.held[k] = keys[k];
+      return;
+    }
+
     // --- Input. Phone: tilt steers / brakes, swipes push and do tricks. Keyboard mirrors it.
     let targetSteer = 0;
     let targetLean = 0;
@@ -143,7 +150,7 @@ export default function Skateboard() {
     st.steer = damp(st.steer, targetSteer, STEER_RESPONSE, dt);
     st.lean = damp(st.lean, targetLean, STEER_RESPONSE, dt);
 
-    // --- Spawn point: set it where you are, or teleport back to it (spawn key, phone shake, falling out).
+    // --- Spawn point: set it where you are, or teleport back to it (spawn key, phone Reset button, falling out).
     const p = rb.translation();
     if (commands.setSpawn) {
       commands.setSpawn = false;

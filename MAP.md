@@ -69,7 +69,7 @@ Red Square sits at the heart of campus, on top of an underground parking garage 
 - **Playable:** the full brick plaza, from the building faces on every side, plus the **top of the Rainier Vista steps** and the steps themselves.
 - **Soft boundary:** at the building walls and the edges of the plaza. Use invisible walls placed where real walls, railings, or planters already stop people, so the boundary never feels arbitrary.
 - **Backdrop (not playable):** The Quad, Rainier Vista beyond the steps, Drumheller Fountain, Mount Rainier, and the trees and roofs beyond the surrounding buildings.
-- **Respawn:** if the skater falls off the edge or gets stuck, press R or shake the phone to reset to the spawn point.
+- **Respawn:** if the skater falls off the edge or gets stuck, press the back-to-spawn key (Space) or tap Reset on the phone to go back to the spawn point.
 
 ---
 

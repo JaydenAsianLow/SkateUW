@@ -2,16 +2,10 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { connect } from '../socket.js';
 import { createComboReader, createStrokeTracker } from './gestures.js';
 import { MOVES } from '../moves.js';
+import { SENSITIVITY, clampSensitivity } from '../sensitivity.js';
 
 const SEND_HZ = 50;
 
-// Sensitivity presets: how far you tilt for full steering, and how short a swipe still counts
-// (as a fraction of the screen height).
-const SENSITIVITY = [
-  { label: 'Normal', tilt: 38, swipe: 0.04 },
-  { label: 'High', tilt: 28, swipe: 0.028 },
-  { label: 'Max', tilt: 20, swipe: 0.02 },
-];
 // Tilt shaping: ignore small tilts and sensor jitter, ease in past that, and smooth the stream.
 const DEADZONE_DEG = 7; // a phone lying still (or slightly off its calibration) doesn't steer
 const CURVE = 1.6; // >1: gentle near the centre, full lock only near full tilt
@@ -20,15 +14,6 @@ const shape = (deg, range) => {
   const over = Math.max(0, Math.abs(deg) - DEADZONE_DEG) / Math.max(1, range - DEADZONE_DEG);
   return Math.sign(deg) * Math.min(1, over) ** CURVE;
 };
-const SENS_KEY = 'skate.sensitivity.v2'; // v2: calmer presets, start everyone on Normal
-function loadSens() {
-  try {
-    const v = Number(localStorage.getItem(SENS_KEY));
-    return Number.isInteger(v) && SENSITIVITY[v] ? v : 0;
-  } catch {
-    return 0;
-  }
-}
 
 const clamp = (v, lo = -1, hi = 1) => Math.min(hi, Math.max(lo, v));
 
@@ -50,11 +35,13 @@ export default function Controller() {
   const offset = useRef(null); // calibration "neutral" pose
   const [conn, setConn] = useState('connecting');
   const [displays, setDisplays] = useState(0);
+  const [statusKnown, setStatusKnown] = useState(false); // got at least one status from the server
+  const [leftOnPurpose, setLeftOnPurpose] = useState(false); // the player tapped Disconnect
   const [rtt, setRtt] = useState(null);
   const [started, setStarted] = useState(false);
   const [error, setError] = useState(null);
   const [view, setView] = useState({ steer: 0, lean: 0, beta: 0, gamma: 0 });
-  const [sens, setSens] = useState(loadSens);
+  const [sens, setSens] = useState(0); // sensitivity preset, set from the laptop's Settings
   const tiltRange = useRef(SENSITIVITY[sens].tilt);
   tiltRange.current = SENSITIVITY[sens].tilt;
 
@@ -65,7 +52,11 @@ export default function Controller() {
     s.on('connect', () => setConn('connected'));
     s.on('disconnect', () => setConn('disconnected'));
     s.on('connect_error', () => setConn('error'));
-    s.on('status', (st) => setDisplays(st.displays));
+    s.on('status', (st) => {
+      setDisplays(st.displays);
+      setStatusKnown(true);
+    });
+    s.on('config', (c) => setSens(clampSensitivity(c?.sensitivity)));
     const ping = setInterval(() => {
       if (!s.connected) return;
       const t0 = performance.now();
@@ -124,12 +115,6 @@ export default function Controller() {
         return;
       }
     }
-    // Motion (for shake-to-reset) is optional.
-    try {
-      await DeviceMotionEvent?.requestPermission?.();
-    } catch {
-      /* shake-to-reset just won't work */
-    }
     window.addEventListener('deviceorientation', (e) => {
       if (e.beta == null || e.gamma == null) return;
       raw.current = { beta: e.beta, gamma: e.gamma, has: true };
@@ -151,23 +136,31 @@ export default function Controller() {
     navigator.vibrate?.(15);
   }
 
-  function cycleSens() {
-    const next = (sens + 1) % SENSITIVITY.length;
-    setSens(next);
-    try {
-      localStorage.setItem(SENS_KEY, String(next));
-    } catch {
-      /* private mode: just don't remember it */
-    }
-    navigator.vibrate?.(10);
+  // Disconnect on purpose: drop the socket (the laptop pauses and asks for the phone) until Reconnect is tapped.
+  function disconnect() {
+    setLeftOnPurpose(true);
+    socketRef.current?.disconnect();
+    navigator.vibrate?.(20);
   }
+  function reconnect() {
+    setLeftOnPurpose(false);
+    setConn('connecting');
+    socketRef.current?.connect();
+  }
+
+  // The game (laptop page or server) went away: shade the phone until it's back. Not while connecting at first,
+  // and not after a deliberate Disconnect.
+  const gameGone =
+    !leftOnPurpose && (conn === 'disconnected' || conn === 'error' || (conn === 'connected' && statusKnown && displays === 0));
 
   const connLabel =
     conn === 'connected'
       ? `Connected${rtt != null ? ` · ${rtt} ms` : ''}`
       : conn === 'connecting'
         ? 'Connecting…'
-        : 'Disconnected, retrying…';
+        : leftOnPurpose
+          ? 'Disconnected'
+          : 'Disconnected, retrying…';
 
   return (
     <div className="ctrl">
@@ -179,7 +172,15 @@ export default function Controller() {
         </span>
       </header>
 
-      {!started ? (
+      {leftOnPurpose ? (
+        <div className="ctrl-start">
+          <h1>Disconnected</h1>
+          <p>The game is paused on the laptop until you reconnect.</p>
+          <button className="big" onClick={reconnect}>
+            Reconnect
+          </button>
+        </div>
+      ) : !started ? (
         <div className="ctrl-start">
           <h1>Skate Controller</h1>
           <p>Hold the phone flat in portrait. Your screen is the deck: nose at the top, tail at the bottom.</p>
@@ -201,9 +202,19 @@ export default function Controller() {
           steer={view.steer}
           onCalibrate={calibrate}
           sens={sens}
-          onSens={cycleSens}
+          onDisconnect={disconnect}
           error={error}
         />
+      )}
+      {gameGone && (
+        <div className="ctrl-lost">
+          <div className="lost-card">
+            <div className="lost-title">Reconnect device</div>
+            <div className="lost-text">
+              The game closed. Open it again on the laptop and this phone will reconnect by itself.
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -223,7 +234,7 @@ const HOLD_MS = 90; // a finger resting this long without moving counts as holdi
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
-function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
+function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
   const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
@@ -290,32 +301,6 @@ function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
       }),
     [sens],
   );
-
-  // Shake the phone to respawn (MAP.md §3).
-  useEffect(() => {
-    const peaks = [];
-    let cooldown = 0;
-    const onMotion = (e) => {
-      const a = e.acceleration;
-      const g = e.accelerationIncludingGravity;
-      let mag = 0;
-      if (a?.x != null) mag = Math.hypot(a.x, a.y, a.z);
-      else if (g?.x != null) mag = Math.abs(Math.hypot(g.x, g.y, g.z) - 9.81);
-      const now = performance.now();
-      if (mag < 18 || now < cooldown) return;
-      if (!peaks.length || now - peaks.at(-1) > 120) peaks.push(now);
-      while (peaks.length && now - peaks[0] > 900) peaks.shift();
-      if (peaks.length >= 3) {
-        peaks.length = 0;
-        cooldown = now + 2000;
-        socketRef.current?.emit('reset');
-        navigator.vibrate?.([40, 40, 40]);
-        setFlash({ label: 'RESET', key: now });
-      }
-    };
-    window.addEventListener('devicemotion', onMotion);
-    return () => window.removeEventListener('devicemotion', onMotion);
-  }, [socketRef]);
 
   // Draw the finger trails and holding fingers.
   useEffect(() => {
@@ -455,8 +440,8 @@ function Deck({ socketRef, steer, onCalibrate, sens, onSens, error }) {
         <button className="secondary small-btn" onClick={onCalibrate}>
           Calibrate
         </button>
-        <button className="secondary small-btn" onClick={onSens}>
-          {SENSITIVITY[sens].label}
+        <button className="secondary small-btn" onClick={onDisconnect}>
+          Disconnect
         </button>
         <span className="muted small">
           {steer >= 0 ? '+' : ''}
