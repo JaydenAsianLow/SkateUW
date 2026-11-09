@@ -1,12 +1,11 @@
 import Atmosphere from './Atmosphere.jsx';
 import { Bench, LampPost } from './Props.jsx';
 import { Tree } from './Trees.jsx';
-import { Sitter, Walker } from './People.jsx';
 import Ground from './redSquare/Ground.jsx';
 import Suzzallo from './redSquare/Suzzallo.jsx';
 import { Backdrop, MidBuilding, Monolith } from './redSquare/Footprints.jsx';
 import { BrokenObelisk, Drumheller, GeorgeWashington, MountRainier } from './redSquare/Landmarks.jsx';
-import { BACKDROP, BENCHES, LAMPS, MID, SITTERS, TREES, WALKERS } from './redSquare/layout.js';
+import { BACKDROP, BENCHES, LAMPS, MID, TREES } from './redSquare/layout.js';
 import { MONOLITHS } from './redSquare/osm.js';
 
 // Level 1: Red Square (Central Plaza), University of Washington. See MAP.md.
@@ -43,13 +42,6 @@ export default function World() {
       ))}
       {TREES.map(({ p, y, v, s }, i) => (
         <Tree key={i} position={p} y={y} variant={v} scale={s} rotY={i * 1.7} />
-      ))}
-
-      {SITTERS.map((s, i) => (
-        <Sitter key={i} {...s} />
-      ))}
-      {WALKERS.map((w, i) => (
-        <Walker key={i} {...w} />
       ))}
     </>
   );

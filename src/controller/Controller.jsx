@@ -7,17 +7,25 @@ const SEND_HZ = 50;
 // Sensitivity presets: how far you tilt for full steering, and how short a swipe still counts
 // (as a fraction of the screen height).
 const SENSITIVITY = [
-  { label: 'Normal', tilt: 26, swipe: 0.04 },
-  { label: 'High', tilt: 18, swipe: 0.028 },
-  { label: 'Max', tilt: 12, swipe: 0.02 },
+  { label: 'Normal', tilt: 38, swipe: 0.04 },
+  { label: 'High', tilt: 28, swipe: 0.028 },
+  { label: 'Max', tilt: 20, swipe: 0.02 },
 ];
-const SENS_KEY = 'skate.sensitivity';
+// Tilt shaping: ignore small tilts and sensor jitter, ease in past that, and smooth the stream.
+const DEADZONE_DEG = 7; // a phone lying still (or slightly off its calibration) doesn't steer
+const CURVE = 1.6; // >1: gentle near the centre, full lock only near full tilt
+const SMOOTH = 0.18; // per-sample low-pass at 50 Hz (lower = steadier)
+const shape = (deg, range) => {
+  const over = Math.max(0, Math.abs(deg) - DEADZONE_DEG) / Math.max(1, range - DEADZONE_DEG);
+  return Math.sign(deg) * Math.min(1, over) ** CURVE;
+};
+const SENS_KEY = 'skate.sensitivity.v2'; // v2: calmer presets, start everyone on Normal
 function loadSens() {
   try {
     const v = Number(localStorage.getItem(SENS_KEY));
-    return Number.isInteger(v) && SENSITIVITY[v] ? v : 1;
+    return Number.isInteger(v) && SENSITIVITY[v] ? v : 0;
   } catch {
-    return 1;
+    return 0;
   }
 }
 
@@ -72,15 +80,18 @@ export default function Controller() {
   useEffect(() => {
     if (!started) return;
     let tick = 0;
+    const sm = { steer: 0, lean: 0 };
     const id = setInterval(() => {
       const r = raw.current;
       if (!r.has) return;
       const a = screenAxes(r.beta, r.gamma);
       if (!offset.current) offset.current = a; // auto-calibrate on first reading
       const range = tiltRange.current;
-      const steer = clamp((a.x - offset.current.x) / range);
+      sm.steer += (shape(a.x - offset.current.x, range) - sm.steer) * SMOOTH;
       // Tilting the top edge away from you lowers y, so negate: forward = push.
-      const lean = clamp(-(a.y - offset.current.y) / range);
+      sm.lean += (shape(-(a.y - offset.current.y), range) - sm.lean) * SMOOTH;
+      const steer = clamp(Math.abs(sm.steer) < 0.01 ? 0 : sm.steer);
+      const lean = clamp(Math.abs(sm.lean) < 0.01 ? 0 : sm.lean);
       const packet = { steer, lean, beta: r.beta, gamma: r.gamma };
       socketRef.current?.volatile.emit('tilt', packet);
       if (++tick % 5 === 0) setView(packet);

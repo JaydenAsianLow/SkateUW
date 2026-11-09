@@ -11,14 +11,14 @@ import Rider from './RiderModel.jsx';
 
 // Tuning
 export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy without floating.
-const MAX_SPEED = 14; // m/s
-const PUSH_GAIN = 3.2; // m/s added per push swipe (scaled by swipe power)
+const MAX_SPEED = 8; // m/s (~29 km/h)
+const PUSH_GAIN = 1.9; // m/s added per push swipe (scaled by swipe power)
 const PUSH_TIME = 0.28; // seconds a push is spread over, so it feels like a kick, not a teleport
 const BRAKE_DECEL = 14; // m/s² at full back tilt
 const BRAKE_DEADZONE = 0.3; // tilt back past this to brake (so holding the phone loosely doesn't)
 const ROLL_DRAG = 0.22; // fraction of speed lost per second while coasting
-const TURN_RATE = 2.8; // rad/s at full steer
-const STEER_RESPONSE = 16; // how fast the board follows the phone tilt (higher = snappier)
+const TURN_RATE = 2.0; // rad/s at full steer
+const STEER_RESPONSE = 7; // how fast the board follows the phone tilt (lower = stiffer, heavier)
 // Ollie: apex = v² / 2g. 3.7 m/s → ~0.45 m at a normal swipe, ~0.3–0.6 m from a lazy to a hard swipe
 // (a typical street ollie). Power scales the apex height linearly, so v ∝ √power.
 const POP_VELOCITY = 3.7;

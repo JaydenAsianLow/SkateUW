@@ -15,6 +15,7 @@ const LOOK_AHEAD = 4;
 const LOOK_RIGHT = 0.35;
 const LOOK_Y = 0.7; // ~3.5° down-tilt
 const MAX_ROLL = (3 * Math.PI) / 180;
+const FOLLOW = 6; // camera position easing rate (1/s)
 // ?topdown (or ?topdown=300 for the height in meters) shows the level from above.
 const TOP_DOWN = (() => {
   const q = new URLSearchParams(window.location.search);
@@ -30,7 +31,7 @@ export default function CameraRig() {
   const first = useRef(true);
 
   useFrame(({ camera, scene }, rawDt) => {
-    const dt = Math.min(rawDt, 1 / 30);
+    const dt = Math.min(rawDt, 0.1); // real time, like the physics, so the speed lead below stays exact
     if (TOP_DOWN) {
       scene.fog = null;
       // Debug map view (MAP.md §10 step 2): straight down over the plaza, north at the top.
@@ -54,7 +55,9 @@ export default function CameraRig() {
       sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
       return;
     }
-    const back = 2.5 + Math.min(board.speed, 14) * 0.04;
+    // Fixed distance at any speed. The camera eases toward its target (rate FOLLOW), which on its own would
+    // trail speed/FOLLOW metres further back when moving fast; leading the target by that much cancels it.
+    const back = 2.3 - Math.min(board.speed, 10) / FOLLOW;
     target.current.set(board.x - fx * back + rx * RIGHT, board.y + HEIGHT, board.z - fz * back + rz * RIGHT);
     aim.set(board.x + fx * LOOK_AHEAD + rx * LOOK_RIGHT, board.y + LOOK_Y, board.z + fz * LOOK_AHEAD + rz * LOOK_RIGHT);
 
@@ -64,7 +67,7 @@ export default function CameraRig() {
       look.current.copy(aim);
       first.current = false;
     }
-    camera.position.lerp(target.current, 1 - Math.exp(-6 * dt));
+    camera.position.lerp(target.current, 1 - Math.exp(-FOLLOW * dt));
     look.current.lerp(aim, 1 - Math.exp(-8 * dt));
     camera.lookAt(look.current);
     roll.current += (-board.steer * MAX_ROLL - roll.current) * (1 - Math.exp(-5 * dt));
