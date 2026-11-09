@@ -25,7 +25,11 @@ const keyMap = [
   { name: 'shove', keys: ['KeyV'] },
   { name: 'fs180', keys: ['KeyE'] },
   { name: 'revert', keys: ['KeyQ'] },
+  { name: 'carry', keys: ['KeyB'] },
 ];
+
+// Dev only: ?play skips the menu and plays with the keyboard (handy with ?posetest / ?sidecam).
+const SKIP_MENU = import.meta.env.DEV && new URLSearchParams(window.location.search).has('play');
 
 const LOST_GRACE_MS = 2000; // phone silent this long mid-game -> pause and show "Reconnect phone"
 
@@ -47,8 +51,8 @@ function usePhoneStatus() {
 }
 
 export default function Display() {
-  const [screen, setScreen] = useState('menu'); // 'menu' | 'pair' | 'play'
-  const [keyboard, setKeyboard] = useState(false);
+  const [screen, setScreen] = useState(SKIP_MENU ? 'play' : 'menu'); // 'menu' | 'pair' | 'play'
+  const [keyboard, setKeyboard] = useState(SKIP_MENU);
   const status = usePhoneStatus();
   // Only call the phone lost after a short grace period, so Wi-Fi blips don't flash the red card.
   const [lostLong, setLostLong] = useState(false);
@@ -92,6 +96,7 @@ export default function Display() {
     s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
     s.on('reset', () => (phone.resetQueued = true));
+    s.on('carry', () => (phone.carryQueued = true));
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
       if (net.connected && net.controllers > 0) s.volatile.emit('board', board.view);

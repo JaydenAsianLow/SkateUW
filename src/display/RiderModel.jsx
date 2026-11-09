@@ -10,7 +10,9 @@ import Skater from './Skater.jsx';
 // physics, like a real skater: sideways stance with knees bent, shoulders opened toward the nose and the head
 // looking where you're going; the push turns the body forward and the back foot sweeps the ground; the ollie
 // snaps (legs extend), tucks the knees up in the air and absorbs the landing; flips lift the feet and flick the
-// front foot out; carving leans with the deck; a bail topples you off the toe side.
+// front foot out; carving leans with the deck.
+// Off the board (bails, getting up, walking with the board, stepping off / on) the pose comes from choreo.js as joint
+// targets (board.pose), solved here with the same aim + IK tools and blended with the skate pose at the edges.
 // Feet stay on the deck with two-bone leg IK. Each bone is aimed (primary axis to its target, secondary axis to a
 // facing direction) from its rest pose, so the real bone lengths and the skinning are always respected.
 //
@@ -97,6 +99,8 @@ function buildRig(scene) {
     hipsParentQInv: pq.invert(),
     thigh: len('LeftUpLeg', 'LeftLeg'),
     shin: len('LeftLeg', 'LeftFoot'),
+    upper: len('LeftArm', 'LeftForeArm'),
+    fore: len('LeftForeArm', 'LeftHand'),
     ankleH: rest.LeftFoot.p.y,
     hipDrop: rest.Hips.p.y - rest.LeftUpLeg.p.y,
   };
@@ -144,6 +148,10 @@ function RiderModel() {
       fSpine: [new Vector3(), new Vector3()], prim: new Vector3(), up: new Vector3(), left: new Vector3(),
       upper: new Vector3(), fore: new Vector3(), bend: new Vector3(), knee: new Vector3(), pole: new Vector3(),
       ankle: [new Vector3(), new Vector3()], footDir: [new Vector3(), new Vector3()], toe: new Vector3(),
+      // off-board pose
+      Qs: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), Ps: new Vector3(),
+      fU: new Vector3(), fF: new Vector3(), fr: new Vector3(), q2: new Quaternion(), target: new Vector3(),
+      sec: new Vector3(), sole: new Vector3(), toeD: new Vector3(),
     };
   }, [rig]);
 
@@ -174,6 +182,66 @@ function RiderModel() {
       P[name].subVectors(rest[name].p, rest[par].p).applyQuaternion(w.tmpQ).add(P[par]);
     };
 
+    // Off-board pose from joint targets (see choreo.js for the fields).
+    function solveOff(fp) {
+      const U = w.fU.fromArray(fp.up).normalize();
+      const F = w.fF.fromArray(fp.front);
+      F.addScaledVector(U, -F.dot(U)).normalize();
+      P.Hips.fromArray(fp.hips);
+      // Spine bones tilt forward by shares of the bend and twist toward the chest's facing (yawDir convention).
+      const spine = (name, ang, twist) => {
+        w.q2.setFromAxisAngle(U, -twist);
+        w.fr.copy(F).applyQuaternion(w.q2);
+        w.prim.copy(U).multiplyScalar(Math.cos(ang)).addScaledVector(w.fr, Math.sin(ang));
+        aim(name, w.prim, w.fr);
+      };
+      const b = fp.bend;
+      spine('Hips', b * 0.35, 0);
+      fk('Spine');
+      spine('Spine', b * 0.55, fp.twist * 0.33);
+      fk('Spine1');
+      spine('Spine1', b * 0.7, fp.twist * 0.66);
+      fk('Spine2');
+      spine('Spine2', b * 0.6, fp.twist);
+      fk('Neck');
+      spine('Neck', b * 0.2 + fp.headPitch * 0.35, fp.twist + fp.headYaw * 0.4);
+      fk('Head');
+      spine('Head', fp.headPitch, fp.twist + fp.headYaw);
+      // Arms: two-bone IK to the wrist targets, elbows pointing along `elbows`.
+      for (const [k, side] of [[0, 'Left'], [1, 'Right']]) {
+        follow(side + 'Shoulder');
+        fk(side + 'Shoulder');
+        fk(side + 'Arm');
+        const sh = P[side + 'Arm'];
+        w.target.fromArray(fp.hands[k]);
+        w.pole.fromArray(fp.elbows[k]).normalize();
+        solveKnee(sh, w.target, w.pole, rig.upper, rig.fore, w.knee);
+        w.sec.copy(w.pole).negate(); // the inside of the elbow faces away from where it points
+        aim(side + 'Arm', w.prim.subVectors(w.knee, sh), w.sec);
+        fk(side + 'ForeArm');
+        aim(side + 'ForeArm', w.prim.subVectors(w.target, P[side + 'ForeArm']), w.sec);
+        fk(side + 'Hand');
+        follow(side + 'Hand');
+      }
+      // Legs: two-bone IK to the ankles, knees along `knees`, feet along `toes` with their instep toward `soles`.
+      for (const [k, side] of [[0, 'Left'], [1, 'Right']]) {
+        fk(side + 'UpLeg');
+        w.target.fromArray(fp.ankles[k]);
+        w.pole.fromArray(fp.knees[k]).normalize();
+        solveKnee(P[side + 'UpLeg'], w.target, w.pole, rig.thigh, rig.shin, w.knee);
+        aim(side + 'UpLeg', w.prim.subVectors(w.knee, P[side + 'UpLeg']), w.pole);
+        fk(side + 'Leg');
+        aim(side + 'Leg', w.prim.subVectors(w.target, P[side + 'Leg']), w.pole);
+        fk(side + 'Foot');
+        const toe = w.toeD.fromArray(fp.toes[k]).normalize();
+        const sole = w.sole.fromArray(fp.soles[k]).normalize();
+        w.toe.copy(toe).multiplyScalar(TOE_REACH).addScaledVector(sole, -TOE_DROP);
+        aim(side + 'Foot', w.toe, sole);
+        fk(side + 'ToeBase');
+        aim(side + 'ToeBase', toe, sole);
+      }
+    }
+
     // --- Drivers from the board.
     const pushU = a.pushT >= 0 ? Math.min(1, a.pushT / PUSH_ANIM) : -1;
     const pushW = pushU >= 0 ? Math.sin(Math.PI * pushU) : 0;
@@ -201,9 +269,9 @@ function RiderModel() {
     // Whole rider rolls into turns with the deck; on a bail topples off the toe side (+X), pivoting at the feet.
     // Balancing a manual: small side-to-side sway, bigger near the edges of the meter.
     const sway = Math.sin(time * 4.3) * 0.035 * m * (0.5 + edge);
-    root.current.rotation.z = -s.lean * 0.12 - fall * 1.42 + sway;
-    root.current.rotation.x = fall * 0.22;
-    root.current.position.set(fall * 0.22, fall * 0.07, 0);
+    const off = board.pose; // off-board pose (choreo.js) and how much of it to show
+    const wOff = off ? Math.min(1, Math.max(0, off.w)) : 0;
+    root.current.rotation.z = (-s.lean * 0.12 + sway) * (1 - wOff);
 
     // --- Feet on the deck (follow nose/tail pitch, lift off for flips).
     const flipW = a.flip >= 0 ? Math.sin(Math.PI * a.flip) : 0;
@@ -312,6 +380,22 @@ function RiderModel() {
       w.toe.copy(dir);
       w.toe.y = -dir.z * toeSp;
       aim(side + 'ToeBase', w.toe, UP);
+    }
+
+    // --- Off the board: solve the choreography's joint targets and blend them over the skate pose.
+    if (wOff > 0) {
+      const names = Object.keys(rest);
+      for (const n of names) w.Qs[n].copy(Q[n]);
+      w.Ps.copy(P.Hips);
+      solveOff(off);
+      if (wOff < 1) {
+        for (const n of names) {
+          w.tmpQ.copy(Q[n]);
+          Q[n].copy(w.Qs[n]).slerp(w.tmpQ, wOff);
+        }
+        w.v.copy(P.Hips);
+        P.Hips.copy(w.Ps).lerp(w.v, wOff);
+      }
     }
 
     // --- Write the pose into the skeleton (local rotations; the hips also get their position).

@@ -155,6 +155,7 @@ const KEYBOARD = [
   ['Pop shove-it', 'V'],
   ['Frontside 180', 'E'],
   ['Revert', 'Q'],
+  ['Walk / ride', 'B (then W walk, Shift+W run)'],
 ];
 
 export function ControlsList() {

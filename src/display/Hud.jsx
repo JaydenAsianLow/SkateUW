@@ -25,7 +25,7 @@ export default function Hud({ onMenu }) {
   return (
     <>
       {trick && (
-        <div key={trick.at} className={`trick-callout ${trick.name === 'BAIL' ? 'bail' : ''}`}>
+        <div key={trick.at} className={`trick-callout ${trick.name === 'BAIL' || trick.name === 'SLAM' ? 'bail' : ''}`}>
           {trick.name}
         </div>
       )}

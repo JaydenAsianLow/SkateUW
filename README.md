@@ -9,7 +9,9 @@ A 3D skateboarding web game: the laptop shows the scene, and your phone acts as 
 - `/controller` (phone) shows a skateboard deck. Swipes on it (one or two fingers) are pushes and tricks; tilt (streamed at 50 Hz) steers and brakes. Gesture recognition lives in `src/controller/gestures.js`.
 - `/` (laptop) shows **Level 1: Red Square (UW)**, built from OpenStreetMap data per `MAP.md`. The HUD shows live values and a QR code for the phone.
 - Visual style follows `DESIGN.md` (golden hour). Add `?clean` to the laptop URL to hide the HUD for side-by-side comparison with the reference image.
-- Keyboard fallback on the laptop: tap W = push, S = brake, A/D = steer, Space = ollie, F = kickflip, G = varial flip, T = tre flip, V = pop shove-it, E = frontside 180, Q = revert, R = reset.
+- Keyboard fallback on the laptop: tap W = push, S = brake, A/D = steer, Space = ollie, F = kickflip, G = varial flip, T = tre flip, V = pop shove-it, E = frontside 180, Q = revert, B = walk / ride (while walking: W walk, Shift+W run, A/D turn), R = reset.
+- Bails depend on the move and your speed: leaning too far back in a manual drops you on your backside (fast: flat on your back while the board shoots ahead); landing a trick mid-rotation is a stumble onto hands and knees when slow, a tumbling slam when fast. The board rolls off on its own, and the skater gets up, jogs back to it and steps on (`src/display/choreo.js`).
+- Dev only: `?play` skips the menu (keyboard), `?posetest=back:0.8` (or `side`, `slam`, `dismount`, `mount`, `mountg`, `walk:<speed>`) loops one off-board animation, add `:<seconds>` to freeze it; pair with `?sidecam`. In the console, `__skate.bail('back' | 'side' | 'slam')` triggers a fall.
 
 ```
 phone ──HTTPS/WSS──▶ Vite dev server :5173 ──proxy──▶ Node Socket.IO :3001 ──▶ laptop display
@@ -48,6 +50,7 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
 | Revert | One finger draws a **half circle** (on the ground). You ride away fakie; revert again to go back |
 | Frontside 180 | Down, up, then the **left finger half-circles down while the right finger half-circles up** (one counter-clockwise half circle also works; clockwise = backside 180) |
 | Steer / brake | Tilt left / right; tilt the top edge toward you to brake |
+| Walk with the board | Tap **Walk**: the skater steps off and kicks the board up into his hand. Tilt forward to walk, further to run, sideways to turn. Tap **Ride** to drop it and step back on (keeps your running speed) |
 | Respawn | Tap **Reset** on the phone (or the back-to-spawn key on the laptop, Space by default) |
 
 Land before a trick finishes rotating and you bail. Ollies pop about 0.3–0.6 m depending on how hard you swipe.

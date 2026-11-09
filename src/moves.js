@@ -10,5 +10,6 @@ export const MOVES = [
   ['Frontside 180', '↓ ↑, then left finger half-circles down while the right half-circles up'],
   ['Steer', 'tilt left / right'],
   ['Manual', 'tilt the top of the phone up; keep the arrow in the green'],
+  ['Walk / ride', 'tap Walk to step off and carry the board (tilt forward to walk, more to run), Ride to drop in'],
   ['Respawn', 'tap Reset'],
 ];

@@ -2,12 +2,13 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier';
-import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Shape } from 'three';
+import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Quaternion, Shape, Vector3 } from 'three';
 import { board, game, phone, phoneIsLive } from '../state.js';
 import { commands, settings, updateSettings } from '../settings.js';
 import { DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
+import { MOUNT_GAP, bailTrack, dismountTrack, evalTrack, finish, mountTrack, rootAt, strideLength, trackWeight, walkPose } from './choreo.js';
 
 // Tuning
 export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy without floating.
@@ -30,10 +31,19 @@ const airPhysics = () => {
 };
 const LAND_OK = 0.78; // a trick at least this far through its rotation when you land still counts
 const ASSIST_MAX = 1.2; // m/s of extra lift a late trick may get so it can finish (keeps tricks landable)
-const BAIL_SPEED_KEEP = 0.25; // speed kept after landing mid-rotation
-const BAIL_TIME = 1.7; // seconds on the ground after a bail before you're back on the board
-const BAIL_FALL = 0.4; // seconds to hit the ground / to get back up
-const BAIL_DRAG = 3; // the board skids to a stop while you're down
+// Bails (choreo.js): the rider falls by kind (manual too far back = backwards; trick under-rotated = a stumble
+// onto the hands and knees when slow, a tumbling slam when fast), the board flies off on its own, the rider gets
+// up, jogs to it and steps back on. Severity grows with speed.
+const BAIL_SLOW = 1.5; // m/s: at or below this a bail is as gentle as it gets
+const BAIL_FAST = 6.5; // m/s: the most severe
+const SLAM_AT = 0.45; // severity from which a trick bail is a slam instead of a stumble
+const BOARD_DRAG = 1.3; // loose board: fraction of speed lost per second rolling on the ground
+// Walking with the board in hand (phone Walk button / B): tilt forward to walk, further to run.
+const WALK_SPEED = 1.5;
+const RUN_SPEED = 4.2;
+const BACK_SPEED = 0.8;
+const WALK_TURN = 2.6; // rad/s at full steer
+const JOG_TO_BOARD = 2.4; // m/s, walking back to the board after a bail
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
 // Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
 // The meter: below MANUAL_IN (too far forward) the front wheels drop back down; MANUAL_IN..MANUAL_FALL is the
@@ -60,7 +70,23 @@ export const TRICKS = {
 };
 
 const KEY_TRICKS = ['kickflip', 'varial', 'tre', 'shove', 'fs180'];
+const EDGE_KEYS = ['forward', 'pop', 'revert', 'carry', ...KEY_TRICKS];
 const damp = (current, target, lambda, dt) => current + (target - current) * (1 - Math.exp(-lambda * dt));
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const _q = new Quaternion();
+const _v = new Vector3();
+const DROP = new Vector3(0, -HALF.y, 0);
+
+// Dev only: ?posetest=back:0.8 (or side, slam, dismount, mount, mountg, walk:<speed>) loops one off-board animation
+// in place; add a third value to freeze it at that time, e.g. ?posetest=slam:1:0.5. Use with ?play&sidecam.
+const POSE_TEST = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('posetest') : null;
+function poseTestTrack(kind, a) {
+  if (kind === 'dismount') return dismountTrack();
+  if (kind === 'mount') return mountTrack(walkPose(0.3, 1.2, true), true);
+  if (kind === 'mountg') return mountTrack(walkPose(0, 0, false), false);
+  return bailTrack(kind, a);
+}
 
 export default function Skateboard() {
   const body = useRef(null);
@@ -68,10 +94,18 @@ export default function Skateboard() {
   const shoveG = useRef(null); // board only: shove-it yaw, trick lift
   const deck = useRef(null); // board only: pop pitch, flip roll, carve roll
   const wheels = useRef([]);
+  const boardG = useRef(null); // the board's offset from the rider (stepping off / on, carrying)
+  const looseG = useRef(null); // the board loose in the world (after a bail)
+  const looseWheels = useRef([]);
   const [, getKeys] = useKeyboardControls();
   const { world, rapier } = useRapier();
-  if (import.meta.env.DEV && window.__skate) window.__skate.world = world;
+  if (import.meta.env.DEV && window.__skate) {
+    window.__skate.world = world;
+    // Console: __skate.bail('back' | 'side' | 'slam', speed?) to try the falls.
+    window.__skate.bail = (kind = 'side', speed) => (s.current.devBail = [kind === 'slam' ? 'side' : kind, speed ?? (kind === 'slam' ? 7 : undefined)]);
+  }
   const ray = useMemo(() => new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 }), [rapier]);
+  const wallRay = useMemo(() => new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }), [rapier]);
   const s = useRef({
     heading: SPAWN.heading,
     steer: 0,
@@ -88,7 +122,17 @@ export default function Skateboard() {
     air: false,
     airT: 0,
     pushT: -1, // seconds since the current push stroke started (rider animation)
-    bail: -1, // seconds since bailing, -1 when riding
+    // Off the board: mode 'ride' | 'bail' (falling + getting up) | 'toBoard' (walking back to it) | 'dismount' |
+    // 'walk' (board in hand) | 'mount' (stepping back on). track = the choreo.js animation being played.
+    mode: 'ride',
+    modeT: 0,
+    track: null,
+    loose: null, // the board on its own in the world (after a bail): { x, y, z, vx, vy, vz, yaw, vyaw, pitch, roll, vroll }
+    offSpeed: 0, // m/s along the heading while off the board (sliding after a bail, rolling while stepping off/on)
+    offDrag: 0,
+    walkSpeed: 0,
+    walkPhase: 0,
+    pitchNow: 0,
     manual: 0, // 0 flat .. 1 nose fully up (smoothed)
     manualT: 0, // seconds the current manual has been held
     manualBalance: -1,
@@ -103,6 +147,169 @@ export default function Skateboard() {
     return hit ? hit.timeOfImpact : Infinity;
   };
 
+  // Rider-space (stance group) vector -> world, and the stance group's world yaw.
+  const yawS = (st) => st.heading + st.stance * Math.PI;
+  const toWorld = (st, x, z) => {
+    const y = yawS(st);
+    const c = Math.cos(y);
+    const sn = Math.sin(y);
+    return [x * c + z * sn, -x * sn + z * c];
+  };
+
+  // --- Bail: pick the fall, set the board loose with a kick that grows with speed.
+  const startBail = (rb, kind, speed) => {
+    const st = s.current;
+    const sev = clamp01((speed - BAIL_SLOW) / (BAIL_FAST - BAIL_SLOW));
+    const k = kind === 'side' && sev > SLAM_AT ? 'slam' : kind;
+    st.mode = 'bail';
+    st.modeT = 0;
+    st.track = bailTrack(k, sev);
+    st.offSpeed = speed * (k === 'back' ? 0.45 : k === 'slam' ? 0.6 : 0.3);
+    st.offDrag = k === 'slam' ? 1.5 : k === 'back' ? 2.2 : 3;
+    Object.assign(st, { pushLeft: 0, pushT: -1, popT: -1, trick: null, revert: null, air: false, manualT: 0, manual: 0 });
+    board.trick = { name: k === 'slam' ? 'SLAM' : 'BAIL', at: performance.now() };
+    const p = rb.translation();
+    const fx = -Math.sin(st.heading);
+    const fz = -Math.cos(st.heading);
+    const [hx, hz] = toWorld(st, -1, 0); // heel side
+    const side = Math.random() < 0.5 ? -1 : 1;
+    let fwd;
+    let lat = 0;
+    let vy = 0;
+    let vyaw = side * 1.5 * sev;
+    let vroll = 0;
+    if (k === 'back') {
+      fwd = speed * 1.05 + 0.7 + 1.6 * sev; // shoots out from under you
+      vy = 1.4 * sev;
+    } else if (k === 'slam') {
+      fwd = speed * 0.95 + 0.5;
+      lat = 1.2 + sev;
+      vy = 1.6 + 1.6 * sev;
+      vyaw = side * (5 + 4 * sev);
+      vroll = side * 10;
+    } else {
+      fwd = speed * 0.7;
+      lat = 1.1;
+      vyaw = side * 2.5;
+    }
+    st.loose = {
+      x: p.x,
+      y: p.y - HALF.y,
+      z: p.z,
+      vx: fx * fwd + hx * lat,
+      vy,
+      vz: fz * fwd + hz * lat,
+      yaw: yawS(st),
+      vyaw,
+      pitch: st.pitchNow,
+      roll: 0,
+      vroll,
+      spin: st.wheelSpin,
+    };
+  };
+
+  // The loose board: rolls and skids to a stop, bounces off walls, falls off ledges, settles flat.
+  const updateLoose = (rb, dt) => {
+    const L = s.current.loose;
+    const gd = probe(rb, L.x, L.y + 0.6, L.z, 6);
+    const ground = Number.isFinite(gd) ? L.y + 0.6 - gd : L.y - 10;
+    L.vy -= GRAVITY * dt;
+    L.y += L.vy * dt;
+    if (L.y <= ground) {
+      L.y = ground;
+      L.vy = L.vy < -1.2 ? -L.vy * 0.3 : 0;
+    }
+    const onGround = L.y <= ground + 0.01 && L.vy <= 0;
+    const k = Math.exp(-(onGround ? BOARD_DRAG : 0.2) * dt);
+    L.vx *= k;
+    L.vz *= k;
+    const sp = Math.hypot(L.vx, L.vz);
+    if (sp > 0.05) {
+      wallRay.origin.x = L.x;
+      wallRay.origin.y = L.y + 0.08;
+      wallRay.origin.z = L.z;
+      wallRay.dir.x = L.vx / sp;
+      wallRay.dir.y = 0;
+      wallRay.dir.z = L.vz / sp;
+      const hit = world.castRayAndGetNormal(wallRay, sp * dt + 0.25, true, undefined, undefined, undefined, rb);
+      if (hit) {
+        const n = hit.normal;
+        const d = L.vx * n.x + L.vz * n.z;
+        if (d < 0) {
+          L.vx = (L.vx - 2 * d * n.x) * 0.4;
+          L.vz = (L.vz - 2 * d * n.z) * 0.4;
+          L.vyaw += (Math.random() - 0.5) * 4;
+        }
+      }
+    }
+    L.x += L.vx * dt;
+    L.z += L.vz * dt;
+    L.vyaw *= Math.exp(-(onGround ? 2.5 : 0.3) * dt);
+    L.yaw += L.vyaw * dt;
+    if (onGround) L.roll = damp(L.roll, Math.round(L.roll / (Math.PI * 2)) * Math.PI * 2, 12, dt);
+    else L.roll += L.vroll * dt;
+    L.pitch = damp(L.pitch, 0, onGround ? 8 : 2, dt);
+    L.spin += (Math.hypot(L.vx, L.vz) / 0.028) * dt * (onGround ? 1 : 0.3);
+  };
+
+  // Board pose in rider space (from the choreography) -> the board group inside the stance group.
+  const placeBoard = (pose) => {
+    const g = boardG.current;
+    if (!g) return;
+    if (!pose) {
+      g.position.set(0, 0, 0);
+      g.quaternion.identity();
+      return;
+    }
+    _q.fromArray(pose.q);
+    _v.copy(DROP).applyQuaternion(_q);
+    g.position.set(pose.p[0], pose.p[1] - HALF.y, pose.p[2]).sub(_v);
+    g.quaternion.copy(_q);
+  };
+  const showLoose = (on) => {
+    if (looseG.current) looseG.current.visible = on;
+    if (boardG.current) boardG.current.visible = !on;
+  };
+  const drawLoose = () => {
+    const L = s.current.loose;
+    const g = looseG.current;
+    if (!L || !g) return;
+    g.position.set(L.x, L.y + PIVOT, L.z);
+    g.rotation.set(L.pitch, L.yaw, L.roll, 'YXZ');
+    for (const w of looseWheels.current) if (w) w.rotation.x = -L.spin;
+  };
+  const resetBoardVisuals = () => {
+    if (stanceG.current) stanceG.current.rotation.y = s.current.stance * Math.PI;
+    if (shoveG.current) {
+      shoveG.current.rotation.y = 0;
+      shoveG.current.position.y = -HALF.y;
+    }
+    if (deck.current) deck.current.rotation.set(0, 0, 0);
+  };
+
+  const startDismount = (speed) => {
+    const st = s.current;
+    st.offSpeed = speed;
+    if (st.stance === 1) {
+      // Off the board you walk nose first: turn the body round (same look) and keep sliding the same way.
+      st.heading += Math.PI;
+      st.stance = 0;
+      st.offSpeed = -speed;
+    }
+    Object.assign(st, { mode: 'dismount', modeT: 0, track: dismountTrack(), offDrag: 3, pushLeft: 0, pushT: -1, manual: 0, manualT: 0 });
+  };
+  const startMount = (carry) => {
+    const st = s.current;
+    st.track = mountTrack(walkPose(st.walkPhase, st.walkSpeed, carry), carry);
+    st.mode = 'mount';
+    st.modeT = 0;
+    st.stance = 0;
+    st.offSpeed = Math.max(0, st.walkSpeed) * 0.9;
+    st.offDrag = 0.3;
+    st.walkSpeed = 0;
+    st.loose = null;
+  };
+
   useFrame((_, rawDt) => {
     const rb = body.current;
     if (!rb) return;
@@ -113,10 +320,35 @@ export default function Skateboard() {
     const keys = getKeys();
     const pressed = (k) => keys[k] && !st.held[k];
 
+    if (POSE_TEST) {
+      const [kind, a, t] = POSE_TEST.split(':');
+      st.testT = (st.testT ?? 0) + dt;
+      let pose;
+      if (kind === 'walk') {
+        const v = Number(a) || 1.5;
+        st.walkPhase += (v * dt) / strideLength(v);
+        pose = finish(walkPose(t != null ? Number(t) : st.walkPhase, v, true));
+        board.pose = { w: 1, ...pose };
+      } else {
+        st.track ??= poseTestTrack(kind, Number(a) || 0);
+        const tt = t != null ? Number(t) : st.testT % (st.track.dur + 0.6);
+        pose = evalTrack(st.track, tt);
+        board.pose = { w: trackWeight(st.track, tt), ...pose };
+      }
+      resetBoardVisuals();
+      placeBoard(pose.board);
+      const p = rb.translation();
+      st.loose = { x: p.x - Math.sin(st.heading) * 1.4, y: p.y - HALF.y, z: p.z - Math.cos(st.heading) * 1.4, yaw: st.heading, pitch: 0, roll: 0, spin: 0 };
+      showLoose(!pose.board);
+      drawLoose();
+      Object.assign(board, { x: p.x, y: p.y, z: p.z, heading: st.heading, speed: 0 });
+      return;
+    }
+
     // Paused (menu, pairing, phone disconnected): freeze, and drop moves sent meanwhile so nothing fires on resume.
     if (!game.running) {
-      Object.assign(phone, { pushQueued: 0, popQueued: 0, trickQueued: null, revertQueued: 0, resetQueued: false });
-      for (const k of ['forward', 'pop', 'revert', ...KEY_TRICKS]) st.held[k] = keys[k];
+      Object.assign(phone, { pushQueued: 0, popQueued: 0, trickQueued: null, revertQueued: 0, resetQueued: false, carryQueued: false });
+      for (const k of EDGE_KEYS) st.held[k] = keys[k];
       return;
     }
 
@@ -128,7 +360,8 @@ export default function Skateboard() {
     let trickReq = null;
     let revertReq = 0;
     let leanIn = 0; // -1 leaning back (top of the phone up) .. 1 leaning forward
-    if (phoneIsLive()) {
+    const live = phoneIsLive();
+    if (live) {
       targetSteer = phone.steer;
       leanIn = phone.lean;
       board.source = 'phone';
@@ -141,11 +374,14 @@ export default function Skateboard() {
     if (phone.popQueued) (pop = phone.popQueued), (phone.popQueued = 0);
     if (phone.trickQueued) (trickReq = phone.trickQueued), (phone.trickQueued = null);
     if (phone.revertQueued) (revertReq = phone.revertQueued), (phone.revertQueued = 0);
+    let carryReq = phone.carryQueued;
+    phone.carryQueued = false;
     if (pressed('forward')) push += 1; // tap W = one push
     if (pressed('pop')) pop = 1;
     for (const k of KEY_TRICKS) if (pressed(k)) trickReq = { type: k, side: 1 };
     if (pressed('revert')) revertReq = 1;
-    for (const k of ['forward', 'pop', 'revert', ...KEY_TRICKS]) st.held[k] = keys[k];
+    if (pressed('carry')) carryReq = true;
+    for (const k of EDGE_KEYS) st.held[k] = keys[k];
 
     st.steer = damp(st.steer, targetSteer, STEER_RESPONSE, dt);
     st.lean = damp(st.lean, targetLean, STEER_RESPONSE, dt);
@@ -168,19 +404,142 @@ export default function Skateboard() {
       rb.setTranslation({ x: sp.x, y: sp.y + 0.05, z: sp.z }, true);
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rb.setGravityScale(1, true);
-      Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, air: false, airT: 0, pushT: -1, bail: -1 });
+      Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, air: false, airT: 0, pushT: -1 });
+      Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0 });
+      board.pose = null;
       return;
     }
 
-    // --- Bailed: you're on the ground, the board skids to a stop, inputs are ignored until you get up.
-    if (st.bail >= 0) {
-      st.bail += dt;
-      push = pop = revertReq = 0;
-      trickReq = null;
-      targetSteer = targetLean = leanIn = 0;
-      st.steer = st.lean = 0;
-      if (st.bail >= BAIL_TIME) st.bail = -1; // back on the board, right where you fell
+    // --- Off the board: falling and getting up, walking (with the board or back to it), stepping off / on.
+    if (st.mode !== 'ride') {
+      st.modeT += dt;
+      const v = rb.linvel();
+      let fwdSpeed = 0;
+      let turn = 0;
+      let latX = 0;
+      let latZ = 0;
+      if (st.mode === 'walk') {
+        // Tilt forward to walk, further to run; tilt back to step backwards; tilt sideways to turn.
+        let target = 0;
+        if (live) {
+          const l = phone.lean;
+          if (l > 0.08) target = l < 0.55 ? 0.7 + ((l - 0.08) / 0.47) * (WALK_SPEED - 0.7) : WALK_SPEED + ((l - 0.55) / 0.45) * (RUN_SPEED - WALK_SPEED);
+          else if (l < -0.15) target = -BACK_SPEED * Math.min(1, (-l - 0.15) / 0.4);
+        }
+        if (keys.forward) target = keys.pop ? RUN_SPEED : WALK_SPEED;
+        else if (keys.back) target = -BACK_SPEED;
+        st.walkSpeed = damp(st.walkSpeed, target, Math.abs(target) > Math.abs(st.walkSpeed) ? 4 : 6, dt);
+        turn = -st.steer * WALK_TURN;
+        st.heading += turn * dt;
+        fwdSpeed = st.walkSpeed;
+        if (carryReq && v.y > -1) startMount(true);
+      } else if (st.mode === 'toBoard') {
+        // Jog back to the board: to a spot just behind it, facing the way you'll ride it.
+        const L = st.loose;
+        const nx = -Math.sin(L.yaw);
+        const nz = -Math.cos(L.yaw);
+        const dir = nx * (L.x - p.x) + nz * (L.z - p.z) >= 0 ? 1 : -1;
+        const dx = nx * dir;
+        const dz = nz * dir;
+        const mx = L.x - dx * MOUNT_GAP - p.x;
+        const mz = L.z - dz * MOUNT_GAP - p.z;
+        const dist = Math.hypot(mx, mz);
+        const rideHeading = Math.atan2(-dx, -dz);
+        const want = dist > 0.35 ? Math.atan2(-mx, -mz) : rideHeading;
+        const err = wrapAngle(want - st.heading);
+        const step = Math.max(-3.5 * dt, Math.min(3.5 * dt, err));
+        st.heading += step;
+        turn = step / dt;
+        const align = Math.max(0, Math.cos(err));
+        const target = dist > 0.04 ? Math.min(JOG_TO_BOARD, dist * 2.5 + 0.3) * align * align : 0;
+        st.walkSpeed = damp(st.walkSpeed, target, 6, dt);
+        fwdSpeed = st.walkSpeed;
+        if (dist < 0.6) {
+          // Close in: side-step onto the spot.
+          const fx = -Math.sin(st.heading);
+          const fz = -Math.cos(st.heading);
+          const along = mx * fx + mz * fz;
+          latX = (mx - fx * along) * 4;
+          latZ = (mz - fz * along) * 4;
+        }
+        const ready = dist < 0.07 && Math.abs(wrapAngle(rideHeading - st.heading)) < 0.1 && Math.hypot(L.vx, L.vz) < 0.4;
+        if (ready || st.modeT > 10) {
+          st.heading = rideHeading;
+          startMount(false);
+        }
+      } else {
+        // Playing a track (bail, stepping off, stepping on): slide along with what speed is left, plus root motion.
+        st.offSpeed *= Math.exp(-st.offDrag * dt);
+        fwdSpeed = st.offSpeed;
+        const r0 = rootAt(st.track, st.modeT - dt);
+        const r1 = rootAt(st.track, st.modeT);
+        const [wx, wz] = toWorld(st, r1[0] - r0[0], r1[1] - r0[1]);
+        latX = wx / dt;
+        latZ = wz / dt;
+        if (st.modeT >= st.track.dur) {
+          if (st.mode === 'bail') {
+            if (st.stance === 1) (st.heading += Math.PI), (st.stance = 0); // walk nose first (same look)
+            Object.assign(st, { mode: 'toBoard', walkSpeed: 0, walkPhase: 0, offSpeed: 0 });
+          } else if (st.mode === 'dismount') {
+            Object.assign(st, { mode: 'walk', walkSpeed: Math.max(0, st.offSpeed), walkPhase: 0, offSpeed: 0 });
+          } else {
+            st.mode = 'ride';
+          }
+          st.modeT = 0;
+          st.track = null;
+        }
+      }
+      if (st.mode === 'walk' || st.mode === 'toBoard') {
+        const pace = Math.max(Math.abs(st.walkSpeed), Math.abs(turn) * 0.35);
+        st.walkPhase += (Math.sign(st.walkSpeed || 1) * pace * dt) / strideLength(st.walkSpeed);
+      }
+      if (st.loose) updateLoose(rb, dt);
+
+      const fx = -Math.sin(st.heading);
+      const fz = -Math.cos(st.heading);
+      rb.setGravityScale(1, true);
+      rb.setLinvel({ x: fx * fwdSpeed + latX, y: v.y, z: fz * fwdSpeed + latZ }, true);
+      rb.setRotation({ x: 0, y: Math.sin(st.heading / 2), z: 0, w: Math.cos(st.heading / 2) }, true);
+
+      // Pose for the rider, board placement.
+      let pose = null;
+      let w = 1;
+      if (st.track) {
+        pose = evalTrack(st.track, st.modeT);
+        w = trackWeight(st.track, st.modeT);
+      } else if (st.mode !== 'ride') {
+        pose = finish(walkPose(st.walkPhase, st.walkSpeed, st.mode === 'walk', turn));
+      }
+      board.pose = pose && { w, ...pose };
+      resetBoardVisuals();
+      placeBoard(pose?.board);
+      showLoose(!!st.loose && !pose?.board);
+      drawLoose();
+      if (pose?.board && pose.board.p[1] < 0.02) {
+        st.wheelSpin += (fwdSpeed / 0.028) * dt;
+        for (const wh of wheels.current) if (wh) wh.rotation.x = -st.wheelSpin;
+      }
+
+      const offMode = st.mode === 'walk' || st.mode === 'dismount' ? 'walk' : st.mode === 'ride' ? 'ride' : 'off';
+      Object.assign(board.view, { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0, mode: offMode });
+      Object.assign(board, { speed: fwdSpeed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: false, mode: st.mode });
+      Object.assign(board.anim, {
+        pushT: -1,
+        popT: -1,
+        flip: -1,
+        air: false,
+        pitch: 0,
+        steer: 0,
+        fall: st.mode === 'bail' ? clamp01(st.modeT / 0.4) : 0,
+        manual: 0,
+        balance: -1,
+        meter: 0,
+      });
+      return;
     }
+    board.pose = null;
+    showLoose(false);
+    placeBoard(null);
 
     // --- Ground contact: rays down from the middle, nose and tail of the board.
     const fx = -Math.sin(st.heading);
@@ -191,6 +550,19 @@ export default function Skateboard() {
     const grounded = Math.min(dCenter, dEnds) < HALF.y + 0.06 && v.y < 0.8;
     const heightAbove = Number.isFinite(dCenter) ? Math.max(0, dCenter - HALF.y) : 8;
     let speed = Math.max(0, v.x * fx + v.z * fz);
+
+    if (import.meta.env.DEV && st.devBail) {
+      const [kind, sp] = st.devBail;
+      st.devBail = null;
+      startBail(rb, kind, sp ?? speed);
+      return;
+    }
+
+    // Step off and pick the board up (phone Walk button / B), only while rolling on the ground.
+    if (carryReq && grounded && st.popT < 0 && !st.revert && st.manualT === 0) {
+      startDismount(speed);
+      return;
+    }
 
     // Pushes only count with the board on the ground; each one is spread over PUSH_TIME.
     if (push && grounded && st.popT < 0 && !st.revert) {
@@ -212,15 +584,12 @@ export default function Skateboard() {
     // --- Manuals: balance on the back wheels while the phone is leant back.
     let inManual = false;
     let balance = 0; // 0 at the start of the balance zone .. 1 at the falling edge
-    if (grounded && st.popT < 0 && !st.revert && st.bail < 0 && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED) {
+    if (grounded && st.popT < 0 && !st.revert && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED) {
       const back = -leanIn;
       if (back > MANUAL_FALL && st.manualT > 0) {
-        // Leaned too far back: the board shoots out and you fall.
-        st.bail = 0;
-        st.pushLeft = 0;
-        speed *= BAIL_SPEED_KEEP;
-        board.trick = { name: 'BAIL', at: performance.now() };
-        st.manualT = 0;
+        // Leaned too far back: the board shoots out and you fall backwards.
+        startBail(rb, 'back', speed);
+        return;
       } else if (back > MANUAL_IN) {
         inManual = true;
         balance = Math.min(1, (back - MANUAL_IN) / (MANUAL_FALL - MANUAL_IN));
@@ -229,7 +598,7 @@ export default function Skateboard() {
     if (inManual) {
       st.manualT += dt; // no slowdown while manualing (rolling friction is skipped below)
     } else if (st.manualT > 0) {
-      if (st.manualT > MANUAL_CALLOUT && st.popT < 0 && st.bail < 0) {
+      if (st.manualT > MANUAL_CALLOUT && st.popT < 0) {
         board.trick = { name: `MANUAL ${st.manualT.toFixed(1)}s`, at: performance.now() };
       }
       st.manualT = 0;
@@ -271,7 +640,7 @@ export default function Skateboard() {
       const left = (vy + Math.sqrt(Math.max(0, vy * vy + 2 * air.g * heightAbove))) / air.g;
       if (left < need) vy = Math.min(vy + ASSIST_MAX, (air.g * need) / 2 - heightAbove / need);
     };
-    const canPop = grounded && st.popT < 0 && !st.revert && st.bail < 0;
+    const canPop = grounded && st.popT < 0 && !st.revert;
     if (pop && canPop) doPop(pop);
     if (revertReq && st.popT >= 0 && st.popT < air.window && !st.trick) {
       trickReq = { type: revertReq > 0 ? 'fs180' : 'bs180', side: 1 }; // a half-circle in the air is a 180
@@ -308,24 +677,20 @@ export default function Skateboard() {
     if (st.air && grounded) {
       st.air = false;
       const tr = st.trick;
-      if (st.popT >= 0 || tr) {
-        let name = (st.popFakie ? 'FAKIE ' : '') + (tr ? tr.def.name : 'OLLIE');
-        if (tr && tr.t / tr.def.time < LAND_OK) {
-          name = 'BAIL'; // landed mid-rotation: you hit the ground, then get back up
-          speed *= BAIL_SPEED_KEEP;
-          st.bail = 0;
-          st.pushLeft = 0;
-          st.pushT = -1;
-        } else if (tr?.def.spin) st.stance ^= 1;
-        board.trick = { name, at: performance.now() };
-      }
+      const popped = st.popT >= 0;
       st.popT = -1;
       st.trick = null;
+      if (tr && tr.t / tr.def.time < LAND_OK) {
+        // Landed mid-rotation: stumble off (slow) or slam (fast), then get up and go back to the board.
+        startBail(rb, 'side', speed);
+        return;
+      }
+      if (tr?.def.spin) st.stance ^= 1;
+      if (popped || tr) board.trick = { name: (st.popFakie ? 'FAKIE ' : '') + (tr ? tr.def.name : 'OLLIE'), at: performance.now() };
     }
     // A pop that never left the ground (e.g. under a ledge) shouldn't lock tricks forever.
     if (st.popT > 1.5 && grounded) (st.popT = -1), (st.trick = null);
 
-    if (st.bail >= 0) speed *= Math.exp(-BAIL_DRAG * dt);
     // Popped jumps use the lighter airtime gravity; rolling off a ledge falls normally.
     rb.setGravityScale(st.popT >= 0 && !grounded ? air.g / GRAVITY : 1, true);
     rb.setLinvel({ x: nfx * speed, y: vy, z: nfz * speed }, true);
@@ -333,8 +698,6 @@ export default function Skateboard() {
 
     // --- Visuals.
     const tr = st.trick;
-    // Fall weight for the rider: 0 riding → 1 lying on the ground → 0 back up.
-    const fall = st.bail < 0 ? 0 : Math.min(1, st.bail / BAIL_FALL, (BAIL_TIME - st.bail) / BAIL_FALL);
     const u = tr ? Math.min(1, tr.t / tr.def.time) : 0;
     const ease = u * u * (3 - 2 * u) * 0.35 + u * 0.65; // quick start, soft catch
     let spinYaw = 0;
@@ -349,9 +712,9 @@ export default function Skateboard() {
       pitch += t < 0.08 ? (t / 0.08) * 0.5 : 0.5 * Math.exp(-(t - 0.08) * 8); // tail snap, then level out
     }
     if (boardTrick) pitch *= 1 - Math.sin(Math.PI * u); // level the board while it rotates
+    st.pitchNow = pitch;
     if (shoveG.current) {
-      // On a bail the board kicks out sideways from under you.
-      shoveG.current.rotation.y = boardTrick ? -tr.side * (tr.def.shove ?? 0) * ease * Math.PI * 2 : fall * 0.5;
+      shoveG.current.rotation.y = boardTrick ? -tr.side * (tr.def.shove ?? 0) * ease * Math.PI * 2 : 0;
       shoveG.current.position.y = -HALF.y + (boardTrick ? Math.sin(Math.PI * u) * 0.16 : 0);
     }
     if (deck.current) {
@@ -365,11 +728,12 @@ export default function Skateboard() {
       spin: spinYaw, // 180s / reverts (not the fakie stance itself)
       lift: shoveG.current ? shoveG.current.position.y + HALF.y : 0, // board rising off the feet in flips
       height: grounded ? 0 : Math.min(2, heightAbove),
+      mode: 'ride',
     });
     st.wheelSpin += (speed / 0.028) * dt;
     for (const w of wheels.current) if (w) w.rotation.x = -st.wheelSpin;
 
-    Object.assign(board, { speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: st.lean, fakie: st.stance === 1 });
+    Object.assign(board, { speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: st.lean, fakie: st.stance === 1, mode: 'ride' });
     Object.assign(board.anim, {
       pushT: st.pushT,
       popT: st.popT,
@@ -377,14 +741,15 @@ export default function Skateboard() {
       air: !grounded && (st.popT >= 0 || st.airT > 0.12),
       pitch,
       steer: st.steer,
-      fall: fall * fall * (3 - 2 * fall),
+      fall: 0,
       manual: st.manual, // 0..1 nose-up amount (rider leans back over the tail)
       balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 through the green zone
       meter: st.meter ?? 0, // needle position on the HUD meter
     });
-  });
+  }, -1); // before the rider (and camera), so they see this frame's pose
 
   return (
+    <>
     <RigidBody
       ref={body}
       position={START}
@@ -397,11 +762,13 @@ export default function Skateboard() {
     >
       <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} />
       <group ref={stanceG}>
-        <group ref={shoveG} position={[0, -HALF.y, 0]}>
-          <group position={[0, PIVOT, 0]}>
-            <group ref={deck}>
-              <group position={[0, -PIVOT, 0]}>
-                <BoardModel wheelsRef={wheels} />
+        <group ref={boardG}>
+          <group ref={shoveG} position={[0, -HALF.y, 0]}>
+            <group position={[0, PIVOT, 0]}>
+              <group ref={deck}>
+                <group position={[0, -PIVOT, 0]}>
+                  <BoardModel wheelsRef={wheels} />
+                </group>
               </group>
             </group>
           </group>
@@ -411,6 +778,13 @@ export default function Skateboard() {
         </group>
       </group>
     </RigidBody>
+    {/* The board on its own after a bail (world space, so it can roll away from the rider). */}
+    <group ref={looseG} visible={false}>
+      <group position={[0, -PIVOT, 0]}>
+        <BoardModel wheelsRef={looseWheels} />
+      </group>
+    </group>
+    </>
   );
 }
 

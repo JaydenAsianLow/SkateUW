@@ -148,6 +148,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .deck-foot .muted { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
 .reset-btn { padding: 12px 22px; font-size: 18px; border: 0; border-radius: 12px; background: #d9d9d9; color: #111; }
 .reset-btn:active { background: #c4c4c4; }
+.walk-btn { padding: 12px 18px; font-size: 18px; font-weight: 700; border: 0; border-radius: 12px; background: var(--accent); color: #001217; }
+.walk-btn.on { background: var(--hot); color: #fff; }
+.walk-btn:disabled { opacity: 0.4; }
+.walk-hint { position: absolute; left: 8%; right: 8%; bottom: 8%; padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,0.6); display: grid; gap: 4px; text-align: center; font-size: 14px; color: #ddd; pointer-events: none; }
+.walk-hint b { color: #fff; letter-spacing: 3px; }
 .small-btn { padding: 10px 14px; font-size: 14px; border-radius: 10px; }
 @keyframes flash-out { 0% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0; transform: scale(1) translateY(-10px); } }
 

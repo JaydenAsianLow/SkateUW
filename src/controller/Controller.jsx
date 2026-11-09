@@ -267,6 +267,7 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
   const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 } });
   const steerRef = useRef(steer);
   steerRef.current = steer;
+  const [mode, setMode] = useState('ride'); // 'ride' | 'walk' (board in hand) | 'off' (bailed), from the laptop
 
   useEffect(() => {
     const s = socketRef.current;
@@ -274,6 +275,7 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
     const onBoard = (d) => {
       mirror.current.target = d;
       mirror.current.at = performance.now();
+      setMode(d.mode ?? 'ride');
     };
     s.on('board', onBoard);
     return () => s.off('board', onBoard);
@@ -427,6 +429,13 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
     tracker.up(e.pointerId);
   };
 
+  // Walk / Ride: step off and carry the board, or drop back in. The laptop decides (e.g. not mid-air).
+  const carry = () => {
+    socketRef.current?.emit('carry');
+    navigator.vibrate?.(25);
+    setFlash({ label: mode === 'walk' ? 'DROP IN' : 'STEP OFF', key: performance.now() });
+  };
+
   const reset = () => {
     socketRef.current?.emit('reset');
     navigator.vibrate?.([40, 40, 40]);
@@ -459,6 +468,13 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
           </div>
         )}
         <canvas ref={canvasRef} className="deck-trail" />
+        {mode === 'walk' && (
+          <div className="walk-hint">
+            <b>WALKING</b>
+            <span>Tilt forward to walk, further to run. Tilt sideways to turn.</span>
+            <span>Tap Ride to drop back in.</span>
+          </div>
+        )}
       </div>
       <div className="deck-foot">
         <button className="secondary small-btn" onClick={onCalibrate}>
@@ -471,6 +487,9 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
           {steer >= 0 ? '+' : ''}
           {steer.toFixed(2)}
         </span>
+        <button className={`walk-btn ${mode === 'walk' ? 'on' : ''}`} onClick={carry} disabled={mode === 'off'}>
+          {mode === 'walk' ? 'Ride' : 'Walk'}
+        </button>
         <button className="reset-btn" onClick={reset}>
           Reset
         </button>

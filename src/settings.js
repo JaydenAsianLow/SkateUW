@@ -21,7 +21,7 @@ export const RESERVED_KEYS = {
   KeyW: 'push', ArrowUp: 'push', KeyS: 'manual', ArrowDown: 'manual',
   KeyA: 'steer left', ArrowLeft: 'steer left', KeyD: 'steer right', ArrowRight: 'steer right',
   ShiftLeft: 'ollie', ShiftRight: 'ollie', KeyF: 'kickflip', KeyG: 'varial flip', KeyT: 'tre flip',
-  KeyV: 'pop shove-it', KeyE: 'frontside 180', KeyQ: 'revert', Escape: 'cancel',
+  KeyV: 'pop shove-it', KeyE: 'frontside 180', KeyQ: 'revert', KeyB: 'walk / ride', Escape: 'cancel',
 };
 
 export const settings = { ...DEFAULTS };

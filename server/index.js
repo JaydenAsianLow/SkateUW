@@ -80,6 +80,7 @@ io.on('connection', (socket) => {
   relay('trick', (d) => ({ type: TRICK_TYPES.has(d.type) ? d.type : 'kickflip', side: d.side < 0 ? -1 : 1 }));
   relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
   relay('reset', () => ({}));
+  relay('carry', () => ({}));
 
   // Deck rotation from the display, mirrored by the phone's 3D board.
   socket.on('board', (d) => {
@@ -91,6 +92,7 @@ io.on('connection', (socket) => {
       spin: num(d.spin, -20, 20),
       lift: num(d.lift, -1, 1),
       height: num(d.height, 0, 2),
+      mode: ['ride', 'walk', 'off'].includes(d.mode) ? d.mode : 'ride',
     });
   });
 
