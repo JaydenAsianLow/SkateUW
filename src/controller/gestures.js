@@ -7,9 +7,11 @@
 //  2. createComboReader: turns segments, arcs and held fingers into skate moves:
 //       D                                   -> push
 //       D, U                                -> ollie (fires immediately)
-//       D, U, diagonal                      -> kickflip (flick side sets the spin direction)
+//       D, U, UR (or UL)                    -> kickflip (UL spins it the other way)
 //       D, U, then UR + DL with two fingers -> varial flip
-//       D, U, DL while another finger holds the top-right of the deck -> tre flip
+//       D, U, hold, DL                      -> tre flip. The hold is the same finger resting a moment at the top of
+//                                              the up-swipe before flicking down-left, or another finger resting
+//                                              anywhere on the deck. A down diagonal with no hold is no trick.
 //       R + DL with two fingers             -> pop shove-it (pops by itself)
 //       half circle                         -> revert (on the ground)
 //       D, U, then half circle(s)           -> frontside 180 (left finger arcs down, right finger arcs up)
@@ -28,6 +30,7 @@ const COMBO_GAP_MS = 550; // max time between segments of one combo
 const TRICK_WINDOW_MS = 820;
 const ARC_WINDOW_MS = 1050; // half circles take longer to draw
 const MULTI_MS = 130; // two fingers within this time count as "at the same time"
+const HOLD_MS = 120; // a finger resting this long, then moving on, marks its next swipe as "after a hold"
 
 const RAD = Math.PI / 180;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -56,6 +59,16 @@ export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
   };
 
   function step(id, f, vx, vy, len, t, x) {
+    // Rested a moment and moving again: the next swipe comes "after a hold" (tre flip), and starts fresh.
+    if (t - f.lastT > HOLD_MS) {
+      flush(f);
+      f.seg = null;
+      f.run = newRun();
+      f.prevAng = null;
+      f.prevD = 0;
+      f.afterHold = true;
+    }
+    f.lastT = t;
     // Curvature: how much the stroke has turned smoothly since the last corner.
     const ang = Math.atan2(vy, vx);
     if (f.prevAng != null) {
@@ -103,7 +116,8 @@ export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
     if (!sg.confirmed && sg.len >= minSegPx) {
       sg.confirmed = true;
       if (f.arced) return; // the rest of a half circle is not a swipe
-      const ev = { id, dir: classify(sg.dx, sg.dy), len: sg.len, speed: sg.len / Math.max(16, t - sg.t0), t };
+      const ev = { id, dir: classify(sg.dx, sg.dy), len: sg.len, speed: sg.len / Math.max(16, t - sg.t0), t, held: f.afterHold };
+      f.afterHold = false;
       if (Math.abs(r.turn) > CURVE_DEG * RAD) f.pending.push(ev);
       else {
         flush(f);
@@ -113,8 +127,8 @@ export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
   }
 
   return {
-    down(id, x, y) {
-      fingers.set(id, { last: { x, y }, seg: null, prevAng: null, prevD: 0, run: newRun(), pending: [], arced: false });
+    down(id, x, y, t = performance.now()) {
+      fingers.set(id, { last: { x, y }, seg: null, prevAng: null, prevD: 0, run: newRun(), pending: [], arced: false, lastT: t, afterHold: false });
     },
     move(id, x, y, t) {
       const f = fingers.get(id);
@@ -137,7 +151,7 @@ export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
 // speed is px/ms; ~0.3 is a lazy swipe, ~2 is a hard flick. Map to 0.75..1.3 (lazy swipes still count).
 const power = (speed) => clamp(0.8 + (speed - 0.3) * 0.4, 0.75, 1.3);
 
-// pointers() -> [{ id, holding, topRight }] for every finger currently on the deck.
+// pointers() -> [{ id, holding }] for every finger currently on the deck (holding = resting still).
 export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, pointers }) {
   let stage = 'idle'; // 'idle' | 'down' | 'pop'
   let lastT = -Infinity;
@@ -172,7 +186,9 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, p
     else if (air) {
       const f = list[0];
       side = f.dir.includes('L') ? -1 : 1;
-      type = pointers().some((p) => p.id !== f.id && p.holding && p.topRight) ? 'tre' : 'kickflip';
+      const held = f.held || pointers().some((p) => p.id !== f.id && p.holding);
+      if (held && (f.dir === 'DL' || f.dir === 'DR')) type = 'tre';
+      else if (f.dir === 'UR' || f.dir === 'UL') type = 'kickflip';
     }
     if (!type) return;
     if (type === 'shove' && !air) popT = now(); // from flat ground: the shove-it pops by itself

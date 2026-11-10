@@ -17,13 +17,13 @@ function rig() {
   });
   const tracker = createStrokeTracker({ onSegment: (e) => reader.segment(e), onArc: (e) => reader.arc(e), minSegPx: 24 });
   // Animate one finger along a list of points (already dense) with optional start delay.
-  async function finger(id, pts, { delay = 0, hold = null, at = {} } = {}) {
+  async function finger(id, pts, { delay = 0, hold = null, at = {}, pause = {} } = {}) {
     await sleep(delay);
     fingers.set(id, { holding: false, topRight: false });
     tracker.down(id, pts[0][0], pts[0][1]);
     for (const [i, [x, y]] of pts.slice(1).entries()) {
       at[i]?.();
-      await sleep(DT);
+      await sleep(DT + (pause[i] ?? 0));
       tracker.move(id, x, y, performance.now());
     }
     if (hold) {
@@ -63,7 +63,22 @@ const tests = {
   },
   'slightly curved push (thumb arc)': async ({ finger }) => finger(1, arc(420, 360, 220, 190 * D, 160 * D, 6)),
   'kickflip ↗': async ({ finger }) => finger(1, chain(line(200, 300, 200, 420), line(200, 420, 200, 320), line(200, 320, 270, 250))),
-  'kickflip ↙': async ({ finger }) => finger(1, chain(line(200, 300, 200, 420), line(200, 420, 200, 320), line(200, 320, 130, 390))),
+  'no trick on ↙ alone (no hold)': async ({ finger }) => finger(1, chain(line(200, 300, 200, 420), line(200, 420, 200, 320), line(200, 320, 130, 390))),
+  'kickflip ↖': async ({ finger }) => finger(1, chain(line(200, 300, 200, 420), line(200, 420, 200, 320), line(200, 320, 130, 250))),
+  'tre flip (same finger: ↓↑, hold, ↙)': async ({ finger }) => {
+    const ollie = chain(line(150, 300, 150, 420), line(150, 420, 150, 320));
+    await finger(1, chain(ollie, line(150, 320, 80, 390)), { pause: { [ollie.length - 1]: 200 } });
+  },
+  'tre flip (another finger resting anywhere + ↓↑↙)': async ({ finger }) => {
+    const release = await finger(9, [[100, 600], [101, 601]], { hold: 'any' });
+    await sleep(120);
+    await finger(1, chain(line(250, 300, 250, 420), line(250, 420, 250, 320), line(250, 320, 180, 390)));
+    release();
+  },
+  'kickflip after a pause (↓↑, hold, ↗)': async ({ finger }) => {
+    const ollie = chain(line(150, 300, 150, 420), line(150, 420, 150, 320));
+    await finger(1, chain(ollie, line(150, 320, 220, 250)), { pause: { [ollie.length - 1]: 200 } });
+  },
   'varial flip (↓↑↗ + ↙ second finger)': async ({ finger }) => {
     // Second finger lands as the first one pops, and swipes down-left as the first flicks up-right.
     let b;
@@ -119,7 +134,11 @@ const expect = {
   'ollie (two separate swipes)': 'push pop',
   'slightly curved push (thumb arc)': 'push',
   'kickflip ↗': 'push pop kickflip',
-  'kickflip ↙': 'push pop kickflip-',
+  'no trick on ↙ alone (no hold)': 'push pop',
+  'kickflip ↖': 'push pop kickflip-',
+  'tre flip (same finger: ↓↑, hold, ↙)': 'push pop tre-',
+  'tre flip (another finger resting anywhere + ↓↑↙)': 'push pop tre-',
+  'kickflip after a pause (↓↑, hold, ↗)': 'push pop kickflip',
   'varial flip (↓↑↗ + ↙ second finger)': 'push pop varial',
   'tre flip (hold top-right + ↓↑↙)': 'push pop tre-',
   'pop shove-it (→ + ↙ together)': 'shove',

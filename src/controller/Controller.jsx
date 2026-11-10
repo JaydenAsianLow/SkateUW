@@ -292,7 +292,7 @@ const TRICK_LABEL = {
 };
 const STAGE_PIPS = { idle: 0, down: 1, pop: 2, trick: 3 };
 const TRAIL_MS = 350;
-const HOLD_MS = 90; // a finger resting this long without moving counts as holding
+const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
@@ -339,15 +339,10 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
   const [pips, setPips] = useState(0);
   const pipsTimer = useRef(0);
 
-  // Every finger on the deck, with whether it's resting in the top-right corner (tre flip hold).
+  // Every finger on the deck, with whether it's resting still right now (anywhere: a hold for the tre flip).
   const pointers = () => {
-    const r = deckRef.current?.getBoundingClientRect();
     const now = performance.now();
-    return [...touches.current.entries()].map(([id, p]) => ({
-      id,
-      holding: !p.moved && now - p.t0 > HOLD_MS,
-      topRight: !!r && p.x > r.left + r.width * 0.5 && p.y < r.top + r.height * 0.5,
-    }));
+    return [...touches.current.entries()].map(([id, p]) => ({ id, holding: now - p.restT > HOLD_MS }));
   };
 
   // Gesture pipeline: pointers -> segments / arcs -> moves -> socket.
@@ -415,7 +410,7 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
       for (const p of pointers()) {
         if (!p.holding) continue;
         const t = touches.current.get(p.id);
-        ctx.strokeStyle = p.topRight ? 'rgba(255, 61, 242, 0.9)' : 'rgba(255, 255, 255, 0.35)';
+        ctx.strokeStyle = 'rgba(255, 61, 242, 0.9)'; // a resting finger: hold for the tre flip
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(t.x - r.left, t.y - r.top, 30 + Math.sin(now / 120) * 3, 0, Math.PI * 2);
@@ -458,7 +453,7 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
   const onDown = (e) => {
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const t = performance.now();
-    touches.current.set(e.pointerId, { x0: e.clientX, y0: e.clientY, t0: t, x: e.clientX, y: e.clientY, moved: false });
+    touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY, restX: e.clientX, restY: e.clientY, restT: t });
     tracker.down(e.pointerId, e.clientX, e.clientY, t);
     trail.current.push({ x: e.clientX, y: e.clientY, t, id: e.pointerId });
   };
@@ -474,7 +469,8 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
     }
     tp.x = e.clientX;
     tp.y = e.clientY;
-    if (!tp.moved && Math.hypot(tp.x - tp.x0, tp.y - tp.y0) > HOLD_SLOP_PX) tp.moved = true;
+    // Moved off the spot it was resting on: it's moving again (rest starts over from here).
+    if (Math.hypot(tp.x - tp.restX, tp.y - tp.restY) > HOLD_SLOP_PX) (tp.restX = tp.x), (tp.restY = tp.y), (tp.restT = t);
   };
   const onUp = (e) => {
     if (!touches.current.has(e.pointerId)) return;
@@ -514,7 +510,6 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
         >
           <div ref={shadowRef} className="board-shadow" />
           <Board3D ref={boardRef} />
-          <div className="hold-zone">HOLD</div>
           <div className="combo">
             {['↓', '↑', '★'].map((g, i) => (
               <span key={g} className={`pip ${i < pips ? 'on' : ''}`}>

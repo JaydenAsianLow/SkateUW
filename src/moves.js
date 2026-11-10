@@ -2,9 +2,9 @@
 export const MOVES = [
   ['Push', 'swipe ↓'],
   ['Ollie', '↓ then ↑'],
-  ['Kickflip', '↓ ↑ then a diagonal'],
+  ['Kickflip', '↓ ↑ then ↗'],
   ['Varial flip', '↓ ↑ then ↗ and ↙ together (two fingers)'],
-  ['Tre flip', 'hold a finger top-right, then ↓ ↑ ↙'],
+  ['Tre flip', '↓ ↑, hold a moment, then ↙ (or rest another finger anywhere and ↓ ↑ ↙)'],
   ['Pop shove-it', '→ and ↙ together (two fingers)'],
   ['Revert', 'one finger draws a half circle'],
   ['Frontside 180', '↓ ↑, then left finger half-circles down while the right half-circles up'],

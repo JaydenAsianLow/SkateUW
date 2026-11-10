@@ -44,9 +44,9 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
 |---|---|
 | Push | Swipe **down** |
 | Ollie | **Down, then up** (one zig-zag stroke or two quick swipes) |
-| Kickflip | Down, up, then a **diagonal** (its side sets the spin direction) |
+| Kickflip | Down, up, then **up-right** (up-left spins it the other way) |
 | Varial flip | Down, up, then **up-right and down-left at the same time** (two fingers) |
-| Tre flip | **Hold a finger on the top-right** of the deck (the HOLD box), then down, up, **down-left** |
+| Tre flip | Down, up, **hold** a moment (keep the finger still), then **down-left**. Or rest another finger anywhere on the deck and swipe down, up, down-left |
 | Pop shove-it | Swipe **right and down-left at the same time** (two fingers). Pops by itself |
 | Revert | One finger draws a **half circle** (on the ground). You ride away fakie; revert again to go back |
 | Frontside 180 | Down, up, then the **left finger half-circles down while the right finger half-circles up** (one counter-clockwise half circle also works; clockwise = backside 180) |
