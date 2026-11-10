@@ -247,13 +247,6 @@ export function SettingsPanel({ inGame }) {
         </span>
       </div>
       <div className="hud-small muted">Higher = less tilt for full steering, shorter swipes count.</div>
-      <div className="ctl-row">
-        <span>Character</span>
-        <span className="ctl-btns">
-          {btn('Me', () => updateSettings({ character: 'me' }), cfg.character !== 'classic' ? 'on' : '')}
-          {btn('Classic', () => updateSettings({ character: 'classic' }), cfg.character === 'classic' ? 'on' : '')}
-        </span>
-      </div>
       <label className="ctl-row">
         <span>Airtime</span>
         <input

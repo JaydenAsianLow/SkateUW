@@ -1,11 +1,10 @@
-import { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
 import { finish, walkPose, walkRate } from './choreo.js';
 import { MOCAP_BONES, loadMocap, locoClips, mocap, sampleClip } from './mocap.js';
-import { onSettings, settings } from '../settings.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
 
@@ -27,14 +26,14 @@ import Skater from './Skater.jsx';
 // On foot, idle / walk / jog / run and the pick-up come from Mixamo motion capture (mocap.js) once the clips are in
 // public/models/skater/anims/; until then the procedural walk (choreo.js) stands in.
 
-// Two characters (Settings > Character): 'me' = the Mixamo body restyled in Blender (art/scripts/13_me_body.py),
-// animated by the Mixamo run and skating clips; 'classic' = the original skater, posed entirely in code.
-const MODELS = { me: '/models/skater/me.glb', classic: '/models/skater/skater.glb' };
-const HIP_HEIGHT = 0.9; // every character is scaled to this hip height, which the choreography is built around
+// On the board the Mixamo skating clip (anims/Skateboarding.glb) plays on top of the coded stance once loaded.
+const MODEL_URL = '/models/skater/skater.glb';
+const HIP_HEIGHT = 0.9; // the rig is scaled to this hip height (a no-op for skater.glb), which the choreography uses
 const normName = (n) => n.replace(/^mixamorig\d*:?/, '');
 // Bones the poses set directly; every other bone (fingers, end joints) keeps its rest pose relative to its parent.
 const POSED = new Set(['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head']);
 for (const s of ['Left', 'Right']) for (const b of ['Shoulder', 'Arm', 'ForeArm', 'Hand', 'UpLeg', 'Leg', 'Foot', 'ToeBase']) POSED.add(s + b);
+const WALK_TOP = 1.5; // m/s: the coded walk's top speed (it would start blending to its own run at 1.6)
 const USE_OLD = new URLSearchParams(window.location.search).has('oldskater');
 
 const FRONT_Z = -0.2; // ankle positions on the deck: front foot over the front bolts, back foot on the tail
@@ -160,9 +159,8 @@ function solveKnee(hip, ankle, pole, l1, l2, out) {
   return out.copy(hip).addScaledVector(_d, along).addScaledVector(_pp, h);
 }
 
-function RiderModel({ boardRef, character }) {
-  const { scene } = useGLTF(MODELS[character]);
-  const isMe = character === 'me';
+function RiderModel({ boardRef }) {
+  const { scene } = useGLTF(MODEL_URL);
   const rig = useMemo(() => buildRig(scene), [scene]);
   const root = useRef(null);
   const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE, locoPhase: 0, idleT: 0, groundOff: 0 });
@@ -361,17 +359,21 @@ function RiderModel({ boardRef, character }) {
     function solveMixed(fp, list, dt) {
       const v = Math.abs(fp.loco.v);
       const S = list[0].speed;
-      const k = smooth(Math.min(1, Math.max(0, (v - 0.45 * S) / (0.45 * S)))); // 0 walk .. 1 clip
+      // The coded gait only ever walks (capped below where it would start its own run), so the Running clip is the
+      // one and only run: walk -> run blend between WALK_TOP and 75% of the clip's speed.
+      const vw = Math.min(v, WALK_TOP);
+      const k = smooth(Math.min(1, Math.max(0, (v - WALK_TOP) / (0.75 * S - WALK_TOP)))); // 0 walk .. 1 clip
       if (k >= 1) return solveLoco(fp, list, dt);
+      const walkR = vw > 1e-4 ? (walkRate(vw) * v) / vw : 0; // the walk's stride, stepping fast enough for speed v
       const clipRate = v / Math.max(0.1, list[0].c.stride);
-      s.locoPhase += Math.sign(fp.loco.v || 1) * (walkRate(v) + (clipRate - walkRate(v)) * k) * dt;
+      s.locoPhase += Math.sign(fp.loco.v || 1) * (walkR + (clipRate - walkR) * k) * dt;
       if (k > 0) {
         applySample(sampleClip(list[0].c, list[0].c.land0 + s.locoPhase * list[0].c.cycleDur, true, w.sampA));
         groundFeet(4, dt);
         for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
         w.hipsA.copy(P.Hips);
       }
-      const wp = finish(walkPose(s.locoPhase, fp.loco.v, fp.loco.carry, fp.loco.turn ?? 0));
+      const wp = finish(walkPose(s.locoPhase, Math.sign(fp.loco.v || 1) * vw, fp.loco.carry, fp.loco.turn ?? 0));
       solveOff(wp);
       if (k > 0) {
         for (const n of MOCAP_BONES) {
@@ -384,7 +386,7 @@ function RiderModel({ boardRef, character }) {
         for (const side of ['Left', 'Right']) follow(side + 'Hand');
       }
     }
-    // 'me' riding: the skating clip, board foot pinned to the deck (front bolts), the rest of the body around it.
+    // Riding: the skating clip, board foot pinned to the deck (front bolts), the rest of the body around it.
     // Steering leans the upper body (and a little of the hips) into the turn, about the travel axis.
     function solveSkate(c) {
       applySample(sampleClip(c, s.skateT, true, w.sampA));
@@ -401,38 +403,6 @@ function RiderModel({ boardRef, character }) {
       P.Hips.add(w.v);
       for (const side of ['Left', 'Right']) follow(side + 'Hand');
     }
-    // 'me' on foot: the run clip while moving (0.8-1.2x, stride matched to speed within that), a still frame of it
-    // when stopped, blended by speed.
-    function solveRunIdle(fp, dt) {
-      const c = mocap.clips.run;
-      const v = Math.abs(fp.loco.v);
-      const k = smooth(Math.min(1, Math.max(0, (v - 0.1) / 0.5)));
-      applySample(sampleClip(c, c.idleT, true, w.sampB));
-      if (k > 0) {
-        s.runT = (s.runT ?? c.idleT) + Math.min(1.2, Math.max(0.8, v / c.speed)) * dt;
-        for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
-        w.hipsA.copy(P.Hips);
-        applySample(sampleClip(c, s.runT, true, w.sampA));
-        for (const n of MOCAP_BONES) {
-          if (!rest[n]) continue;
-          w.tmpQ.copy(Q[n]);
-          Q[n].copy(w.QA[n]).slerp(w.tmpQ, k);
-        }
-        P.Hips.lerpVectors(w.hipsA, w.v.copy(P.Hips), k);
-      } else s.runT = c.idleT;
-      groundFeet(4, dt);
-      const lean = Math.max(-0.22, Math.min(0.22, (fp.loco.turn ?? 0) * v * 0.05));
-      if (lean) {
-        w.qL.setFromAxisAngle(w.v.set(0, 0, 1), lean);
-        for (const n of MOCAP_BONES) if (rest[n]) Q[n].premultiply(w.qL);
-        const y = P.Hips.y;
-        P.Hips.y = 0;
-        P.Hips.add(w.v.set(0, y, 0).applyQuaternion(w.qL));
-      }
-      if (fp.loco.carry) holdBoard(fp);
-      for (const side of ['Left', 'Right']) follow(side + 'Hand');
-    }
-
     // A one-shot clip (the pick-up), timed by the choreography, right hand reaching for the board.
     function solveClip(fp, c) {
       applySample(sampleClip(c, fp.mocap.t * fp.mocap.rate, false, w.sampA));
@@ -591,9 +561,9 @@ function RiderModel({ boardRef, character }) {
       aim(side + 'ToeBase', w.toe, UP);
     }
 
-    // --- 'me' on the board: the skating clip, with the board foot planted on the deck and the steer lean on top.
+    // --- On the board: the skating clip, with the board foot planted on the deck and the steer lean on top.
     // Tricks, air and manuals blend back to the coded pose above (it lifts the feet for flips and tucks in the air).
-    const skate = isMe && mocap.clips.skate;
+    const skate = mocap.clips.skate;
     if (skate && wOff < 1) {
       const trick = a.air || a.flip >= 0 || popT >= 0 || m > 0.05 ? 1 : 0;
       s.trickW = damp(s.trickW ?? 0, trick, trick ? 14 : 5, dt);
@@ -615,8 +585,7 @@ function RiderModel({ boardRef, character }) {
       w.Ps.copy(P.Hips);
       const loco = off.loco && mocap.status === 'ready' ? locoClips() : [];
       const clip = off.mocap?.clip && mocap.clips[off.mocap.clip];
-      if (isMe && off.loco && mocap.clips.run) solveRunIdle(off, dt);
-      else if (loco.length && loco[0].speed > 0) solveMixed(off, loco, dt);
+      if (loco.length && loco[0].speed > 0) solveMixed(off, loco, dt);
       else if (loco.length) solveLoco(off, loco, dt);
       else if (clip) solveClip(off, clip);
       else solveOff(off);
@@ -707,16 +676,14 @@ class Fallback extends Component {
 }
 
 export default function Rider({ boardRef }) {
-  const [character, setCharacter] = useState(settings.character);
-  useEffect(() => onSettings((c) => setCharacter(c.character)), []);
   if (USE_OLD) return <Skater />;
   return (
     <Fallback>
       <Suspense fallback={<Skater />}>
-        <RiderModel key={character} boardRef={boardRef} character={character} />
+        <RiderModel boardRef={boardRef} />
       </Suspense>
     </Fallback>
   );
 }
 
-if (!USE_OLD) useGLTF.preload(MODELS[settings.character] ?? MODELS.me);
+if (!USE_OLD) useGLTF.preload(MODEL_URL);
