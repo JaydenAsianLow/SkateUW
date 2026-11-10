@@ -140,6 +140,7 @@ export function QrCode({ small }) {
         </div>
       )}
       {!small && <div className="qr-note">Accept the certificate warning on the phone.</div>}
+      {!small && <div className="qr-note">After scanning, you’ll be asked to hold your phone flat like a skateboard to calibrate.</div>}
     </div>
   );
 }

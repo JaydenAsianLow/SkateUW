@@ -6,10 +6,14 @@ import { SENSITIVITY, clampSensitivity } from '../sensitivity.js';
 
 const SEND_HZ = 50;
 
-// Tilt shaping: ignore small tilts and sensor jitter, ease in past that, and smooth the stream.
-const DEADZONE_DEG = 7; // a phone lying still (or slightly off its calibration) doesn't steer
-const CURVE = 1.6; // >1: gentle near the centre, full lock only near full tilt
-const SMOOTH = 0.18; // per-sample low-pass at 50 Hz (lower = steadier)
+// Tilt: steering is only the difference from the calibrated neutral pose (phone flat like a deck, top pointing
+// forward). Uses gamma (left/right roll) and beta (nose up/down) in the phone's own frame, never alpha (the compass
+// heading drifts), and never the screen rotation: the axes stay fixed to the phone even if the page rotates.
+// A ±5° dead zone means a steady hand rides straight; full lock at the preset's range (Normal: 30°).
+const DEADZONE_DEG = 5;
+const CURVE = 1.25; // a little gentler near the centre
+const SMOOTH = 0.18; // per-sample low-pass at 50 Hz (~0.1 s)
+const CAL_MS = 500; // calibration: average the pose over this long
 const shape = (deg, range) => {
   const over = Math.max(0, Math.abs(deg) - DEADZONE_DEG) / Math.max(1, range - DEADZONE_DEG);
   return Math.sign(deg) * Math.min(1, over) ** CURVE;
@@ -17,23 +21,13 @@ const shape = (deg, range) => {
 
 const clamp = (v, lo = -1, hi = 1) => Math.min(hi, Math.max(lo, v));
 
-// Map raw beta/gamma into screen-relative x (left/right) and y (front/back),
-// so it still works if the phone is rotated to landscape.
-function screenAxes(beta, gamma) {
-  const angle = screen.orientation?.angle ?? window.orientation ?? 0;
-  switch (((angle % 360) + 360) % 360) {
-    case 90: return { x: beta, y: -gamma };
-    case 180: return { x: -gamma, y: -beta };
-    case 270: return { x: -beta, y: gamma };
-    default: return { x: gamma, y: beta };
-  }
-}
-
 export default function Controller() {
   const socketRef = useRef(null);
   const raw = useRef({ beta: 0, gamma: 0, has: false });
   const stick = useRef({ x: 0, y: 0 }); // on-foot joystick (right +, up +), sent with the tilt stream
-  const offset = useRef(null); // calibration "neutral" pose
+  const offset = useRef(null); // calibrated neutral pose { beta, gamma }, null until calibrated
+  const cal = useRef(null); // while calibrating: { until, beta, gamma, n }
+  const [calState, setCalState] = useState('need'); // 'need' (show the calibrate screen) | 'measuring' | 'done'
   const [conn, setConn] = useState('connecting');
   const [displays, setDisplays] = useState(0);
   const [statusKnown, setStatusKnown] = useState(false); // got at least one status from the server
@@ -89,13 +83,28 @@ export default function Controller() {
     const id = setInterval(() => {
       const r = raw.current;
       if (!r.has) return;
-      const a = screenAxes(r.beta, r.gamma);
-      if (!offset.current) offset.current = a; // auto-calibrate on first reading
+      // Calibrating: average the pose; send neutral (no steering) meanwhile.
+      const c = cal.current;
+      if (c) {
+        c.beta += r.beta;
+        c.gamma += r.gamma;
+        c.n++;
+        if (performance.now() >= c.until) {
+          offset.current = { beta: c.beta / c.n, gamma: c.gamma / c.n };
+          cal.current = null;
+          sm.steer = sm.lean = 0;
+          setCalState('done');
+          navigator.vibrate?.(30);
+        }
+      }
+      const o = offset.current;
       const range = tiltRange.current;
-      sm.steer += (shape(a.x - offset.current.x, range) - sm.steer) * SMOOTH;
+      const steerT = o && !c ? shape(r.gamma - o.gamma, range) : 0;
       // lean < 0 = leaning back (top of the phone tilted up toward you) = manual. Verified on a real phone:
       // beta rises as the top edge comes up, so negate.
-      sm.lean += (shape(-(a.y - offset.current.y), range) - sm.lean) * SMOOTH;
+      const leanT = o && !c ? shape(-(r.beta - o.beta), range) : 0;
+      sm.steer += (steerT - sm.steer) * SMOOTH;
+      sm.lean += (leanT - sm.lean) * SMOOTH;
       const steer = clamp(Math.abs(sm.steer) < 0.01 ? 0 : sm.steer);
       const lean = clamp(Math.abs(sm.lean) < 0.01 ? 0 : sm.lean);
       const packet = { steer, lean, beta: r.beta, gamma: r.gamma, jx: stick.current.x, jy: stick.current.y };
@@ -142,14 +151,24 @@ export default function Controller() {
     };
     keepAwake();
     document.addEventListener('visibilitychange', keepAwake);
+    // Lock to portrait where the browser allows it (Android, in fullscreen). Elsewhere a rotated page shows a
+    // "turn back to portrait" card, and steering doesn't care anyway (it reads the phone's own axes).
+    try {
+      await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+      await screen.orientation?.lock?.('portrait');
+    } catch {
+      /* not supported (iOS) or refused */
+    }
     setStarted(true);
     setTimeout(() => {
       if (!raw.current.has) setError('No sensor data is arriving. Are you on a phone? Laptops have no tilt sensor.');
     }, 1500);
   }
 
+  // Average the phone's pose over CAL_MS and use it as neutral (calibrate screen, Recalibrate, getting back on).
   function calibrate() {
-    offset.current = null; // next reading becomes the neutral pose
+    cal.current = { until: performance.now() + CAL_MS, beta: 0, gamma: 0, n: 0 };
+    setCalState('measuring');
     navigator.vibrate?.(15);
   }
 
@@ -221,17 +240,34 @@ export default function Controller() {
           </button>
           {error && <p className="error">{error}</p>}
         </div>
+      ) : calState !== 'done' && !offset.current ? (
+        <div className="ctrl-start cal">
+          <h1>Calibrate</h1>
+          <div className="cal-phone" aria-hidden="true">
+            <div className="cal-deck" />
+          </div>
+          <p>
+            Hold your phone like a skateboard: <b>flat, screen up, top of the phone pointing forward</b>. Keep it
+            steady, then tap Calibrate.
+          </p>
+          <button className="big" onClick={calibrate} disabled={calState === 'measuring'}>
+            {calState === 'measuring' ? 'Hold still…' : 'Calibrate'}
+          </button>
+          {error && <p className="error">{error}</p>}
+        </div>
       ) : (
         <Deck
           socketRef={socketRef}
           stickRef={stick}
           steer={view.steer}
+          calibrating={calState === 'measuring'}
           onCalibrate={calibrate}
           sens={sens}
           onDisconnect={disconnect}
           error={error}
         />
       )}
+      <div className="rotate-back">Turn your phone back to portrait</div>
       {gameGone && (
         <div className="ctrl-lost">
           <div className="lost-card">
@@ -260,7 +296,7 @@ const HOLD_MS = 90; // a finger resting this long without moving counts as holdi
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
-function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, error }) {
+function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDisconnect, error }) {
   const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
@@ -290,6 +326,13 @@ function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, err
     s.on('board', onBoard);
     return () => s.off('board', onBoard);
   }, [socketRef]);
+
+  // Back on the board: recalibrate (however you held the phone on foot, the deck pose is the new neutral).
+  const prevMode = useRef(mode);
+  useEffect(() => {
+    if (prevMode.current !== 'ride' && mode === 'ride') onCalibrate();
+    prevMode.current = mode;
+  }, [mode, onCalibrate]);
   const trail = useRef([]); // { x, y, t, id }
   const touches = useRef(new Map()); // id -> { x0, y0, t0, x, y, moved }
   const [flash, setFlash] = useState(null); // { label, key }
@@ -491,8 +534,8 @@ function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, err
         {mode === 'ride' ? 'Get off' : mode === 'carry' ? 'Get on' : 'Go to board'}
       </button>
       <div className="deck-foot">
-        <button className="secondary small-btn" onClick={onCalibrate}>
-          Calibrate
+        <button className="secondary small-btn" onClick={onCalibrate} disabled={calibrating}>
+          {calibrating ? 'Hold still…' : 'Recalibrate'}
         </button>
         <button className="secondary small-btn" onClick={onDisconnect}>
           Disconnect
