@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
-import { finish, walkPose } from './choreo.js';
+import { finish, walkPose, walkRate } from './choreo.js';
 import { MOCAP_BONES, loadMocap, locoClips, mocap, sampleClip } from './mocap.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
@@ -337,6 +337,34 @@ function RiderModel({ boardRef }) {
       if (fp.loco.carry) holdBoard(fp);
       for (const side of ['Left', 'Right']) follow(side + 'Hand');
     }
+    // Only moving clips (e.g. just Running, no Idle / Walking yet): the procedural walk below them, blending into the
+    // slowest clip on the same step phase, and the clips alone (1:1 at their own speed) from there up.
+    function solveMixed(fp, list, dt) {
+      const v = Math.abs(fp.loco.v);
+      const S = list[0].speed;
+      const k = smooth(Math.min(1, Math.max(0, (v - 0.45 * S) / (0.45 * S)))); // 0 walk .. 1 clip
+      if (k >= 1) return solveLoco(fp, list, dt);
+      const clipRate = v / Math.max(0.1, list[0].c.stride);
+      s.locoPhase += Math.sign(fp.loco.v || 1) * (walkRate(v) + (clipRate - walkRate(v)) * k) * dt;
+      if (k > 0) {
+        applySample(sampleClip(list[0].c, list[0].c.land0 + s.locoPhase * list[0].c.cycleDur, true, w.sampA));
+        groundFeet(4, dt);
+        for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
+        w.hipsA.copy(P.Hips);
+      }
+      const wp = finish(walkPose(s.locoPhase, fp.loco.v, fp.loco.carry, fp.loco.turn ?? 0));
+      solveOff(wp);
+      if (k > 0) {
+        for (const n of MOCAP_BONES) {
+          if (!rest[n]) continue;
+          w.tmpQ.copy(w.QA[n]);
+          Q[n].slerp(w.tmpQ, k);
+        }
+        P.Hips.lerp(w.hipsA, k);
+        if (fp.loco.carry) holdBoard(wp);
+        for (const side of ['Left', 'Right']) follow(side + 'Hand');
+      }
+    }
     // A one-shot clip (the pick-up), timed by the choreography, right hand reaching for the board.
     function solveClip(fp, c) {
       applySample(sampleClip(c, fp.mocap.t * fp.mocap.rate, false, w.sampA));
@@ -501,7 +529,8 @@ function RiderModel({ boardRef }) {
       w.Ps.copy(P.Hips);
       const loco = off.loco && mocap.status === 'ready' ? locoClips() : [];
       const clip = off.mocap?.clip && mocap.clips[off.mocap.clip];
-      if (loco.length) solveLoco(off, loco, dt);
+      if (loco.length && loco[0].speed > 0) solveMixed(off, loco, dt);
+      else if (loco.length) solveLoco(off, loco, dt);
       else if (clip) solveClip(off, clip);
       else solveOff(off);
       if (wOff < 1) {

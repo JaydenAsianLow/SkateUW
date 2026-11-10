@@ -8,7 +8,7 @@ import { commands, settings, updateSettings } from '../settings.js';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
-import { mocap } from './mocap.js';
+import { mocap, runTopSpeed } from './mocap.js';
 import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, trackWeight, walkPose, walkRate } from './choreo.js';
 
 // Tuning
@@ -44,8 +44,8 @@ const BOARD_DRAG = 1.3; // loose board: fraction of speed lost per second rollin
 // at the edge. The animation blends idle -> walk -> run by speed (choreo.js walkPose).
 const STICK_DEAD = 0.15;
 const STICK_SMOOTH = 10; // 1/s (time constant 0.1 s)
-const RUN_SPEED = 4.2; // m/s at full push
-const stickSpeed = (m) => RUN_SPEED * clamp01((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 2;
+const RUN_SPEED = 4.2; // m/s at full push (without a run clip; with one, its own speed so it plays 1:1)
+const stickSpeed = (m) => runTopSpeed(RUN_SPEED) * clamp01((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 2;
 const TURN_MAX = 6; // rad/s; the turn rate itself eases in/out so the body doesn't snap round
 const AUTO_GRAB = 1.0; // m: walking this close to a board on the ground picks it up
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)

@@ -10,7 +10,7 @@
 // body), how many steps cycles it holds and when the left foot lands, so clips can be blended in step and played at
 // a rate that matches the skater's real speed (no foot sliding).
 
-import { AnimationMixer, Quaternion, Vector3 } from 'three';
+import { AnimationMixer, LoopOnce, Quaternion, Vector3 } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 const DIR = '/models/skater/anims/';
@@ -75,7 +75,12 @@ export function bakeClip(root, clip, hipHeight) {
   const scale = hipHeight / restHip;
 
   const mixer = new AnimationMixer(root);
-  mixer.clipAction(clip).play();
+  // Play once and hold the last frame, so sampling t = duration gives the real end pose (a looping action wraps it
+  // back to the start, hiding root motion).
+  const action = mixer.clipAction(clip);
+  action.setLoop(LoopOnce, 1);
+  action.clampWhenFinished = true;
+  action.play();
   const dur = clip.duration;
   const n = Math.max(2, Math.round(dur * FPS) + 1);
   const prim = {};
@@ -115,7 +120,20 @@ export function bakeClip(root, clip, hipHeight) {
     put(rhand, i, pos(bones.RightHand, _a).multiplyScalar(scale));
   }
   mixer.stopAllAction();
-  return analyse({ dur, n, prim, sec, hips, feet, rhand });
+  // Not exported In Place (the hips travel forward through the clip): take the travel out so it plays on the spot,
+  // and use it as the clip's ground speed, which is exact for root-motion clips.
+  const dx = hips[(n - 1) * 3] - hips[0];
+  const dz = hips[(n - 1) * 3 + 2] - hips[2];
+  const travel = Math.hypot(dx, dz);
+  let rootSpeed = null;
+  if (travel > 0.2) {
+    rootSpeed = travel / dur;
+    for (let i = 0; i < n; i++) {
+      const k = i / (n - 1);
+      for (const arr of [hips, feet[0], feet[1], rhand]) (arr[i * 3] -= dx * k), (arr[i * 3 + 2] -= dz * k);
+    }
+  }
+  return analyse({ dur, n, prim, sec, hips, feet, rhand, rootSpeed });
 }
 
 // Ground speed, step cycles, left-foot landing, and (for a pick-up) when the right hand is lowest.
@@ -133,7 +151,7 @@ function analyse(c) {
     if (y(k, i) < minY + 0.03) v.push((fwd(k, i) - fwd(k, i + 1)) / dt);
   }
   v.sort((a, b) => a - b);
-  const speed = v.length ? Math.max(0, v[Math.floor(v.length / 2)]) : 0;
+  const speed = c.rootSpeed ?? (v.length ? Math.max(0, v[Math.floor(v.length / 2)]) : 0);
   // Left-foot landings: the left foot becomes the lower one.
   const lands = [];
   for (let i = 1; i < n; i++) if (y(0, i - 1) >= y(1, i - 1) && y(0, i) < y(1, i)) lands.push(i * dt);
@@ -166,6 +184,9 @@ export function sampleClip(c, t, loop, out) {
   lerp(c.hips, out.hips);
   return out;
 }
+
+// Top speed on foot: the run clip's own speed (so a full push plays it 1:1), else the fallback.
+export const runTopSpeed = (fallback) => (mocap.clips.run?.speed > 0.2 ? mocap.clips.run.speed : fallback);
 
 // Locomotion clips by speed (idle first). Only those that loaded.
 export function locoClips() {
