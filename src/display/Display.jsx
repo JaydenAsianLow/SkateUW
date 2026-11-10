@@ -135,9 +135,11 @@ export default function Display() {
         <Canvas
           shadows
           flat
-          dpr={[1, 2]}
+          dpr={[1, 1.5]} // above 1.5x the GPU cost grows ~4x for a barely visible gain on a laptop screen
           camera={{ position: [4, 1.1, -17], fov: 50, near: 0.05, far: 1500 }}
-          gl={{ powerPreference: 'high-performance' }}
+          // The effect chain renders into its own buffers and does its own anti-aliasing (SMAA), so the canvas's
+          // multisampling would only cost memory and bandwidth.
+          gl={{ powerPreference: 'high-performance', antialias: false }}
           onCreated={({ gl }) => (gl.toneMappingExposure = 1.1)}
         >
           <Suspense fallback={null}>
