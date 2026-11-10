@@ -6,11 +6,13 @@ import { connect } from '../socket.js';
 import { board, game, phone, net, phoneIsLive } from '../state.js';
 import { commands, onSettings, settings } from '../settings.js';
 import World from './World.jsx';
-import Skateboard, { GRAVITY } from './Skateboard.jsx';
+import Skateboard from './Skateboard.jsx';
+import { GRAVITY } from './tuning.js';
 import CameraRig from './CameraRig.jsx';
 import Effects from './Effects.jsx';
 import Hud from './Hud.jsx';
 import { MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
+import { urlParams } from './util.js';
 
 // Keyboard fallback so the scene can be tested without a phone.
 const keyMap = [
@@ -29,7 +31,7 @@ const keyMap = [
 ];
 
 // Dev only: ?play skips the menu and plays with the keyboard (handy with ?posetest / ?sidecam).
-const SKIP_MENU = import.meta.env.DEV && new URLSearchParams(window.location.search).has('play');
+const SKIP_MENU = import.meta.env.DEV && urlParams.has('play');
 
 const LOST_GRACE_MS = 2000; // phone silent this long mid-game -> pause and show "Reconnect phone"
 

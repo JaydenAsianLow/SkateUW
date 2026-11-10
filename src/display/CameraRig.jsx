@@ -3,27 +3,16 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { board } from '../state.js';
 import { SUN_DIR, sunView } from './look.js';
+import { urlParams } from './util.js';
+import { CAM_DISTANCE, CAM_FOLLOW, CAM_HEIGHT, CAM_LOOK_AHEAD, CAM_LOOK_RIGHT, CAM_LOOK_Y, CAM_MAX_ROLL, CAM_RIGHT } from './tuning.js';
 
 const aim = new Vector3();
 
-// Low over-the-shoulder chase camera (DESIGN.md §3): hip height, ~2.5–3 m behind and a little
-// to the right so the skater sits left of centre, nearly level with a slight downward tilt,
-// lagging on turns and rolling a few degrees into them.
-const HEIGHT = 1.2;
-const RIGHT = 0.55;
-const LOOK_AHEAD = 4;
-const LOOK_RIGHT = 0.35;
-const LOOK_Y = 0.7; // ~3.5° down-tilt
-const MAX_ROLL = (3 * Math.PI) / 180;
-const FOLLOW = 6; // camera position easing rate (1/s)
 // ?topdown (or ?topdown=300 for the height in meters) shows the level from above.
-const TOP_DOWN = (() => {
-  const q = new URLSearchParams(window.location.search);
-  return q.has('topdown') ? Number(q.get('topdown')) || 260 : 0;
-})();
+const TOP_DOWN = urlParams.has('topdown') ? Number(urlParams.get('topdown')) || 260 : 0;
+const SIDE_CAM = urlParams.has('sidecam');
 
-const SIDE_CAM = new URLSearchParams(window.location.search).has('sidecam');
-
+// Low over-the-shoulder chase camera (DESIGN.md §3; numbers in tuning.js).
 export default function CameraRig() {
   const look = useRef(new Vector3());
   const target = useRef(new Vector3());
@@ -39,9 +28,7 @@ export default function CameraRig() {
       camera.position.set(board.x * 0.25, TOP_DOWN, board.z * 0.25 + 0.01);
       camera.up.set(0, 0, -1);
       camera.lookAt(board.x * 0.25, 0, board.z * 0.25);
-      camera.updateMatrixWorld();
-      sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
-      return;
+      return updateSunView(camera);
     }
     // Manual: swing round toward the toe side (a slight side angle) so you can see the board on its back wheels.
     const side = board.fakie ? -1 : 1;
@@ -55,20 +42,18 @@ export default function CameraRig() {
       camera.position.set(board.x + rx * 3, board.y + 0.9, board.z + rz * 3);
       camera.up.set(0, 1, 0);
       camera.lookAt(board.x, board.y + 0.8, board.z);
-      camera.updateMatrixWorld();
-      sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
-      return;
+      return updateSunView(camera);
     }
-    // Fixed distance at any speed. The camera eases toward its target (rate FOLLOW), which on its own would
-    // trail speed/FOLLOW metres further back when moving fast; leading the target by that much cancels it.
-    const back = 2.7 - Math.min(board.speed, 10) / FOLLOW;
+    // Fixed distance at any speed. The camera eases toward its target (rate CAM_FOLLOW), which on its own would
+    // trail speed/CAM_FOLLOW metres further back when moving fast; leading the target by that much cancels it.
+    const back = CAM_DISTANCE - Math.min(board.speed, 10) / CAM_FOLLOW;
     const ca = Math.cos(angle.current);
     const sa = Math.sin(angle.current);
-    const offX = (-fx * ca + rx * sa) * 2.7 + fx * (2.7 - back) + rx * RIGHT * ca;
-    const offZ = (-fz * ca + rz * sa) * 2.7 + fz * (2.7 - back) + rz * RIGHT * ca;
-    target.current.set(board.x + offX, board.y + HEIGHT - Math.abs(sa) * 0.25, board.z + offZ);
-    const ahead = LOOK_AHEAD * (1 - 0.75 * Math.abs(sa)); // look closer to the board from the side, to keep it centred
-    aim.set(board.x + fx * ahead + rx * LOOK_RIGHT, board.y + LOOK_Y, board.z + fz * ahead + rz * LOOK_RIGHT);
+    const offX = (-fx * ca + rx * sa) * CAM_DISTANCE + fx * (CAM_DISTANCE - back) + rx * CAM_RIGHT * ca;
+    const offZ = (-fz * ca + rz * sa) * CAM_DISTANCE + fz * (CAM_DISTANCE - back) + rz * CAM_RIGHT * ca;
+    target.current.set(board.x + offX, board.y + CAM_HEIGHT - Math.abs(sa) * 0.25, board.z + offZ);
+    const ahead = CAM_LOOK_AHEAD * (1 - 0.75 * Math.abs(sa)); // look closer to the board from the side, to keep it centred
+    aim.set(board.x + fx * ahead + rx * CAM_LOOK_RIGHT, board.y + CAM_LOOK_Y, board.z + fz * ahead + rz * CAM_LOOK_RIGHT);
 
     // Snap on the first frames and after a reset/teleport instead of swooping across the map.
     if (first.current || camera.position.distanceTo(target.current) > 6) {
@@ -76,15 +61,20 @@ export default function CameraRig() {
       look.current.copy(aim);
       first.current = false;
     }
-    camera.position.lerp(target.current, 1 - Math.exp(-FOLLOW * dt));
+    camera.position.lerp(target.current, 1 - Math.exp(-CAM_FOLLOW * dt));
     look.current.lerp(aim, 1 - Math.exp(-8 * dt));
     camera.lookAt(look.current);
-    roll.current += (-board.steer * MAX_ROLL - roll.current) * (1 - Math.exp(-5 * dt));
+    roll.current += (-board.steer * CAM_MAX_ROLL - roll.current) * (1 - Math.exp(-5 * dt));
     camera.rotateZ(roll.current);
 
-    camera.updateMatrixWorld();
-    sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
+    updateSunView(camera);
   });
 
   return null;
+}
+
+// After moving the camera: its matrices, and the sun direction in view space (drives the rim light).
+function updateSunView(camera) {
+  camera.updateMatrixWorld();
+  sunView.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
 }

@@ -3,6 +3,7 @@ import { CuboidCollider, RigidBody, TrimeshCollider } from '@react-three/rapier'
 import { CanvasTexture, LinearFilter, PlaneGeometry } from 'three';
 import { groundMask, groundMaskBounds, materials, merge } from '../look.js';
 import { edgeBox, edgeRotY, edges, flatPolygon, worldUv } from './geo.js';
+import { BoxColliders } from './Footprints.jsx';
 import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS } from './layout.js';
 
 // The plaza deck (y = 0) with holes where the ground drops to LOW, the lower ground, retaining walls,
@@ -142,9 +143,7 @@ export default function Ground() {
             between the deck's long triangles and stops dead ("ghost" collisions). */}
         <TrimeshCollider args={[geo.deckVerts, geo.deckIdx, TRIMESH_FIX_INTERNAL_EDGES]} />
         <CuboidCollider args={[WORLD * 1.5, 0.5, WORLD * 1.5]} position={[0, LOW - 0.5, 0]} />
-        {geo.colliders.map((c, i) => (
-          <CuboidCollider key={i} args={c.args} position={c.position} rotation={[0, c.rotY, 0]} />
-        ))}
+        <BoxColliders list={geo.colliders} />
       </RigidBody>
       <mesh geometry={geo.deck} material={m.ground} receiveShadow />
       <mesh geometry={geo.lower} material={m.ground} receiveShadow />

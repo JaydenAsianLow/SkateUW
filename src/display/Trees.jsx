@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { CylinderGeometry, Quaternion, Vector3 } from 'three';
 import { CylinderCollider, RigidBody } from '@react-three/rapier';
 import { materials, merge, rng } from './look.js';
+import { Instanced } from './Instanced.jsx';
 
 // Tall bare deciduous trees (DESIGN.md §6.4): only need to read as dark branch silhouettes
 // against the bright sky, and throw long branchy shadows across the brick.
@@ -38,20 +39,30 @@ function makeTree(seed, height) {
   return merge(parts);
 }
 
-let variants = null;
-function getVariants() {
-  if (!variants) variants = [makeTree(11, 14), makeTree(23, 12), makeTree(37, 16), makeTree(51, 13)];
-  return variants;
-}
-
-export function Tree({ position: [x, z], y = 0, variant = 0, rotY = 0, scale = 1, collider = true }) {
-  const geos = getVariants();
+// trees = [{ p: [x, z], y, v: variant, s: scale }, ...]; each is turned by its index so copies look different.
+// One instanced mesh per variant; all trunk colliders share one fixed body.
+export function Trees({ trees }) {
   const m = materials();
-  const geo = useMemo(() => geos[variant % geos.length], [geos, variant]);
+  const variants = useMemo(() => [makeTree(11, 14), makeTree(23, 12), makeTree(37, 16), makeTree(51, 13)], []);
+  const byVariant = useMemo(
+    () =>
+      variants.map((_, v) =>
+        trees
+          .map(({ p: [x, z], y = 0, v: tv = 0, s = 1 }, i) => ({ v: tv % variants.length, position: [x, y, z], rotY: i * 1.7, scale: s }))
+          .filter((t) => t.v === v),
+      ),
+    [trees, variants],
+  );
   return (
-    <RigidBody type="fixed" colliders={false} position={[x, y, z]} rotation={[0, rotY, 0]}>
-      {collider && <CylinderCollider args={[1.5, 0.35 * scale]} position={[0, 1.5, 0]} />}
-      <mesh geometry={geo} material={m.bark} scale={scale} castShadow receiveShadow />
-    </RigidBody>
+    <>
+      <RigidBody type="fixed" colliders={false}>
+        {trees.map(({ p: [x, z], y = 0, s = 1 }, i) => (
+          <CylinderCollider key={i} args={[1.5, 0.35 * s]} position={[x, y + 1.5, z]} />
+        ))}
+      </RigidBody>
+      {variants.map((geo, v) =>
+        byVariant[v].length ? <Instanced key={v} geometry={geo} material={m.bark} items={byVariant[v]} castShadow receiveShadow /> : null,
+      )}
+    </>
   );
 }

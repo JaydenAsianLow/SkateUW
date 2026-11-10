@@ -20,14 +20,13 @@
 // physics body follows the rider around (no teleports) while the pose stays relative to it.
 
 import { DECK_TOP } from './look.js';
+import { clamp01, smooth } from './util.js';
 
 export const ANK = 0.085; // ankle height of a flat foot (from the rig)
 const STANCE_ANK = DECK_TOP + ANK;
 const UP = [0, 1, 0];
 const WALK_FACE = -Math.PI / 2; // off the board the rider faces the nose direction (-Z)
 
-const clamp01 = (v) => Math.min(1, Math.max(0, v));
-const smooth = (t) => t * t * (3 - 2 * t);
 const norm = (v) => {
   const l = Math.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];

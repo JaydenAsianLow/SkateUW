@@ -1,6 +1,6 @@
 import Atmosphere from './Atmosphere.jsx';
-import { Bench, LampPost } from './Props.jsx';
-import { Tree } from './Trees.jsx';
+import { Benches, LampPosts } from './Props.jsx';
+import { Trees } from './Trees.jsx';
 import Ground from './redSquare/Ground.jsx';
 import Suzzallo from './redSquare/Suzzallo.jsx';
 import { Backdrop, MidBuilding, Monolith } from './redSquare/Footprints.jsx';
@@ -34,15 +34,9 @@ export default function World() {
       <Drumheller />
       <MountRainier />
 
-      {LAMPS.map((p, i) => (
-        <LampPost key={i} position={p} />
-      ))}
-      {BENCHES.map(([x, z, r], i) => (
-        <Bench key={i} position={[x, z]} rotY={r} />
-      ))}
-      {TREES.map(({ p, y, v, s }, i) => (
-        <Tree key={i} position={p} y={y} variant={v} scale={s} rotY={i * 1.7} />
-      ))}
+      <LampPosts positions={LAMPS} />
+      <Benches benches={BENCHES} />
+      <Trees trees={TREES} />
     </>
   );
 }

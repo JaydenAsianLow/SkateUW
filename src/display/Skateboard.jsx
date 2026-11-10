@@ -9,20 +9,15 @@ import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
 import { mocap, runTopSpeed } from './mocap.js';
+import { clamp01, damp, urlParams, wrapAngle } from './util.js';
+import {
+  ASSIST_MAX, AUTO_GRAB, BAIL_FAST, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_CALLOUT, MANUAL_FALL, MANUAL_IN,
+  MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
+  REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
+  TURN_RATE,
+} from './tuning.js';
 import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, walkPose, walkRate } from './choreo.js';
 
-// Tuning
-export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy without floating.
-const MAX_SPEED = 8; // m/s (~29 km/h)
-const PUSH_GAIN = 1.9; // m/s added per push swipe (scaled by swipe power)
-const PUSH_TIME = 0.28; // seconds a push is spread over, so it feels like a kick, not a teleport
-const ROLL_DRAG = 0.22; // fraction of speed lost per second while coasting
-const TURN_RATE = 2.0; // rad/s at full steer
-const STEER_RESPONSE = 7; // how fast the board follows the phone tilt (lower = stiffer, heavier)
-// Ollie: apex = v² / 2g. 3.7 m/s → ~0.45 m at a normal swipe, ~0.3–0.6 m from a lazy to a hard swipe
-// (a typical street ollie). Power scales the apex height linearly, so v ∝ √power.
-const POP_VELOCITY = 3.7;
-const TRICK_WINDOW = 0.5; // seconds after the pop that a trick swipe still upgrades the ollie (at airtime 1)
 // Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
 // so the jump also gets a bit higher (∝ A^¾) instead of just floating in slow motion.
 // A = 1.7 → ~0.9 s in the air and ~0.75 m apex (vs ~0.5 s / 0.45 m at A = 1).
@@ -30,62 +25,20 @@ const airPhysics = () => {
   const A = settings.airtime;
   return { pop: POP_VELOCITY * A ** -0.25, g: GRAVITY * A ** -1.25, window: TRICK_WINDOW * A };
 };
-const LAND_OK = 0.78; // a trick at least this far through its rotation when you land still counts
-const ASSIST_MAX = 1.2; // m/s of extra lift a late trick may get so it can finish (keeps tricks landable)
-// Bails (choreo.js): the rider falls by kind (manual too far back = backwards; trick under-rotated = a stumble
-// onto the hands and knees when slow, a tumbling slam when fast), the board flies off on its own, the rider gets
-// up and you walk to it (within AUTO_GRAB the skater picks it up), then Get on. Severity grows with speed.
-const BAIL_SLOW = 1.5; // m/s: at or below this a bail is as gentle as it gets
-const BAIL_FAST = 6.5; // m/s: the most severe
-const SLAM_AT = 0.45; // severity from which a trick bail is a slam instead of a stumble
-const BOARD_DRAG = 1.3; // loose board: fraction of speed lost per second rolling on the ground
-// On foot (Get off on the phone / B, or after a bail): the phone shows a joystick, moving relative to the camera.
-// The stick is smoothed (~0.1 s), has a 15% dead zone and a squared response: precise near the centre, a run only
-// at the edge. The animation blends idle -> walk -> run by speed (choreo.js walkPose).
-const STICK_DEAD = 0.15;
-const STICK_SMOOTH = 10; // 1/s (time constant 0.1 s)
-const RUN_SPEED = 4.2; // m/s at full push (without a run clip; with one, its own speed so it plays 1:1)
 const stickSpeed = (m) => runTopSpeed(RUN_SPEED) * clamp01((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 2;
-const TURN_MAX = 6; // rad/s; the turn rate itself eases in/out so the body doesn't snap round
-const AUTO_GRAB = 1.0; // m: walking this close to a board on the ground picks it up
-const ON_THE_MOVE = 1.5; // m/s: faster than this, Get on is a running jump and Get off a hop into a run
-const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
-// Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
-// The meter: below MANUAL_IN (too far forward) the front wheels drop back down; MANUAL_IN..MANUAL_FALL is the
-// green zone where you keep manualing (the nose rises the deeper you lean); past MANUAL_FALL you bail.
-const MANUAL_IN = 0.25;
-const MANUAL_FALL = 0.85;
-const MANUAL_PITCH_MIN = 0.12; // rad, nose up at the start of the zone
-const MANUAL_PITCH_MAX = 0.3; // rad, nose up at the edge (tail almost on the ground)
-const MANUAL_MIN_SPEED = 0.6; // m/s; slower than this you just stand on it
-const MANUAL_CALLOUT = 0.6; // s held before it counts as a manual
 const HALF = { x: 0.12, y: BOARD_HALF_Y, z: 0.42 }; // collider half extents (real-size board)
 const START = [SPAWN.position[0], HALF.y + 0.05, SPAWN.position[1]];
 const PIVOT = DECK_TOP - 0.035; // flips spin around the middle of the board, not the ground
 
-// Trick definitions. flip = kickflip turns (board roll), shove = board-only yaw turns,
-// spin = rider + board yaw turns (you ride away fakie after a 180).
-export const TRICKS = {
-  kickflip: { name: 'KICKFLIP', time: 0.3, flip: 1 },
-  varial: { name: 'VARIAL FLIP', time: 0.34, flip: 1, shove: 0.5 },
-  tre: { name: 'TRE FLIP', time: 0.4, flip: 1, shove: 1 },
-  shove: { name: 'POP SHOVE-IT', time: 0.3, shove: 0.5 },
-  fs180: { name: 'FRONTSIDE 180', time: 0.4, spin: 0.5, dir: 1 },
-  bs180: { name: 'BACKSIDE 180', time: 0.4, spin: 0.5, dir: -1 },
-};
-
 const KEY_TRICKS = ['kickflip', 'varial', 'tre', 'shove', 'fs180'];
 const EDGE_KEYS = ['forward', 'pop', 'revert', 'carry', ...KEY_TRICKS];
-const damp = (current, target, lambda, dt) => current + (target - current) * (1 - Math.exp(-lambda * dt));
-const clamp01 = (v) => Math.min(1, Math.max(0, v));
-const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const _q = new Quaternion();
 const _v = new Vector3();
 const DROP = new Vector3(0, -HALF.y, 0);
 
 // Dev only: ?posetest=back:0.8 (or side, slam, dismount, mount, pickup, walk:<speed>) loops one off-board animation
 // in place; add a third value to freeze it at that time, e.g. ?posetest=slam:1:0.5. Use with ?play&sidecam.
-const POSE_TEST = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('posetest') : null;
+const POSE_TEST = import.meta.env.DEV ? urlParams.get('posetest') : null;
 function poseTestTrack(kind, a) {
   if (kind === 'dismount') return dismountTrack();
   if (kind === 'mount') return mountTrack(walkPose(0.3, 1.2, true), true);
@@ -853,33 +806,50 @@ function deckGeometry(thick, inset) {
   return g;
 }
 
+// Built once, shared by the ridden board and the loose one.
+let boardGeo = null;
+function getBoardGeo() {
+  if (boardGeo) return boardGeo;
+  const truck = [];
+  for (const z of [-0.2, 0.2]) {
+    truck.push(new BoxGeometry(0.06, 0.012, 0.09).translate(0, DECK_TOP - 0.018, z)); // baseplate
+    truck.push(new BoxGeometry(0.035, 0.035, 0.04).translate(0, DECK_TOP - 0.04, z)); // kingpin block
+    truck.push(new CylinderGeometry(0.011, 0.011, 0.17, 8).rotateZ(Math.PI / 2).translate(0, WHEEL_R, z)); // axle
+    truck.push(new BoxGeometry(0.15, 0.022, 0.03).translate(0, WHEEL_R + 0.012, z)); // hanger
+  }
+  boardGeo = {
+    deck: deckGeometry(0.012, 0),
+    grip: deckGeometry(0.001, 0.004),
+    trucks: merge(truck),
+    wheel: new CylinderGeometry(WHEEL_R, WHEEL_R, 0.032, 18),
+  };
+  return boardGeo;
+}
+const WHEEL_POSITIONS = [
+  [-0.075, -0.2],
+  [0.075, -0.2],
+  [-0.075, 0.2],
+  [0.075, 0.2],
+];
+
 function BoardModel({ wheelsRef }) {
   const m = materials();
-  const geo = useMemo(() => {
-    const truck = [];
-    for (const z of [-0.2, 0.2]) {
-      truck.push(new BoxGeometry(0.06, 0.012, 0.09).translate(0, DECK_TOP - 0.018, z)); // baseplate
-      truck.push(new BoxGeometry(0.035, 0.035, 0.04).translate(0, DECK_TOP - 0.04, z)); // kingpin block
-      truck.push(new CylinderGeometry(0.011, 0.011, 0.17, 8).rotateZ(Math.PI / 2).translate(0, WHEEL_R, z)); // axle
-      truck.push(new BoxGeometry(0.15, 0.022, 0.03).translate(0, WHEEL_R + 0.012, z)); // hanger
-    }
-    return { deck: deckGeometry(0.012, 0), grip: deckGeometry(0.001, 0.004), trucks: merge(truck) };
-  }, []);
-  const wheelPositions = [
-    [-0.075, -0.2],
-    [0.075, -0.2],
-    [-0.075, 0.2],
-    [0.075, 0.2],
-  ];
+  const geo = getBoardGeo();
   return (
     <group>
       <mesh geometry={geo.deck} material={m.deck} position-y={DECK_TOP - 0.002} castShadow receiveShadow />
       <mesh geometry={geo.grip} material={m.grip} position-y={DECK_TOP + 0.0005} receiveShadow />
       <mesh geometry={geo.trucks} material={m.trucks} castShadow />
-      {wheelPositions.map(([x, z], i) => (
-        <mesh key={i} ref={(e) => (wheelsRef.current[i] = e)} position={[x, WHEEL_R, z]} rotation-z={Math.PI / 2} material={m.wheels} castShadow>
-          <cylinderGeometry args={[WHEEL_R, WHEEL_R, 0.032, 18]} />
-        </mesh>
+      {WHEEL_POSITIONS.map(([x, z], i) => (
+        <mesh
+          key={i}
+          ref={(e) => (wheelsRef.current[i] = e)}
+          geometry={geo.wheel}
+          position={[x, WHEEL_R, z]}
+          rotation-z={Math.PI / 2}
+          material={m.wheels}
+          castShadow
+        />
       ))}
     </group>
   );

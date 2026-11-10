@@ -2,6 +2,7 @@
 // in osm.js: stair sets, the lower ground they lead to, invisible boundaries, paved areas, props.
 // Units: meters. +x = east, +z = south (north is -z). Plaza deck at y = 0.
 import { BUILDINGS, PLAZA, POI } from './osm.js';
+import { urlParams } from '../util.js';
 
 // Red Square is a deck over a parking garage; Rainier Vista and the west lawn sit a stair flight lower.
 export const LOW = -2;
@@ -17,8 +18,7 @@ const add = (a, b, k = 1) => [a[0] + b[0] * k, a[1] + b[1] * k];
 export const SPAWN = { position: [4, -14], heading: Math.PI };
 // Debug: ?spawn=x,z,headingDeg starts somewhere else (heading 0 = north, 90 = west, 180 = south).
 {
-  const q = new URLSearchParams(globalThis.location?.search ?? '').get('spawn');
-  const v = q?.split(',').map(Number);
+  const v = urlParams.get('spawn')?.split(',').map(Number);
   if (v?.length >= 2 && v.every(Number.isFinite)) {
     SPAWN.position = [v[0], v[1]];
     if (v.length > 2) SPAWN.heading = (v[2] * Math.PI) / 180;
@@ -147,20 +147,4 @@ export const TREES = [
   { p: [78, -36], y: 0, v: 2, s: 1.0 }, { p: [88, -26], y: 0, v: 3, s: 1.05 },
   // West lawn around George Washington
   { p: [-104, -16], y: LOW, v: 1, s: 1.0 }, { p: [-140, 2], y: LOW, v: 3, s: 1.1 },
-];
-
-export const WALKERS = [
-  { a: [-30, 0], b: [40, 20], speed: 1.25, i: 0 },
-  { a: [10, -35], b: [-20, 45], speed: 1.35, i: 1 },
-  { a: [45, 45], b: [-10, -25], speed: 1.2, i: 2, offset: 0.6 },
-  { a: [-42, 30], b: [20, 50], speed: 1.15, i: 3, offset: 0.3 },
-  { a: [30, -20], b: [50, 35], speed: 1.3, i: 4, offset: 1.2 },
-  { a: [-35, -60], b: [-20, -10], speed: 1.1, i: 5, offset: 0.9, backpack: false },
-  { a: [0, 10], b: [-40, 15], speed: 1.25, i: 6, offset: 1.5 },
-  { a: [20, 5], b: [25, 50], speed: 1.2, i: 7, offset: 0.4, backpack: false },
-  { a: [-15, -40], b: [35, -5], speed: 1.4, i: 8, offset: 1.7 },
-];
-export const SITTERS = [
-  { position: [0.05, 53.7], rotY: 0.18, seat: 0.47, i: 11 },
-  { position: [12.05, 55.9], rotY: 0.18, seat: 0.47, i: 12 },
 ];

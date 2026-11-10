@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { CuboidCollider, RigidBody } from '@react-three/rapier';
-import { ConeGeometry, CylinderGeometry, Shape, SphereGeometry } from 'three';
-import { archShape, box, extrude } from '../Buildings.jsx';
+import { BoxGeometry, ConeGeometry, CylinderGeometry, Euler, ExtrudeGeometry, Matrix4, Shape, SphereGeometry } from 'three';
 import { materials, merge } from '../look.js';
 import { MidBuilding } from './Footprints.jsx';
 import { LOW, SUZZALLO, SUZZALLO_FACADE } from './layout.js';
@@ -17,6 +16,28 @@ const D = 20; // wing depth
 const ROOF_H = 10;
 const BAYS = 15;
 const ENTRY = [6, 7, 8]; // bays covered by the entrance pavilion
+
+const euler = new Euler();
+function box(w, h, d, x, y, z, rx = 0, ry = 0, rz = 0) {
+  const g = new BoxGeometry(w, h, d);
+  if (rx || ry || rz) g.applyMatrix4(new Matrix4().makeRotationFromEuler(euler.set(rx, ry, rz)));
+  g.translate(x, y, z);
+  return g;
+}
+
+// Pointed (Gothic) arch outline, `spring` = where the curve starts.
+function archShape(w, h, spring) {
+  const s = new Shape();
+  s.moveTo(-w / 2, 0);
+  s.lineTo(w / 2, 0);
+  s.lineTo(w / 2, spring);
+  s.quadraticCurveTo(w / 2, spring + (h - spring) * 0.6, 0, h);
+  s.quadraticCurveTo(-w / 2, spring + (h - spring) * 0.6, -w / 2, spring);
+  s.lineTo(-w / 2, 0);
+  return s;
+}
+
+const extrude = (shape, depth) => new ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 10 });
 
 function wingGeometry(L) {
   const bay = L / BAYS;

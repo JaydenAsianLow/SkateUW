@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
 import { CylinderGeometry, Quaternion, Vector3 } from 'three';
 import { DECK_TOP, PUSH_ANIM, materials } from './look.js';
+import { damp, smooth } from './util.js';
 import { board } from '../state.js';
 
 // The skater (DESIGN.md §7): seen from behind, regular stance (left foot forward), cream canvas
@@ -17,8 +18,6 @@ const ANKLE = 0.065; // ankle height above the sole centre
 
 const UP = new Vector3(0, 1, 0);
 const tmp = { a: new Vector3(), b: new Vector3(), d: new Vector3(), p: new Vector3(), k: new Vector3(), q: new Quaternion() };
-const damp = (c, t, l, dt) => c + (t - c) * (1 - Math.exp(-l * dt));
-const smooth = (t) => t * t * (3 - 2 * t);
 
 // Place a unit cylinder (radius 1, height 1, +Y up) between two points.
 function setLimb(mesh, from, to, r) {

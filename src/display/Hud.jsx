@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { board } from '../state.js';
 import { SettingsPanel } from './Menus.jsx';
+import { urlParams } from './util.js';
 
 // ?clean hides the overlay (for screenshots against the DESIGN.md reference).
-const CLEAN = new URLSearchParams(window.location.search).has('clean');
+const CLEAN = urlParams.has('clean');
 
 // In-game overlay: just Settings and Main menu buttons, plus the trick callout and the manual meter.
 export default function Hud({ onMenu }) {

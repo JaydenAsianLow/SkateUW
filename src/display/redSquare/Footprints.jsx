@@ -115,6 +115,11 @@ export function edgeColliders(pts, height) {
   }));
 }
 
+// Upright box colliders from { args, position, rotY } (half extents, centre, yaw).
+export function BoxColliders({ list }) {
+  return list.map((c, i) => <CuboidCollider key={i} args={c.args} position={c.position} rotation={[0, c.rotY, 0]} />);
+}
+
 export function MidBuilding({ pts, height, style = 'modern', roof = 'roofFlat' }) {
   const m = materials();
   const geo = useMemo(() => {
@@ -128,9 +133,7 @@ export function MidBuilding({ pts, height, style = 'modern', roof = 'roofFlat' }
   }, [pts, height, style]);
   return (
     <RigidBody type="fixed" colliders={false}>
-      {geo.colliders.map((c, i) => (
-        <CuboidCollider key={i} args={c.args} position={c.position} rotation={[0, c.rotY, 0]} />
-      ))}
+      <BoxColliders list={geo.colliders} />
       <mesh geometry={geo.walls} material={m[geo.wallMat]} castShadow receiveShadow />
       <mesh geometry={geo.roof} material={m[roof]} receiveShadow />
       {geo.trim && <mesh geometry={geo.trim} material={m[geo.trimMat]} castShadow receiveShadow />}
@@ -184,9 +187,7 @@ export function Monolith({ pts, height }) {
   }, [pts, height]);
   return (
     <RigidBody type="fixed" colliders={false}>
-      {geo.colliders.map((c, i) => (
-        <CuboidCollider key={i} args={c.args} position={c.position} rotation={[0, c.rotY, 0]} />
-      ))}
+      <BoxColliders list={geo.colliders} />
       <mesh geometry={geo.walls} material={m.facadeBrick} castShadow receiveShadow />
       <mesh geometry={geo.cap} material={m.limestone} />
       <mesh geometry={geo.trim} material={m.limestone} castShadow receiveShadow />

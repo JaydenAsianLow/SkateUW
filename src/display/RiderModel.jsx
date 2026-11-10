@@ -5,6 +5,7 @@ import { Matrix4, Quaternion, Vector3 } from 'three';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
 import { finish, walkPose, walkRate } from './choreo.js';
 import { MOCAP_BONES, loadMocap, locoClips, mocap, sampleClip } from './mocap.js';
+import { clamp, damp, smooth, urlParams } from './util.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
 
@@ -34,7 +35,7 @@ const normName = (n) => n.replace(/^mixamorig\d*:?/, '');
 const POSED = new Set(['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head']);
 for (const s of ['Left', 'Right']) for (const b of ['Shoulder', 'Arm', 'ForeArm', 'Hand', 'UpLeg', 'Leg', 'Foot', 'ToeBase']) POSED.add(s + b);
 const WALK_TOP = 1.5; // m/s: the coded walk's top speed (it would start blending to its own run at 1.6)
-const USE_OLD = new URLSearchParams(window.location.search).has('oldskater');
+const USE_OLD = urlParams.has('oldskater');
 
 const FRONT_Z = -0.2; // ankle positions on the deck: front foot over the front bolts, back foot on the tail
 const BACK_Z = 0.25;
@@ -46,13 +47,11 @@ const UP = new Vector3(0, 1, 0);
 const ONE = new Vector3(1, 1, 1);
 const FADE = 0.2;
 const RIGHT_ARM = ['Spine', 'Spine1', 'Spine2', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand'];
-const damp = (c, t, l, dt) => c + (t - c) * (1 - Math.exp(-l * dt));
-const smooth = (t) => t * t * (3 - 2 * t);
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const yawDir = (a, out = new Vector3()) => out.set(Math.cos(a), 0, Math.sin(a)); // 0 = +X (facing), -π/2 = nose
 const tilt = (fwd, ang, out = new Vector3()) => out.copy(UP).multiplyScalar(Math.cos(ang)).addScaledVector(fwd, Math.sin(ang));
 
-const SPINE = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head'];
+const SIDE_NAMES = ['Left', 'Right'];
+const SIDES = [[0, 'Left'], [1, 'Right']];
 const PRIM_CHILD = { Hips: 'Spine', Spine: 'Spine1', Spine1: 'Spine2', Spine2: 'Neck', Neck: 'Head' };
 for (const s of ['Left', 'Right']) {
   Object.assign(PRIM_CHILD, {
@@ -121,6 +120,8 @@ function buildRig(scene) {
     bones,
     rest,
     extra,
+    names: Object.keys(rest), // every bone, in a fixed order
+    mocapNames: MOCAP_BONES.filter((n) => rest[n]), // the retargeted bones this rig has
     hipsParentInv: parentM.clone().invert(),
     hipsParentQInv: pq.invert(),
     thigh: len('LeftUpLeg', 'LeftLeg'),
@@ -168,9 +169,10 @@ function RiderModel({ boardRef }) {
     loadMocap(rig.rest.Hips.p.y);
   }, [rig]);
   const w = useMemo(() => {
+    const quats = () => Object.fromEntries(rig.names.map((n) => [n, new Quaternion()])); // one per bone
     const Q = {};
     const P = {};
-    for (const n of Object.keys(rig.rest)) (Q[n] = new Quaternion()), (P[n] = new Vector3());
+    for (const n of rig.names) (Q[n] = new Quaternion()), (P[n] = new Vector3());
     return {
       Q, P, M: new Matrix4(), R: new Quaternion(), tmpQ: new Quaternion(), v: new Vector3(),
       fPelvis: new Vector3(), fChest: new Vector3(), fNeck: new Vector3(), fHead: new Vector3(),
@@ -178,18 +180,18 @@ function RiderModel({ boardRef }) {
       upper: new Vector3(), fore: new Vector3(), bend: new Vector3(), knee: new Vector3(), pole: new Vector3(),
       ankle: [new Vector3(), new Vector3()], footDir: [new Vector3(), new Vector3()], toe: new Vector3(),
       // off-board pose
-      Qs: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), Ps: new Vector3(),
+      Qs: quats(), Ps: new Vector3(),
       fU: new Vector3(), fF: new Vector3(), fr: new Vector3(), q2: new Quaternion(), target: new Vector3(),
       sec: new Vector3(), sole: new Vector3(), toeD: new Vector3(),
       // crossfade: the last shown pose, and the snapshot faded out from
-      lastQ: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), lastP: new Vector3(),
-      fadeQ: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), fadeP: new Vector3(),
+      lastQ: quats(), lastP: new Vector3(),
+      fadeQ: quats(), fadeP: new Vector3(),
       // board in the right hand: hand -> board offset, and scratch
       offset: null, H: new Matrix4(), B: new Matrix4(), bp: new Vector3(), bq: new Quaternion(), bs: new Vector3(),
       cq: new Quaternion(), cp: new Vector3(),
       // motion capture
       sampA: { prim: {}, sec: {} }, sampB: { prim: {}, sec: {} },
-      QA: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), hipsA: new Vector3(), qL: new Quaternion(),
+      QA: quats(), hipsA: new Vector3(), qL: new Quaternion(),
     };
   }, [rig]);
 
@@ -246,31 +248,13 @@ function RiderModel({ boardRef }) {
       fk('Head');
       spine('Head', fp.headPitch, fp.twist + fp.headYaw);
       // Arms: two-bone IK to the wrist targets, elbows pointing along `elbows`.
-      for (const [k, side] of [[0, 'Left'], [1, 'Right']]) {
+      for (const [k, side] of SIDES) {
         follow(side + 'Shoulder');
-        fk(side + 'Shoulder');
-        fk(side + 'Arm');
-        const sh = P[side + 'Arm'];
-        w.target.fromArray(fp.hands[k]);
-        w.pole.fromArray(fp.elbows[k]).normalize();
-        solveKnee(sh, w.target, w.pole, rig.upper, rig.fore, w.knee);
-        w.sec.copy(w.pole).negate(); // the inside of the elbow faces away from where it points
-        aim(side + 'Arm', w.prim.subVectors(w.knee, sh), w.sec);
-        fk(side + 'ForeArm');
-        aim(side + 'ForeArm', w.prim.subVectors(w.target, P[side + 'ForeArm']), w.sec);
-        fk(side + 'Hand');
-        follow(side + 'Hand');
+        solveArm(side, w.target.fromArray(fp.hands[k]), w.pole.fromArray(fp.elbows[k]).normalize());
       }
       // Legs: two-bone IK to the ankles, knees along `knees`, feet along `toes` with their instep toward `soles`.
-      for (const [k, side] of [[0, 'Left'], [1, 'Right']]) {
-        fk(side + 'UpLeg');
-        w.target.fromArray(fp.ankles[k]);
-        w.pole.fromArray(fp.knees[k]).normalize();
-        solveKnee(P[side + 'UpLeg'], w.target, w.pole, rig.thigh, rig.shin, w.knee);
-        aim(side + 'UpLeg', w.prim.subVectors(w.knee, P[side + 'UpLeg']), w.pole);
-        fk(side + 'Leg');
-        aim(side + 'Leg', w.prim.subVectors(w.target, P[side + 'Leg']), w.pole);
-        fk(side + 'Foot');
+      for (const [k, side] of SIDES) {
+        solveLeg(side, w.target.fromArray(fp.ankles[k]), w.pole.fromArray(fp.knees[k]).normalize());
         const toe = w.toeD.fromArray(fp.toes[k]).normalize();
         const sole = w.sole.fromArray(fp.soles[k]).normalize();
         w.toe.copy(toe).multiplyScalar(TOE_REACH).addScaledVector(sole, -TOE_DROP);
@@ -293,6 +277,34 @@ function RiderModel({ boardRef }) {
       fk(side + 'Hand');
       follow(side + 'Hand');
     }
+    // One leg by IK from its hip socket to the ankle, knee bending toward `pole` (feet are aimed by the caller).
+    function solveLeg(side, ankle, pole) {
+      fk(side + 'UpLeg');
+      solveKnee(P[side + 'UpLeg'], ankle, pole, rig.thigh, rig.shin, w.knee);
+      aim(side + 'UpLeg', w.prim.subVectors(w.knee, P[side + 'UpLeg']), pole);
+      fk(side + 'Leg');
+      aim(side + 'Leg', w.prim.subVectors(ankle, P[side + 'Leg']), pole);
+      fk(side + 'Foot');
+    }
+    // Save the current pose of `names` (and the hips) into a snapshot.
+    function snapshot(dstQ, dstP, names) {
+      for (const n of names) dstQ[n].copy(Q[n]);
+      dstP.copy(P.Hips);
+    }
+    // Pose = snapshot blended toward the current pose by k (k = 0 the snapshot, 1 the current pose).
+    function blendFrom(srcQ, srcP, k, names) {
+      for (const n of names) {
+        w.tmpQ.copy(Q[n]);
+        Q[n].copy(srcQ[n]).slerp(w.tmpQ, k);
+      }
+      w.v.copy(P.Hips);
+      P.Hips.copy(srcP).lerp(w.v, k);
+    }
+    // Pose = current pose blended toward the snapshot by k.
+    function blendTo(srcQ, srcP, k, names) {
+      for (const n of names) Q[n].slerp(srcQ[n], k);
+      P.Hips.lerp(srcP, k);
+    }
 
     // A baked mocap frame onto the skeleton: every retargeted bone aimed like the source's, hips from the clip.
     function applySample(smp) {
@@ -302,7 +314,7 @@ function RiderModel({ boardRef }) {
     // Keep the feet on the ground: the source's legs aren't the skater's length, so shift the hips so the lower
     // ankle sits at ankle height (eased, so the run's flight phase still leaves the ground).
     function groundFeet(rate, dt) {
-      for (const side of ['Left', 'Right']) for (const n of ['UpLeg', 'Leg', 'Foot']) fk(side + n);
+      for (const side of SIDE_NAMES) for (const n of ['UpLeg', 'Leg', 'Foot']) fk(side + n);
       const low = Math.min(P.LeftFoot.y, P.RightFoot.y);
       s.groundOff = rate ? damp(s.groundOff, rig.ankleH - low, rate, dt) : rig.ankleH - low;
       P.Hips.y += s.groundOff;
@@ -330,29 +342,23 @@ function RiderModel({ boardRef }) {
       const timeOf = (l) => (l.speed > 0 ? l.c.land0 + s.locoPhase * l.c.cycleDur : s.idleT);
       applySample(sampleClip(a.c, timeOf(a), true, w.sampA));
       if (t > 0) {
-        for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
-        w.hipsA.copy(P.Hips);
+        snapshot(w.QA, w.hipsA, rig.mocapNames);
         applySample(sampleClip(b.c, timeOf(b), true, w.sampB));
-        for (const n of MOCAP_BONES) {
-          if (!rest[n]) continue;
-          w.tmpQ.copy(Q[n]);
-          Q[n].copy(w.QA[n]).slerp(w.tmpQ, t);
-        }
-        P.Hips.lerpVectors(w.hipsA, w.v.copy(P.Hips), t);
+        blendFrom(w.QA, w.hipsA, t, rig.mocapNames);
       }
       groundFeet(4, dt);
       // Lean into turns: tip the whole body about the feet toward the inside of the turn.
       const lean = Math.max(-0.22, Math.min(0.22, (fp.loco.turn ?? 0) * v * 0.05));
       if (lean) {
         w.qL.setFromAxisAngle(w.v.set(0, 0, 1), lean);
-        for (const n of MOCAP_BONES) if (rest[n]) Q[n].premultiply(w.qL);
+        for (const n of rig.mocapNames) Q[n].premultiply(w.qL);
         const y = P.Hips.y;
         P.Hips.y = 0;
         w.v.set(0, y, 0).applyQuaternion(w.qL);
         P.Hips.add(w.v);
       }
       if (fp.loco.carry) holdBoard(fp);
-      for (const side of ['Left', 'Right']) follow(side + 'Hand');
+      for (const side of SIDE_NAMES) follow(side + 'Hand');
     }
     // Only moving clips (e.g. just Running, no Idle / Walking yet): the procedural walk below them, blending into the
     // slowest clip on the same step phase, and the clips alone (1:1 at their own speed) from there up.
@@ -370,20 +376,14 @@ function RiderModel({ boardRef }) {
       if (k > 0) {
         applySample(sampleClip(list[0].c, list[0].c.land0 + s.locoPhase * list[0].c.cycleDur, true, w.sampA));
         groundFeet(4, dt);
-        for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
-        w.hipsA.copy(P.Hips);
+        snapshot(w.QA, w.hipsA, rig.mocapNames);
       }
       const wp = finish(walkPose(s.locoPhase, Math.sign(fp.loco.v || 1) * vw, fp.loco.carry, fp.loco.turn ?? 0));
       solveOff(wp);
       if (k > 0) {
-        for (const n of MOCAP_BONES) {
-          if (!rest[n]) continue;
-          w.tmpQ.copy(w.QA[n]);
-          Q[n].slerp(w.tmpQ, k);
-        }
-        P.Hips.lerp(w.hipsA, k);
+        blendTo(w.QA, w.hipsA, k, rig.mocapNames);
         if (fp.loco.carry) holdBoard(wp);
-        for (const side of ['Left', 'Right']) follow(side + 'Hand');
+        for (const side of SIDE_NAMES) follow(side + 'Hand');
       }
     }
     // Riding: the skating clip, board foot pinned to the deck (front bolts), the rest of the body around it.
@@ -401,7 +401,7 @@ function RiderModel({ boardRef }) {
       for (const n of ['UpLeg', 'Leg', 'Foot']) fk(bf + n);
       w.v.set(0, DECK_TOP + rig.ankleH, FRONT_Z).sub(P[bf + 'Foot']);
       P.Hips.add(w.v);
-      for (const side of ['Left', 'Right']) follow(side + 'Hand');
+      for (const side of SIDE_NAMES) follow(side + 'Hand');
     }
     // A one-shot clip (the pick-up), timed by the choreography, right hand reaching for the board.
     function solveClip(fp, c) {
@@ -539,16 +539,9 @@ function RiderModel({ boardRef }) {
     }
 
     // --- Legs: two-bone IK from the hip sockets to the ankles, knees bending out over the toes.
-    for (const [k, side] of [[0, 'Left'], [1, 'Right']]) {
-      fk(side + 'UpLeg');
-      const ankle = w.ankle[k];
+    for (const [k, side] of SIDES) {
       const dir = w.footDir[k];
-      w.pole.copy(dir).addScaledVector(w.fPelvis, 0.6).normalize();
-      solveKnee(P[side + 'UpLeg'], ankle, w.pole, rig.thigh, rig.shin, w.knee);
-      aim(side + 'UpLeg', w.prim.subVectors(w.knee, P[side + 'UpLeg']), w.pole);
-      fk(side + 'Leg');
-      aim(side + 'Leg', w.prim.subVectors(ankle, P[side + 'Leg']), w.pole);
-      fk(side + 'Foot');
+      solveLeg(side, w.ankle[k], w.pole.copy(dir).addScaledVector(w.fPelvis, 0.6).normalize());
       // Foot flat on the deck (or the ground while pushing), toes along `dir`.
       const onGround = k === 1 && pushU >= 0.22 && pushU < 0.62;
       const toeSp = onGround ? 0 : sp;
@@ -568,39 +561,27 @@ function RiderModel({ boardRef }) {
       const trick = a.air || a.flip >= 0 || popT >= 0 || m > 0.05 ? 1 : 0;
       s.trickW = damp(s.trickW ?? 0, trick, trick ? 14 : 5, dt);
       if (s.trickW < 0.999) {
-        for (const n of Object.keys(rest)) w.QA[n].copy(Q[n]);
-        w.hipsA.copy(P.Hips);
+        snapshot(w.QA, w.hipsA, rig.names);
         s.skateT = (s.skateT ?? 0) + dt;
         solveSkate(skate);
-        if (s.trickW > 0.001) {
-          for (const n of Object.keys(rest)) Q[n].slerp(w.QA[n], s.trickW);
-          P.Hips.lerp(w.hipsA, s.trickW);
-        }
+        if (s.trickW > 0.001) blendTo(w.QA, w.hipsA, s.trickW, rig.names);
       }
     }
 
     // --- Off the board: solve the choreography's joint targets and blend them over the skate pose.
     if (wOff > 0) {
-      for (const n of Object.keys(rest)) w.Qs[n].copy(Q[n]);
-      w.Ps.copy(P.Hips);
+      snapshot(w.Qs, w.Ps, rig.names);
       const loco = off.loco && mocap.status === 'ready' ? locoClips() : [];
       const clip = off.mocap?.clip && mocap.clips[off.mocap.clip];
       if (loco.length && loco[0].speed > 0) solveMixed(off, loco, dt);
       else if (loco.length) solveLoco(off, loco, dt);
       else if (clip) solveClip(off, clip);
       else solveOff(off);
-      if (wOff < 1) {
-        for (const n of Object.keys(rest)) {
-          w.tmpQ.copy(Q[n]);
-          Q[n].copy(w.Qs[n]).slerp(w.tmpQ, wOff);
-        }
-        w.v.copy(P.Hips);
-        P.Hips.copy(w.Ps).lerp(w.v, wOff);
-      }
+      if (wOff < 1) blendFrom(w.Qs, w.Ps, wOff, rig.names);
     }
 
     // --- Crossfade on every change of state (FADE s from the last shown pose).
-    const names = Object.keys(rest);
+    const names = rig.names;
     const key = off ? off.state ?? 'off' : 'ride';
     if (key !== s.fadeKey) {
       if (s.fadeKey !== null) {
@@ -612,16 +593,9 @@ function RiderModel({ boardRef }) {
     }
     if (s.fadeT < FADE) {
       s.fadeT += dt;
-      const k = smooth(Math.min(1, s.fadeT / FADE));
-      for (const n of names) {
-        w.tmpQ.copy(Q[n]);
-        Q[n].copy(w.fadeQ[n]).slerp(w.tmpQ, k);
-      }
-      w.v.copy(P.Hips);
-      P.Hips.copy(w.fadeP).lerp(w.v, k);
+      blendFrom(w.fadeQ, w.fadeP, smooth(Math.min(1, s.fadeT / FADE)), names);
     }
-    for (const n of names) w.lastQ[n].copy(Q[n]);
-    w.lastP.copy(P.Hips);
+    snapshot(w.lastQ, w.lastP, names);
 
     // --- Board in the right hand: pinned to the hand bone (blending in from the choreography as the hand closes).
     const g = boardRef?.current;
@@ -642,7 +616,7 @@ function RiderModel({ boardRef }) {
     for (const n of rig.extra) follow(n);
 
     // --- Write the pose into the skeleton (local rotations; the hips also get their position).
-    for (const name of Object.keys(rest)) {
+    for (const name of names) {
       const b = bones[name];
       const par = rest[name].parent;
       if (!par) {
