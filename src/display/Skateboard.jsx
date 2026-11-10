@@ -5,10 +5,10 @@ import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier';
 import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Quaternion, Shape, Vector3 } from 'three';
 import { board, game, phone, phoneIsLive } from '../state.js';
 import { commands, settings, updateSettings } from '../settings.js';
-import { DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
+import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
-import { MOUNT_GAP, bailTrack, dismountTrack, evalTrack, stepOffTrack, finish, mountTrack, rootAt, strideLength, trackWeight, walkPose } from './choreo.js';
+import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, trackWeight, walkPose, walkRate } from './choreo.js';
 
 // Tuning
 export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy without floating.
@@ -33,22 +33,20 @@ const LAND_OK = 0.78; // a trick at least this far through its rotation when you
 const ASSIST_MAX = 1.2; // m/s of extra lift a late trick may get so it can finish (keeps tricks landable)
 // Bails (choreo.js): the rider falls by kind (manual too far back = backwards; trick under-rotated = a stumble
 // onto the hands and knees when slow, a tumbling slam when fast), the board flies off on its own, the rider gets
-// up, jogs to it and steps back on. Severity grows with speed.
+// up and you walk to it (within AUTO_GRAB the skater picks it up), then Get on. Severity grows with speed.
 const BAIL_SLOW = 1.5; // m/s: at or below this a bail is as gentle as it gets
 const BAIL_FAST = 6.5; // m/s: the most severe
 const SLAM_AT = 0.45; // severity from which a trick bail is a slam instead of a stumble
 const BOARD_DRAG = 1.3; // loose board: fraction of speed lost per second rolling on the ground
 // On foot (Get off on the phone / B, or after a bail): the phone shows a joystick, moving relative to the camera.
-// How far it's pushed sets the speed, smoothly from a slow walk to a run.
-const STICK_DEAD = 0.12;
-const WALK_MIN = 0.6; // m/s just past the dead zone
+// The stick is smoothed (~0.1 s), has a 15% dead zone and a squared response: precise near the centre, a run only
+// at the edge. The animation blends idle -> walk -> run by speed (choreo.js walkPose).
+const STICK_DEAD = 0.15;
+const STICK_SMOOTH = 10; // 1/s (time constant 0.1 s)
 const RUN_SPEED = 4.2; // m/s at full push
-const stickSpeed = (m) => WALK_MIN + (RUN_SPEED - WALK_MIN) * ((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 1.6;
-const WALK_TURN = 9; // rad/s the skater turns toward the stick direction
-const JOG_TO_BOARD = 1.6; // m/s, the last steps onto the board
-const NEAR_BOARD = 1.6; // m: close enough that Get on steps onto the board
-const AUTO_GRAB = 1.0; // m: walking this close to the board gets you on by itself
-const GRAB_ARM = 1.3; // m: ...once you've been at least this far from it (so Get off doesn't grab it straight back)
+const stickSpeed = (m) => RUN_SPEED * clamp01((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 2;
+const TURN_MAX = 6; // rad/s; the turn rate itself eases in/out so the body doesn't snap round
+const AUTO_GRAB = 1.0; // m: walking this close to a board on the ground picks it up
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
 // Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
 // The meter: below MANUAL_IN (too far forward) the front wheels drop back down; MANUAL_IN..MANUAL_FALL is the
@@ -59,7 +57,7 @@ const MANUAL_PITCH_MIN = 0.12; // rad, nose up at the start of the zone
 const MANUAL_PITCH_MAX = 0.3; // rad, nose up at the edge (tail almost on the ground)
 const MANUAL_MIN_SPEED = 0.6; // m/s; slower than this you just stand on it
 const MANUAL_CALLOUT = 0.6; // s held before it counts as a manual
-const HALF = { x: 0.12, y: 0.08, z: 0.42 }; // collider half extents (real-size board)
+const HALF = { x: 0.12, y: BOARD_HALF_Y, z: 0.42 }; // collider half extents (real-size board)
 const START = [SPAWN.position[0], HALF.y + 0.05, SPAWN.position[1]];
 const PIVOT = DECK_TOP - 0.035; // flips spin around the middle of the board, not the ground
 
@@ -83,13 +81,13 @@ const _q = new Quaternion();
 const _v = new Vector3();
 const DROP = new Vector3(0, -HALF.y, 0);
 
-// Dev only: ?posetest=back:0.8 (or side, slam, dismount, mount, mountg, walk:<speed>) loops one off-board animation
+// Dev only: ?posetest=back:0.8 (or side, slam, dismount, mount, pickup, walk:<speed>) loops one off-board animation
 // in place; add a third value to freeze it at that time, e.g. ?posetest=slam:1:0.5. Use with ?play&sidecam.
 const POSE_TEST = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('posetest') : null;
 function poseTestTrack(kind, a) {
   if (kind === 'dismount') return dismountTrack();
   if (kind === 'mount') return mountTrack(walkPose(0.3, 1.2, true), true);
-  if (kind === 'mountg') return mountTrack(walkPose(0, 0, false), false);
+  if (kind === 'pickup') return pickupTrack(walkPose(0.2, 1.2, false), { x: 0.45, y: 0, z: -0.75, yaw: 0.6 });
   return bailTrack(kind, a);
 }
 
@@ -128,8 +126,8 @@ export default function Skateboard() {
     air: false,
     airT: 0,
     pushT: -1, // seconds since the current push stroke started (rider animation)
-    // Off the board: mode 'ride' | 'bail' (falling + getting up) | 'dismount' | 'walk' (board in hand, or walking
-    // back to it after a bail while it's loose) | 'toBoard' (the last steps onto it after Ride) | 'mount'. track = the choreo.js animation being played.
+    // Off the board: mode 'ride' | 'bail' (falling + getting up) | 'dismount' (Get off, board into the hand) |
+    // 'walk' (on foot: board in hand, or on the ground after a bail) | 'pickup' | 'mount' (Get on). track = the choreo.js animation being played.
     mode: 'ride',
     modeT: 0,
     track: null,
@@ -293,17 +291,9 @@ export default function Skateboard() {
     if (deck.current) deck.current.rotation.set(0, 0, 0);
   };
 
-  // Get off: step off to the toe side and leave the board where it is (rolling out what speed it had).
-  const startDismount = (rb, speed) => {
+  // Get off: step off to the heel side, stamp the tail and catch the board in the right hand.
+  const startDismount = (speed) => {
     const st = s.current;
-    const p = rb.translation();
-    const roll = speed * 0.35;
-    st.loose = {
-      x: p.x, y: p.y - HALF.y, z: p.z,
-      vx: -Math.sin(st.heading) * roll, vy: 0, vz: -Math.cos(st.heading) * roll,
-      yaw: yawS(st), vyaw: 0, pitch: st.pitchNow, roll: 0, vroll: 0, spin: st.wheelSpin,
-    };
-    st.grabArmed = false;
     st.offSpeed = speed;
     if (st.stance === 1) {
       // Off the board you walk nose first: turn the body round (same look) and keep sliding the same way.
@@ -311,7 +301,21 @@ export default function Skateboard() {
       st.stance = 0;
       st.offSpeed = -speed;
     }
-    Object.assign(st, { mode: 'dismount', modeT: 0, track: stepOffTrack(), offDrag: 3, pushLeft: 0, pushT: -1, manual: 0, manualT: 0 });
+    Object.assign(st, { mode: 'dismount', modeT: 0, track: dismountTrack(), offDrag: 3, pushLeft: 0, pushT: -1, manual: 0, manualT: 0 });
+  };
+  // Walked up to the board on the ground: pick it up (it leaves the world and goes into the hand).
+  const startPickup = (rb) => {
+    const st = s.current;
+    const L = st.loose;
+    const p = rb.translation();
+    const y = yawS(st);
+    const c = Math.cos(y);
+    const sn = Math.sin(y);
+    const dx = L.x - p.x;
+    const dz = L.z - p.z;
+    const b = { x: dx * c - dz * sn, y: Math.max(0, L.y - (p.y - HALF.y)), z: dx * sn + dz * c, yaw: wrapAngle(L.yaw - y) };
+    st.track = pickupTrack(walkPose(st.walkPhase, st.walkSpeed, false, st.turnVel ?? 0), b);
+    Object.assign(st, { mode: 'pickup', modeT: 0, offSpeed: 0, offDrag: 0, walkSpeed: 0, turnVel: 0, loose: null });
   };
   const startMount = (carry) => {
     const st = s.current;
@@ -341,7 +345,7 @@ export default function Skateboard() {
       let pose;
       if (kind === 'walk') {
         const v = Number(a) || 1.5;
-        st.walkPhase += (v * dt) / strideLength(v);
+        st.walkPhase += walkRate(v) * dt;
         pose = finish(walkPose(t != null ? Number(t) : st.walkPhase, v, true));
         board.pose = { w: 1, ...pose };
       } else {
@@ -440,69 +444,37 @@ export default function Skateboard() {
         const kx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
         const ky = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
         if (kx || ky) {
-          const k = (keys.pop ? 1 : 0.6) / Math.hypot(kx, ky);
+          const k = (keys.pop ? 1 : 0.7) / Math.hypot(kx, ky);
           jx = kx * k;
           jy = ky * k;
         }
-        const mag = Math.min(1, Math.hypot(jx, jy));
+        st.jx = damp(st.jx ?? 0, jx, STICK_SMOOTH, dt);
+        st.jy = damp(st.jy ?? 0, jy, STICK_SMOOTH, dt);
+        const mag = Math.min(1, Math.hypot(st.jx, st.jy));
         let target = 0;
+        let turnTarget = 0;
         if (mag > STICK_DEAD) {
           camera.getWorldDirection(_v);
           const cl = Math.hypot(_v.x, _v.z) || 1;
           const cx = _v.x / cl;
           const cz = _v.z / cl;
-          const dx = cx * jy - cz * jx; // camera forward * up + camera right * right
-          const dz = cz * jy + cx * jx;
+          const dx = cx * st.jy - cz * st.jx; // camera forward * up + camera right * right
+          const dz = cz * st.jy + cx * st.jx;
           const err = wrapAngle(Math.atan2(-dx, -dz) - st.heading);
-          const step = Math.max(-WALK_TURN * dt, Math.min(WALK_TURN * dt, err));
-          st.heading += step;
-          turn = step / dt;
-          target = stickSpeed(mag) * Math.max(0.15, Math.cos(err));
+          turnTarget = Math.max(-TURN_MAX, Math.min(TURN_MAX, err * 7));
+          target = stickSpeed(mag) * Math.max(0.2, Math.cos(err));
         }
-        st.walkSpeed = damp(st.walkSpeed, target, target > st.walkSpeed ? 6 : 12, dt);
+        st.turnVel = damp(st.turnVel ?? 0, turnTarget, 12, dt);
+        st.heading += st.turnVel * dt;
+        turn = st.turnVel;
+        st.walkSpeed = damp(st.walkSpeed, target, target > st.walkSpeed ? 5 : 8, dt);
         fwdSpeed = st.walkSpeed;
-        // Get on: tap it next to the board, or just walk up to it.
         const L = st.loose;
-        if (L && v.y > -1) {
-          const dB = Math.hypot(L.x - p.x, L.z - p.z);
-          if (dB > GRAB_ARM) st.grabArmed = true;
-          const still = Math.hypot(L.vx, L.vz) < 0.5;
-          if ((carryReq && dB < NEAR_BOARD) || (st.grabArmed && still && dB < AUTO_GRAB)) Object.assign(st, { mode: 'toBoard', modeT: 0 });
-        } else if (!L && carryReq) startMount(true);
-      } else if (st.mode === 'toBoard') {
-        // Ride tapped next to the loose board: step to a spot just behind it, facing the way you'll ride it.
-        const L = st.loose;
-        const nx = -Math.sin(L.yaw);
-        const nz = -Math.cos(L.yaw);
-        const dir = nx * (L.x - p.x) + nz * (L.z - p.z) >= 0 ? 1 : -1;
-        const dx = nx * dir;
-        const dz = nz * dir;
-        const mx = L.x - dx * MOUNT_GAP - p.x;
-        const mz = L.z - dz * MOUNT_GAP - p.z;
-        const dist = Math.hypot(mx, mz);
-        const rideHeading = Math.atan2(-dx, -dz);
-        const want = dist > 0.35 ? Math.atan2(-mx, -mz) : rideHeading;
-        const err = wrapAngle(want - st.heading);
-        const step = Math.max(-3.5 * dt, Math.min(3.5 * dt, err));
-        st.heading += step;
-        turn = step / dt;
-        const align = Math.max(0, Math.cos(err));
-        const target = dist > 0.04 ? Math.min(JOG_TO_BOARD, dist * 2.5 + 0.3) * align * align : 0;
-        st.walkSpeed = damp(st.walkSpeed, target, 6, dt);
-        fwdSpeed = st.walkSpeed;
-        if (dist < 0.6) {
-          // Close in: side-step onto the spot.
-          const fx = -Math.sin(st.heading);
-          const fz = -Math.cos(st.heading);
-          const along = mx * fx + mz * fz;
-          latX = (mx - fx * along) * 4;
-          latZ = (mz - fz * along) * 4;
-        }
-        const ready = dist < 0.07 && Math.abs(wrapAngle(rideHeading - st.heading)) < 0.1 && Math.hypot(L.vx, L.vz) < 0.4;
-        if (ready || st.modeT > 3) {
-          st.heading = rideHeading;
-          startMount(false);
-        }
+        if (L) {
+          // Board on the ground: walking up to it picks it up.
+          const still = Math.hypot(L.vx, L.vz) < 0.5 && L.vy === 0;
+          if (still && Math.hypot(L.x - p.x, L.z - p.z) < AUTO_GRAB) startPickup(rb);
+        } else if (carryReq && v.y > -1) startMount(true); // Get on: drop the board and step on
       } else {
         // Playing a track (bail, stepping off, stepping on): slide along with what speed is left, plus root motion.
         st.offSpeed *= Math.exp(-st.offDrag * dt);
@@ -515,9 +487,9 @@ export default function Skateboard() {
         if (st.modeT >= st.track.dur) {
           if (st.mode === 'bail') {
             if (st.stance === 1) (st.heading += Math.PI), (st.stance = 0); // walk nose first (same look)
-            Object.assign(st, { mode: 'walk', walkSpeed: 0, walkPhase: 0, offSpeed: 0, grabArmed: true }); // walk back to the board
-          } else if (st.mode === 'dismount') {
-            Object.assign(st, { mode: 'walk', walkSpeed: Math.max(0, st.offSpeed), walkPhase: 0, offSpeed: 0 });
+            Object.assign(st, { mode: 'walk', walkSpeed: 0, walkPhase: 0, offSpeed: 0, turnVel: 0 }); // walk to the board
+          } else if (st.mode === 'dismount' || st.mode === 'pickup') {
+            Object.assign(st, { mode: 'walk', walkSpeed: Math.max(0, st.offSpeed), walkPhase: 0, offSpeed: 0, turnVel: 0 });
           } else {
             st.mode = 'ride';
           }
@@ -525,9 +497,10 @@ export default function Skateboard() {
           st.track = null;
         }
       }
-      if (st.mode === 'walk' || st.mode === 'toBoard') {
-        const pace = Math.max(Math.abs(st.walkSpeed), Math.abs(turn) * 0.35);
-        st.walkPhase += (Math.sign(st.walkSpeed || 1) * pace * dt) / strideLength(st.walkSpeed);
+      if (st.mode === 'walk') {
+        // Stride matched to ground speed (feet never slide); turning on the spot still shuffles the feet.
+        const shuffle = Math.abs(st.walkSpeed) < 0.3 ? Math.min(1.2, Math.abs(turn) * 0.25) : 0;
+        st.walkPhase += (Math.sign(st.walkSpeed || 1) * walkRate(st.walkSpeed) + shuffle) * dt;
       }
       if (st.loose) {
         updateLoose(rb, dt);
@@ -550,7 +523,7 @@ export default function Skateboard() {
       } else if (st.mode !== 'ride') {
         pose = finish(walkPose(st.walkPhase, st.walkSpeed, !st.loose, turn));
       }
-      board.pose = pose && { w, ...pose };
+      board.pose = pose && { w, state: st.mode, ...pose };
       resetBoardVisuals();
       placeBoard(pose?.board);
       showLoose(!!st.loose && !pose?.board);
@@ -560,13 +533,12 @@ export default function Skateboard() {
         for (const wh of wheels.current) if (wh) wh.rotation.x = -st.wheelSpin;
       }
 
-      // For the phone's button: 'walk' board in hand (Ride drops in), 'find' walking back to the loose board,
-      // 'near' close enough to step on, 'off' down on the ground. Stepping on counts as riding.
+      // For the phone (joystick + one button): 'ride' on the board (Get off), 'carry' on foot with the board in hand
+      // (Get on), 'find' on foot with the board on the ground (Go to board, greyed), 'off' down after a fall.
       let offMode = 'off';
       if (st.mode === 'ride' || st.mode === 'mount') offMode = 'ride';
-      else if (st.mode === 'toBoard') offMode = 'near';
-      else if (st.mode === 'dismount' || !st.loose) offMode = 'find';
-      else if (st.mode === 'walk') offMode = st.grabArmed && Math.hypot(st.loose.x - p.x, st.loose.z - p.z) < NEAR_BOARD ? 'near' : 'find';
+      else if (st.mode === 'dismount' || (st.mode === 'walk' && !st.loose)) offMode = 'carry';
+      else if (st.mode === 'walk' || st.mode === 'pickup') offMode = 'find';
       Object.assign(board.view, { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0, mode: offMode });
       Object.assign(board, { speed: fwdSpeed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: false, mode: st.mode, loose: st.loose });
       Object.assign(board.anim, {
@@ -606,7 +578,7 @@ export default function Skateboard() {
 
     // Step off and pick the board up (phone Walk button / B), only while rolling on the ground.
     if (carryReq && grounded && st.popT < 0 && !st.revert && st.manualT === 0) {
-      startDismount(rb, speed);
+      startDismount(speed);
       return;
     }
 
@@ -820,7 +792,7 @@ export default function Skateboard() {
           </group>
         </group>
         <group position={[0, -HALF.y, 0]}>
-          <Rider />
+          <Rider boardRef={boardG} />
         </group>
       </group>
     </RigidBody>

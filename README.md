@@ -10,8 +10,8 @@ A 3D skateboarding web game: the laptop shows the scene, and your phone acts as 
 - `/` (laptop) shows **Level 1: Red Square (UW)**, built from OpenStreetMap data per `MAP.md`. The HUD shows live values and a QR code for the phone.
 - Visual style follows `DESIGN.md` (golden hour). Add `?clean` to the laptop URL to hide the HUD for side-by-side comparison with the reference image.
 - Keyboard fallback on the laptop: tap W = push, S = brake, A/D = steer, Space = ollie, F = kickflip, G = varial flip, T = tre flip, V = pop shove-it, E = frontside 180, Q = revert, B = get off / on (on foot: WASD to walk, Shift to run), R = reset.
-- Bails depend on the move and your speed: leaning too far back in a manual drops you on your backside (fast: flat on your back while the board shoots ahead); landing a trick mid-rotation is a stumble onto hands and knees when slow, a tumbling slam when fast. The board rolls off on its own; once the skater is up you walk back to it yourself: walk onto it (within about 1 m) or tap Get on next to it to hop on (`src/display/choreo.js`).
-- Dev only: `?play` skips the menu (keyboard), `?posetest=back:0.8` (or `side`, `slam`, `dismount`, `mount`, `mountg`, `walk:<speed>`) loops one off-board animation, add `:<seconds>` to freeze it; pair with `?sidecam`. In the console, `__skate.bail('back' | 'side' | 'slam')` triggers a fall.
+- Bails depend on the move and your speed: leaning too far back in a manual drops you on your backside (fast: flat on your back while the board shoots ahead); landing a trick mid-rotation is a stumble onto hands and knees when slow, a tumbling slam when fast. The board rolls off on its own; once the skater is up you walk to it with the joystick; within about 1 m they pick it up, then tap Get on (`src/display/choreo.js`).
+- Dev only: `?play` skips the menu (keyboard), `?posetest=back:0.8` (or `side`, `slam`, `dismount`, `mount`, `pickup`, `walk:<speed>`) loops one off-board animation, add `:<seconds>` to freeze it; pair with `?sidecam`. In the console, `__skate.bail('back' | 'side' | 'slam')` triggers a fall.
 
 ```
 phone ──HTTPS/WSS──▶ Vite dev server :5173 ──proxy──▶ Node Socket.IO :3001 ──▶ laptop display
@@ -50,7 +50,7 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
 | Revert | One finger draws a **half circle** (on the ground). You ride away fakie; revert again to go back |
 | Frontside 180 | Down, up, then the **left finger half-circles down while the right finger half-circles up** (one counter-clockwise half circle also works; clockwise = backside 180) |
 | Steer / brake | Tilt left / right; tilt the top edge toward you to brake |
-| Get off / on | Tap **Get off**: the skater steps off and leaves the board, and the phone shows a joystick (push a little to walk, all the way to run; directions are relative to the camera). Walk onto the board, or tap **Get on** next to it, to hop back on; the phone switches back to the deck |
+| Get off / on | Tap **Get off**: the skater steps off and catches the board in the right hand, and the phone shows a joystick (15% dead zone, squared response: a little push walks, the edge runs; directions are relative to the camera). Tap **Get on** to drop the board and step on; the phone switches back to the deck. After a fall the button reads **Go to board** until you walk to the board and pick it up |
 | Respawn | Tap **Reset** on the phone (or the back-to-spawn key on the laptop, Space by default) |
 
 Land before a trick finishes rotating and you bail. Ollies pop about 0.3–0.6 m depending on how hard you swipe.

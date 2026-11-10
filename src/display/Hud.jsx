@@ -44,9 +44,7 @@ export default function Hud({ onMenu }) {
           <SettingsPanel inGame />
         </div>
       )}
-      {(foot === 'find' || foot === 'near') && (
-        <div className="foot-hint">{foot === 'near' ? 'Walk onto your board, or tap Get on (B)' : 'Walk back to your board'}</div>
-      )}
+      {foot === 'find' && <div className="foot-hint">Walk to your board to pick it up</div>}
       <BalanceMeter />
     </>
   );

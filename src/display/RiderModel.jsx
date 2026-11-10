@@ -2,7 +2,8 @@ import { Component, Suspense, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { DECK_TOP, PUSH_ANIM } from './look.js';
+import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
+import { finish, walkPose } from './choreo.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
 
@@ -19,6 +20,8 @@ import Skater from './Skater.jsx';
 // "Rider space" = the old skater's local space: ground y = 0, nose toward -Z, rider faces +X (toe side).
 // The model faces +Z in its own file, so it is turned +90° about Y (its +Z -> rider +X, its left +X -> nose -Z).
 // ?oldskater in the URL shows the old primitive skater instead.
+// While the board is in the right hand it is pinned to the RightHand bone (boardRef = the board's group), and every
+// change of state (riding, falling, walking, grabbing, getting on / off) crossfades over FADE seconds.
 
 const MODEL_URL = '/models/skater/skater.glb';
 const USE_OLD = new URLSearchParams(window.location.search).has('oldskater');
@@ -30,6 +33,9 @@ const TOE_REACH = 0.138; // ankle -> toe base, horizontal (from the rig)
 const TOE_DROP = 0.06;
 
 const UP = new Vector3(0, 1, 0);
+const ONE = new Vector3(1, 1, 1);
+const FADE = 0.2;
+const RIGHT_ARM = ['Spine', 'Spine1', 'Spine2', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand'];
 const damp = (c, t, l, dt) => c + (t - c) * (1 - Math.exp(-l * dt));
 const smooth = (t) => t * t * (3 - 2 * t);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -133,11 +139,11 @@ function solveKnee(hip, ankle, pole, l1, l2, out) {
   return out.copy(hip).addScaledVector(_d, along).addScaledVector(_pp, h);
 }
 
-function RiderModel() {
+function RiderModel({ boardRef }) {
   const { scene } = useGLTF(MODEL_URL);
   const rig = useMemo(() => buildRig(scene), [scene]);
   const root = useRef(null);
-  const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false });
+  const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE });
   const w = useMemo(() => {
     const Q = {};
     const P = {};
@@ -152,6 +158,12 @@ function RiderModel() {
       Qs: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), Ps: new Vector3(),
       fU: new Vector3(), fF: new Vector3(), fr: new Vector3(), q2: new Quaternion(), target: new Vector3(),
       sec: new Vector3(), sole: new Vector3(), toeD: new Vector3(),
+      // crossfade: the last shown pose, and the snapshot faded out from
+      lastQ: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), lastP: new Vector3(),
+      fadeQ: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), fadeP: new Vector3(),
+      // board in the right hand: hand -> board offset, and scratch
+      offset: null, H: new Matrix4(), B: new Matrix4(), bp: new Vector3(), bq: new Quaternion(), bs: new Vector3(),
+      cq: new Quaternion(), cp: new Vector3(),
     };
   }, [rig]);
 
@@ -240,6 +252,16 @@ function RiderModel() {
         fk(side + 'ToeBase');
         aim(side + 'ToeBase', toe, sole);
       }
+    }
+
+    // Hand -> board offset, once: pose the carry stance and see where the right hand is relative to the board.
+    if (!w.offset) {
+      const cp = finish(walkPose(0, 0, true));
+      solveOff(cp);
+      for (const n of RIGHT_ARM) fk(n);
+      w.H.compose(P.RightHand, Q.RightHand, ONE);
+      w.B.compose(w.bp.fromArray(cp.board.p), w.bq.fromArray(cp.board.q), ONE);
+      w.offset = new Matrix4().copy(w.H).invert().multiply(w.B);
     }
 
     // --- Drivers from the board.
@@ -384,18 +406,56 @@ function RiderModel() {
 
     // --- Off the board: solve the choreography's joint targets and blend them over the skate pose.
     if (wOff > 0) {
-      const names = Object.keys(rest);
-      for (const n of names) w.Qs[n].copy(Q[n]);
+      for (const n of Object.keys(rest)) w.Qs[n].copy(Q[n]);
       w.Ps.copy(P.Hips);
       solveOff(off);
       if (wOff < 1) {
-        for (const n of names) {
+        for (const n of Object.keys(rest)) {
           w.tmpQ.copy(Q[n]);
           Q[n].copy(w.Qs[n]).slerp(w.tmpQ, wOff);
         }
         w.v.copy(P.Hips);
         P.Hips.copy(w.Ps).lerp(w.v, wOff);
       }
+    }
+
+    // --- Crossfade on every change of state (FADE s from the last shown pose).
+    const names = Object.keys(rest);
+    const key = off ? off.state ?? 'off' : 'ride';
+    if (key !== s.fadeKey) {
+      if (s.fadeKey !== null) {
+        for (const n of names) w.fadeQ[n].copy(w.lastQ[n]);
+        w.fadeP.copy(w.lastP);
+        s.fadeT = 0;
+      }
+      s.fadeKey = key;
+    }
+    if (s.fadeT < FADE) {
+      s.fadeT += dt;
+      const k = smooth(Math.min(1, s.fadeT / FADE));
+      for (const n of names) {
+        w.tmpQ.copy(Q[n]);
+        Q[n].copy(w.fadeQ[n]).slerp(w.tmpQ, k);
+      }
+      w.v.copy(P.Hips);
+      P.Hips.copy(w.fadeP).lerp(w.v, k);
+    }
+    for (const n of names) w.lastQ[n].copy(Q[n]);
+    w.lastP.copy(P.Hips);
+
+    // --- Board in the right hand: pinned to the hand bone (blending in from the choreography as the hand closes).
+    const g = boardRef?.current;
+    if (g && off?.board && off.grip?.hand === 1 && off.grip.w > 0.6) {
+      for (const n of RIGHT_ARM) fk(n);
+      w.H.compose(P.RightHand, Q.RightHand, ONE).multiply(w.offset);
+      w.H.decompose(w.bp, w.bq, w.bs);
+      const a = smooth(Math.min(1, (off.grip.w - 0.6) / 0.4));
+      w.cp.fromArray(off.board.p).lerp(w.bp, a);
+      w.cq.fromArray(off.board.q).slerp(w.bq, a);
+      // Same placement as Skateboard's placeBoard: the board group's origin is the collider centre.
+      w.v.set(0, -BOARD_HALF_Y, 0).applyQuaternion(w.cq);
+      g.position.set(w.cp.x, w.cp.y - BOARD_HALF_Y, w.cp.z).sub(w.v);
+      g.quaternion.copy(w.cq);
     }
 
     // --- Write the pose into the skeleton (local rotations; the hips also get their position).
@@ -432,12 +492,12 @@ class Fallback extends Component {
   }
 }
 
-export default function Rider() {
+export default function Rider({ boardRef }) {
   if (USE_OLD) return <Skater />;
   return (
     <Fallback>
       <Suspense fallback={<Skater />}>
-        <RiderModel />
+        <RiderModel boardRef={boardRef} />
       </Suspense>
     </Fallback>
   );

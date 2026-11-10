@@ -269,8 +269,8 @@ function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, err
   const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 } });
   const steerRef = useRef(steer);
   steerRef.current = steer;
-  // From the laptop: 'ride' | 'find' (on foot, board away) | 'near' (close enough to get on) | 'off' (down after a
-  // fall). The phone only follows the laptop, and only once two packets in a row agree, so it can't flicker.
+  // From the laptop: 'ride' (on the board) | 'carry' (on foot, board in hand) | 'find' (on foot, board on the ground)
+  // | 'off' (down after a fall). The phone only follows the laptop, and only once two packets in a row agree.
   const [mode, setMode] = useState('ride');
   const pendingMode = useRef({ mode: 'ride', n: 0 });
   const onFoot = mode !== 'ride'; // joystick instead of the deck
@@ -443,7 +443,7 @@ function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, err
   const getOnOff = () => {
     socketRef.current?.emit('carry');
     navigator.vibrate?.(25);
-    if (onFoot && mode !== 'near') setFlash({ label: 'WALK TO YOUR BOARD', key: performance.now() });
+    if (mode === 'find') setFlash({ label: 'WALK TO YOUR BOARD', key: performance.now() });
   };
 
   const reset = () => {
@@ -458,7 +458,7 @@ function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, err
         <Joystick
           stickRef={stickRef}
           flash={flash}
-          hint={mode === 'off' ? 'Getting up…' : mode === 'near' ? 'Walk onto your board or tap Get on' : 'Push a little to walk, all the way to run'}
+          hint={mode === 'off' ? 'Getting up…' : mode === 'find' ? 'Walk to your board to pick it up' : 'Push a little to walk, all the way to run'}
         />
       ) : (
         <div
@@ -487,8 +487,8 @@ function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, err
           <canvas ref={canvasRef} className="deck-trail" />
         </div>
       )}
-      <button className="onoff-btn" onClick={getOnOff} disabled={mode === 'off'}>
-        {onFoot ? 'Get on' : 'Get off'}
+      <button className="onoff-btn" onClick={getOnOff} disabled={mode === 'off' || mode === 'find'}>
+        {mode === 'ride' ? 'Get off' : mode === 'carry' ? 'Get on' : 'Go to board'}
       </button>
       <div className="deck-foot">
         <button className="secondary small-btn" onClick={onCalibrate}>

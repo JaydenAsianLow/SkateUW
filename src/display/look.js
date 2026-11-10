@@ -54,6 +54,7 @@ export const sunView = { value: new Vector3(0, 0, -1) };
 
 // Board / rider shared dimensions.
 export const DECK_TOP = 0.1; // grip surface height above the ground (m)
+export const BOARD_HALF_Y = 0.08; // half height of the board's physics box (its centre sits this far above the ground)
 export const PUSH_ANIM = 0.62; // seconds for one push stroke animation
 
 // Where the ground is paved (brick) vs lawn: a world-space mask texture painted by the level

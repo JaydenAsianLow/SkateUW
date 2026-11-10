@@ -126,46 +126,91 @@ function shift(p, dx, dz) {
   };
 }
 
-// --- Walking / running (procedural). phase: 0..1 per stride (two steps); v: m/s (negative = backwards);
-// turn: rad/s, so turning on the spot still takes small steps. carry: board in the left hand.
-export const strideLength = (v) => 0.9 + 0.35 * Math.abs(v);
+// --- Walking / running: one gait blended by speed (idle -> walk -> run, no switch).
+// A cycle (two steps) takes cycleTime(v); the run is a snappy 0.5 s loop (12 frames at 24 fps). The stride is
+// speed x cycle time, so a planted foot moves back at exactly the ground speed and never slides. Below V0 the
+// cadence slows too, so the steps shrink smoothly to standing still.
+const runBlend = (v) => smooth(clamp01((v - 1.6) / 1.8)); // 0 walk .. 1 run
+const cycleTime = (v) => 1.05 + (0.5 - 1.05) * runBlend(v);
+const V0 = 0.6;
+export const strideLength = (v) => {
+  const a = Math.abs(v);
+  return a >= V0 ? a * cycleTime(a) : V0 * cycleTime(V0) * Math.sqrt(a / V0);
+};
+export const walkRate = (v) => {
+  const a = Math.abs(v);
+  return a < 1e-4 ? 0 : a / strideLength(a); // cycles per second
+};
+const CARRY_WRIST = [0.32, 0.8, 0]; // right wrist holding the board at the side
+
+// phase: 0..1 per cycle (left foot lands at 0); v: m/s (negative = backwards); turn: rad/s (lean into it, and turning
+// on the spot still steps); carry: board in the right hand.
 export function walkPose(phase, v, carry, turn = 0) {
   const sp = Math.abs(v);
-  const run = clamp01((sp - 2) / 1.6);
-  const amp = clamp01(Math.max(sp / 0.9, Math.abs(turn) * 0.45));
-  const L = strideLength(sp) * amp;
-  const sf = 0.6 - 0.22 * run; // share of the stride a foot is on the ground
+  const run = runBlend(sp);
+  const go = clamp01(sp / V0); // idle -> moving
+  const L = strideLength(sp);
+  const sf = 0.62 - 0.24 * run; // share of the cycle a foot is planted (walk: double support, run: flight)
+  const liftH = (0.08 + 0.13 * run) * Math.max(go, clamp01(Math.abs(turn) / 2.5) * 0.6);
+  // Each foot loops: plant (slides back under the body at ground speed, heel peels up at the end) -> push off ->
+  // lift (early peak, the run kicks the heel up behind) -> swing forward -> reach -> plant.
   const legs = [phase, phase + 0.5].map((ph) => {
     const u = ((ph % 1) + 1) % 1;
-    if (u < sf) return { f: (sf * L) / 2 - (u / sf) * sf * L, lift: 0 }; // planted: slides back under the body
+    if (u < sf) {
+      const a = u / sf;
+      const peel = smooth(clamp01((a - 0.7) / 0.3)) * go; // heel comes up before push-off
+      const strike = (1 - run) * go * 0.25 * (1 - clamp01(a / 0.12)); // walk: lands heel first, toes up
+      return { f: (sf * L) / 2 - a * sf * L, y: 0.05 * peel, pitch: strike - 0.45 * peel };
+    }
     const a = (u - sf) / (1 - sf);
-    return { f: -(sf * L) / 2 + smooth(a) * sf * L, lift: Math.sin(Math.PI * a) * (0.07 + 0.16 * run) * amp };
+    const reach = (1 - run) * go * 0.25 * smooth(clamp01((a - 0.7) / 0.3)); // toes come up to meet the ground
+    return { f: -(sf * L) / 2 + smooth(a) * sf * L, y: liftH * Math.sin(Math.PI * a ** 0.7), pitch: reach - 0.35 * Math.sin(Math.PI * a) * go };
   });
-  const swing = legs[0].f / ((sf * strideLength(sp)) / 2 || 1); // -1..1, left leg forward = +1
-  const bob = Math.cos(phase * Math.PI * 4) * (0.016 + 0.03 * run) * amp;
-  const hips = [Math.sin(phase * Math.PI * 2) * 0.018 * amp * (1 - run), 0.88 - 0.05 * run - bob, 0];
-  const lean = 0.03 + 0.05 * amp + 0.22 * run;
-  const pelvisYaw = WALK_FACE + swing * 0.1 * amp;
+  // Centre of gravity: over the planted foot side to side; lowest just after each landing, highest at push-off.
+  const step = (((phase * 2) % 1) + 1) % 1;
+  const bob = (0.014 + 0.03 * run) * go;
+  const hips = [
+    -Math.cos(Math.PI * 2 * (phase - sf / 2)) * 0.022 * (1 - 0.6 * run) * go,
+    0.885 - 0.05 * run - 0.012 * go - Math.cos(Math.PI * 2 * (step - 0.1)) * bob,
+    0,
+  ];
+  // Twist: the pelvis turns with the forward leg, the chest the other way; arms opposite the legs.
+  const s = Math.cos(Math.PI * 2 * phase) * go; // +1 left leg forward
+  const pelvisYaw = WALK_FACE + s * (0.1 + 0.08 * run);
+  const chestYaw = WALK_FACE - s * (0.12 + 0.1 * run);
+  const lean = 0.03 + 0.05 * go + 0.2 * run;
   const t = torso(pelvisYaw, lean);
-  const arm = (side, s) => [hips[0] + side * 0.21, 0.82 + 0.17 * run + Math.abs(s) * 0.03, -s * (0.12 + 0.22 * run) * amp];
-  const right = arm(1, swing); // the right arm swings with the left leg
-  const left = carry ? [-0.27, 0.8 - bob * 0.5, 0.03 * swing * amp] : arm(-1, -swing);
+  const side = Math.max(-0.22, Math.min(0.22, turn * sp * 0.06)); // lean into turns (turn > 0 = left = -X)
+  t.up = norm([t.up[0] - side, t.up[1], t.up[2]]);
+  // Free arm: swings in an arc (rises at both ends, more in front); running bends the elbow and pumps harder.
+  const arm = (sgn, sw) => {
+    const k = Math.sign(sw) * Math.abs(sw) ** 0.8;
+    return [
+      hips[0] + sgn * (0.21 - Math.max(0, k) * 0.06 * run),
+      0.82 + 0.12 * run + k * k * (k > 0 ? 0.06 + 0.16 * run : 0.03),
+      -k * (0.15 + 0.17 * run),
+    ];
+  };
+  const left = arm(-1, -s);
+  const right = carry ? [CARRY_WRIST[0] + hips[0] * 0.5, CARRY_WRIST[1] - bob * 0.5, 0.025 * s] : arm(1, s);
+  const foot = (pitch, k) => ({ toe: norm([k ? 0.08 : -0.08, Math.sin(pitch), -Math.cos(pitch)]), sole: norm([0, Math.cos(pitch), Math.sin(pitch)]) });
+  const feet = legs.map(({ pitch }, k) => foot(pitch, k));
   return {
     root: [0, 0],
     hips,
     ...t,
     bend: 0.04 + 0.12 * run,
-    twist: -swing * 0.2 * amp,
+    twist: chestYaw - pelvisYaw,
     headPitch: 0.1 - lean * 0.5,
-    headYaw: swing * 0.08 * amp,
+    headYaw: s * 0.06,
     hands: [left, right],
-    elbows: [norm([-0.4, -0.1 - 0.4 * run, 1]), norm([0.4, -0.1 - 0.4 * run, 1])],
-    ankles: legs.map(({ f, lift }, k) => [hips[0] * 0.3 + (k ? 0.1 : -0.1), ANK + lift, -f]),
+    elbows: [norm([-0.35, -0.1 - 0.5 * run, 1]), carry ? norm([0.6, 0, 0.6]) : norm([0.35, -0.1 - 0.5 * run, 1])],
+    ankles: legs.map(({ f, y }, k) => [hips[0] * 0.3 + (k ? 0.1 : -0.1), ANK + y, -f]),
     knees: [norm([-0.12, 0, -1]), norm([0.12, 0, -1])],
-    toes: legs.map(({ lift }, k) => norm([k ? 0.08 : -0.08, -lift * 2.5, -1])),
-    soles: legs.map(({ lift }) => norm([0, 1, -lift * 2.5])),
-    board: carry ? carryBoard(left) : null,
-    grip: carry ? { hand: 0, local: EDGE_GRIP, w: 1 } : null,
+    toes: feet.map((f) => f.toe),
+    soles: feet.map((f) => f.sole),
+    board: carry ? carryBoard(right) : null,
+    grip: carry ? { hand: 1, local: EDGE_GRIP, w: 1 } : null,
   };
 }
 const idle = (x, z, carry = false) => shift(walkPose(0, 0, carry), x, z);
@@ -588,93 +633,109 @@ export function bailTrack(kind, severity) {
   return sideFall();
 }
 
-// --- Stepping off: back foot to the ground on the toe side, front foot onto the tail, press it so the board
-// stands up, catch the nose with the left hand, lift it into the carry. Board starts flat under the rider.
+// --- Get off: the front foot steps down on the heel side, the back foot stamps the tail so the nose pops up beside
+// you, the right hand catches it and swings it down to the side (deck vertical). About 0.6 s. Board starts flat under
+// the rider; you end up standing on the heel side holding it.
 export function dismountTrack() {
-  const g0 = { hand: 0, local: NOSE_GRIP, w: 0 };
+  const g0 = { hand: 1, local: NOSE_GRIP, w: 0 };
   const d0 = P(STANCE, { board: FLAT(), grip: g0 });
-  const d1 = P(d0, { hips: [0.03, 0.84, 0.03], ...torso(-0.45, 0.05), twist: -0.15, headYaw: -0.9, ankles: [d0.ankles[0], at(0.16, 0.33, 0.24)], toes: [d0.toes[0], norm(yd(-0.2))] });
-  const d2 = P(d1, {
-    root: [0.1, 0],
-    hips: [0.17, 0.83, 0.02],
-    ...torso(-0.85, 0.06),
+  const d1 = P(d0, {
+    root: [-0.08, 0],
+    hips: [-0.1, 0.84, 0.0],
+    ...torso(-0.8, 0.05),
     twist: -0.1,
     headYaw: -0.6,
-    ankles: [d0.ankles[0], at(0.34, ANK, 0.14)],
-    knees: [d0.knees[0], norm([0.6, 0, -1])],
-    toes: [d0.toes[0], norm(yd(-1.0))],
-  });
-  const d3 = P(d2, {
-    root: [0.22, 0.05],
-    hips: [0.27, 0.83, 0.08],
-    ...torso(-1.25, 0.08),
-    twist: 0,
-    headYaw: -0.25,
-    headPitch: 0.3,
-    ankles: [at(0.12, 0.34, 0.12), d2.ankles[1]],
-    knees: [norm([0.2, 0, -1]), d2.knees[1]],
-    toes: [norm(yd(-1.6)), d2.toes[1]],
+    ankles: [at(-0.24, 0.3, -0.16), d0.ankles[1]],
+    knees: [norm([0.3, 0, -1]), d0.knees[1]],
+    toes: [norm(yd(-1.3)), d0.toes[1]],
   });
   const flat = FLAT();
-  const d4 = P(d3, {
-    hips: [0.28, 0.8, 0.12],
-    ...torso(WALK_FACE, 0.12),
-    headPitch: 0.45,
-    headYaw: 0,
-    ankles: [boardPt(flat, TAIL_FOOT), d2.ankles[1]],
-    toes: [norm([0.15, 0, -1]), d2.toes[1]],
-    grip: { ...g0, w: 0 },
+  const d2 = P(d1, {
+    root: [-0.22, 0.03],
+    hips: [-0.25, 0.82, 0.04],
+    ...torso(-1.3, 0.1),
+    twist: 0,
+    headYaw: 0.2,
+    headPitch: 0.3,
+    ankles: [at(-0.4, ANK, -0.05), boardPt(flat, TAIL_FOOT)],
+    knees: [norm([-0.1, 0, -1]), norm([0.4, 0, -1])],
+    toes: [norm(yd(-1.6)), norm([0.2, 0, -1])],
   });
   const up = tailPress(1.28);
-  const tailFoot = boardPt(up, TAIL_FOOT);
-  const d5 = P(d4, {
-    root: [0.28, 0.1],
-    hips: [0.3, 0.74, 0.12],
-    ...torso(WALK_FACE, 0.28),
-    bend: 0.35,
-    headPitch: 0.4,
-    hands: [at(0.08, 0.7, 0.12), d4.hands[1]],
-    ankles: [[tailFoot[0] + 0.02, Math.max(ANK, tailFoot[1]), tailFoot[2] - 0.03], d4.ankles[1]],
-    toes: [norm([0.15, -0.6, -1]), d4.toes[1]],
+  const tail = boardPt(up, TAIL_FOOT);
+  const d3 = P(d2, {
+    root: [-0.28, 0.06],
+    hips: [-0.28, 0.76, 0.08],
+    ...torso(WALK_FACE, 0.25),
+    bend: 0.3,
+    headPitch: 0.35,
+    headYaw: 0.3,
+    hands: [at(-0.5, 0.82, 0.0), at(-0.02, 0.75, 0.14)],
+    ankles: [d2.ankles[0], [tail[0] - 0.02, Math.max(ANK, tail[1]), tail[2] - 0.03]],
+    toes: [d2.toes[0], norm([0.15, -0.6, -1])],
     board: up,
-    grip: { ...g0, w: 0.75 },
+    grip: { ...g0, w: 0.85 },
   });
-  const d6 = P(d5, { grip: { ...g0, w: 1 } });
-  const end = idle(0.3, 0.1, true);
-  const mid = lerpPose(d6, end, 0.55);
-  const d7 = { ...mid, board: { p: lerp3(up.p, end.board.p, 0.6), q: lerpPose(up, end.board, 0.6).q }, grip: { hand: 0, local: lerp3(NOSE_GRIP, EDGE_GRIP, 0.6), w: 1 } };
+  const d4 = P(d3, { grip: { ...g0, w: 1 } });
+  const E = [-0.3, 0.05];
+  const end = idle(E[0], E[1], true);
   const keys = [
     [0, d0],
-    [0.13, d1, 'out'],
-    [0.26, d2, 'in'],
-    [0.38, d3, 'out'],
-    [0.48, d4, 'in'],
-    [0.64, d5, 'in'],
-    [0.7, d6],
-    [0.86, d7],
-    [1.02, end],
+    [0.1, d1, 'out'],
+    [0.22, d2, 'in'],
+    [0.34, d3, 'in'],
+    [0.39, d4],
+    [0.6, end],
   ];
-  return { keys, dur: 1.02, blendIn: 0.14 };
+  return { keys, dur: 0.6, blendIn: 0.1 };
 }
 
-// --- Getting off and leaving the board where it is: back foot to the ground on the toe side, then the front foot,
-// turning to face the way you were going. The board is loose in the world (not part of the pose).
-export function stepOffTrack() {
-  const ks = dismountTrack().keys.slice(0, 3).map(([t, p, e]) => [t, { ...p, board: null, grip: null }, e]);
-  const d2 = ks[2][1];
-  const d3 = P(d2, {
-    root: [0.2, 0.03],
-    hips: [0.26, 0.84, 0.04],
-    ...torso(-1.2, 0.05),
-    twist: 0,
-    headYaw: -0.2,
-    headPitch: 0.15,
-    ankles: [at(0.16, 0.26, 0.0), d2.ankles[1]],
-    knees: [norm([0.3, 0, -1]), d2.knees[1]],
-    toes: [norm(yd(-1.4)), d2.toes[1]],
-  });
-  ks.push([0.4, d3, 'out'], [0.6, idle(0.3, 0.06), 'in']);
-  return { keys: ks, dur: 0.6, blendIn: 0.12 };
+// --- Picking the board up off the ground (walked within ~1 m of it after a bail): step to it, squat, grab the near
+// edge with the right hand, stand up with it at the side. start: the walk pose now; b: the board in rider space
+// { x, y, z, yaw } (yaw relative to the rider, nose = -Z at 0).
+export function pickupTrack(start, b) {
+  // The board looks the same both ways round: turn it so its local -X edge is the one nearest the rider.
+  const R = [b.x - 0.2, b.z + 0.24]; // stand here: board under the right shoulder, a little ahead
+  let yaw = b.yaw;
+  const toRider = [R[0] - b.x, R[1] - b.z];
+  const lx = Math.cos(yaw) * toRider[0] - Math.sin(yaw) * toRider[1]; // rider direction in board-local X
+  if (lx > 0) yaw += Math.PI;
+  const board0 = { p: [b.x, b.y, b.z], q: qAxis([0, 1, 0], yaw) };
+  const g = { hand: 1, local: [-0.14, 0.22, 0], w: 0 };
+  const k0 = { ...start, board: board0, grip: g };
+  const hc = [R[0], 0.47, R[1] + 0.1];
+  const fc = frame(tiltUp(WALK_FACE, 0.95), tiltFront(WALK_FACE, 0.95));
+  const k1 = {
+    ...k0,
+    root: R,
+    hips: hc,
+    up: fc.U,
+    front: fc.F,
+    bend: 0.45,
+    twist: 0.1,
+    headPitch: 0.2,
+    headYaw: 0.2,
+    hands: [at(R[0] - 0.14, 0.46, R[1] - 0.18), start.hands[1]],
+    elbows: [norm([-0.6, 0, 1]), norm([0.5, 0.3, 0.6])],
+    ankles: [at(R[0] - 0.13, ANK, R[1] + 0.02), at(R[0] + 0.13, ANK, R[1] + 0.12)],
+    knees: [norm([-0.3, 0, -1]), norm([0.3, 0, -1])],
+    toes: [norm([-0.15, 0, -1]), norm([0.15, 0, -1])],
+    soles: [UP, UP],
+    grip: { ...g, w: 1 },
+  };
+  const end = idle(R[0], R[1], true);
+  const k2 = {
+    ...lerpPose(k1, end, 0.5),
+    board: { p: lerp3(board0.p, end.board.p, 0.5), q: lerpPose(board0, end.board, 0.5).q },
+    grip: { hand: 1, local: lerp3(g.local, EDGE_GRIP, 0.5), w: 1 },
+  };
+  const keys = [
+    [0, k0],
+    [0.26, k1, 'out'],
+    [0.42, k2, 'in'],
+    [0.6, end, 'out'],
+  ];
+  return { keys, dur: 0.6, blendIn: 0 };
 }
 
 // --- Dropping back in. start: the walk pose at this moment (at the origin). carry: drop the board from the hand
@@ -684,10 +745,10 @@ export const MOUNT_GAP = 0.55;
 export function mountTrack(start, carry) {
   const B = -MOUNT_GAP;
   const board0 = FLAT(B);
-  const g = { hand: 0, local: EDGE_GRIP, w: carry ? 1 : 0 };
+  const g = { hand: 1, local: EDGE_GRIP, w: carry ? 1 : 0 };
   const m0 = { ...start, board: start.board ?? board0, grip: start.grip ?? { ...g, w: 0 } };
   const lower = {
-    p: [-0.17, 0.26, -0.32],
+    p: [0.17, 0.26, -0.32],
     q: lerpPose({ q: CARRY_Q }, { q: [0, 0, 0, 1] }, 0.45).q,
   };
   const m1 = P(m0, {
@@ -695,14 +756,14 @@ export function mountTrack(start, carry) {
     ...torso(WALK_FACE, 0.3),
     bend: 0.25,
     headPitch: 0.45,
-    hands: [m0.hands[0], at(0.22, 0.8, -0.05)],
+    hands: [at(-0.22, 0.8, -0.05), m0.hands[1]],
     ankles: [at(-0.1, ANK, -0.22), at(0.1, ANK, 0.12)],
     toes: [norm([-0.08, 0, -1]), norm([0.08, 0, -1])],
     soles: [UP, UP],
     board: lower,
     grip: { ...g, w: 1 },
   });
-  const m2 = P(m1, { board: { p: [0, 0.05, B], q: [0, 0, 0, 1] }, grip: { ...g, w: 0 }, hands: [at(-0.12, 0.5, -0.3), m1.hands[1]] });
+  const m2 = P(m1, { board: { p: [0, 0.05, B], q: [0, 0, 0, 1] }, grip: { ...g, w: 0 }, hands: [m1.hands[0], at(0.12, 0.5, -0.3)] });
   const m3 = P(m2, {
     root: [0, -0.1],
     hips: [0, 0.82, -0.2],

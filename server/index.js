@@ -45,6 +45,9 @@ const broadcastStatus = () =>
   io.emit('status', { controllers: roomSize('controllers'), displays: roomSize('displays') });
 
 let config = null; // last phone config from a display
+// Only one laptop page speaks for the game to the phone: the most recently opened one. With two tabs open (say an old
+// one still on the menu, or playing), both would send board state and the phone would flip between them.
+let activeDisplay = null;
 
 const TRICK_TYPES = new Set(['kickflip', 'varial', 'tre', 'shove', 'fs180', 'bs180']);
 const num = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : 0);
@@ -54,6 +57,7 @@ io.on('connection', (socket) => {
     if (role !== 'display' && role !== 'controller') return;
     socket.data.role = role;
     socket.join(role + 's');
+    if (role === 'display') activeDisplay = socket.id;
     console.log(`[socket] ${role} joined (${socket.handshake.address})`);
     if (role === 'controller' && config) socket.emit('config', config);
     broadcastStatus();
@@ -86,7 +90,7 @@ io.on('connection', (socket) => {
 
   // Deck rotation from the display, mirrored by the phone's 3D board.
   socket.on('board', (d) => {
-    if (socket.data.role !== 'display' || !d) return;
+    if (socket.data.role !== 'display' || !d || socket.id !== activeDisplay) return;
     io.to('controllers').volatile.emit('board', {
       roll: num(d.roll, -20, 20),
       pitch: num(d.pitch, -3, 3),
@@ -94,7 +98,7 @@ io.on('connection', (socket) => {
       spin: num(d.spin, -20, 20),
       lift: num(d.lift, -1, 1),
       height: num(d.height, 0, 2),
-      mode: ['ride', 'walk', 'find', 'near', 'off'].includes(d.mode) ? d.mode : 'ride',
+      mode: ['ride', 'carry', 'find', 'off'].includes(d.mode) ? d.mode : 'ride',
     });
   });
 
@@ -109,6 +113,7 @@ io.on('connection', (socket) => {
   socket.on('rtt', (ack) => typeof ack === 'function' && ack());
 
   socket.on('disconnect', () => {
+    if (socket.id === activeDisplay) activeDisplay = [...(io.sockets.adapter.rooms.get('displays') ?? [])].pop() ?? null;
     if (socket.data.role) console.log(`[socket] ${socket.data.role} left`);
     broadcastStatus();
   });
