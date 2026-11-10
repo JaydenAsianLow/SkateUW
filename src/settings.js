@@ -14,6 +14,7 @@ const DEFAULTS = {
   returnKey: 'Space', // teleport back to the spawn point
   setSpawnKey: 'KeyP', // make the current spot the spawn point
   spawn: null, // { x, y, z, heading } or null for the level's default spawn
+  character: 'me', // 'me' (Mixamo body restyled, motion-capture run + skate) | 'classic' (the original skater)
 };
 
 // Keys the fixed keyboard controls already use (Display.jsx keyMap). Spawn keys can't take these.
@@ -33,6 +34,7 @@ try {
 }
 settings.airtime = Math.min(AIRTIME_MAX, Math.max(AIRTIME_MIN, Number(settings.airtime) || DEFAULTS.airtime));
 settings.sensitivity = clampSensitivity(settings.sensitivity);
+if (settings.character !== 'classic') settings.character = 'me';
 delete settings.leanBack; // old option (lean back is always a manual now)
 
 const listeners = new Set();

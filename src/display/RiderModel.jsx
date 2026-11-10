@@ -1,10 +1,11 @@
-import { Component, Suspense, useEffect, useMemo, useRef } from 'react';
+import { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
 import { finish, walkPose, walkRate } from './choreo.js';
 import { MOCAP_BONES, loadMocap, locoClips, mocap, sampleClip } from './mocap.js';
+import { onSettings, settings } from '../settings.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
 
@@ -26,7 +27,14 @@ import Skater from './Skater.jsx';
 // On foot, idle / walk / jog / run and the pick-up come from Mixamo motion capture (mocap.js) once the clips are in
 // public/models/skater/anims/; until then the procedural walk (choreo.js) stands in.
 
-const MODEL_URL = '/models/skater/skater.glb';
+// Two characters (Settings > Character): 'me' = the Mixamo body restyled in Blender (art/scripts/13_me_body.py),
+// animated by the Mixamo run and skating clips; 'classic' = the original skater, posed entirely in code.
+const MODELS = { me: '/models/skater/me.glb', classic: '/models/skater/skater.glb' };
+const HIP_HEIGHT = 0.9; // every character is scaled to this hip height, which the choreography is built around
+const normName = (n) => n.replace(/^mixamorig\d*:?/, '');
+// Bones the poses set directly; every other bone (fingers, end joints) keeps its rest pose relative to its parent.
+const POSED = new Set(['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head']);
+for (const s of ['Left', 'Right']) for (const b of ['Shoulder', 'Arm', 'ForeArm', 'Hand', 'UpLeg', 'Leg', 'Foot', 'ToeBase']) POSED.add(s + b);
 const USE_OLD = new URLSearchParams(window.location.search).has('oldskater');
 
 const FRONT_Z = -0.2; // ankle positions on the deck: front foot over the front bolts, back foot on the tail
@@ -62,12 +70,19 @@ for (const s of ['Left', 'Right']) {
 function buildRig(scene) {
   if (scene.userData.rig) return scene.userData.rig;
   scene.updateMatrixWorld(true);
+  // Scale to the shared hip height (the Mixamo body is taller than the classic skater).
+  let hipsBone = null;
+  scene.traverse((o) => o.isBone && normName(o.name) === 'Hips' && !hipsBone && (hipsBone = o));
+  const hipY = hipsBone ? hipsBone.getWorldPosition(new Vector3()).y : HIP_HEIGHT;
+  const sc = hipY > 0.1 ? HIP_HEIGHT / hipY : 1;
+  // Rider space = model space turned +90° and scaled (the scene object carries the same scale for rendering).
   const rootInv = new Matrix4().copy(scene.matrixWorld).invert();
+  scene.scale.multiplyScalar(sc);
   const q0 = new Quaternion().setFromAxisAngle(UP, Math.PI / 2);
-  const m0 = new Matrix4().makeRotationFromQuaternion(q0);
+  const m0 = new Matrix4().makeRotationFromQuaternion(q0).multiply(new Matrix4().makeScale(sc, sc, sc));
   const bones = {};
   scene.traverse((o) => {
-    if (o.isBone) bones[o.name] = o;
+    if (o.isBone) bones[normName(o.name)] = o;
     if (o.isMesh) {
       o.castShadow = true;
       o.receiveShadow = true;
@@ -81,7 +96,7 @@ function buildRig(scene) {
     const p = new Vector3();
     const q = new Quaternion();
     m.multiplyMatrices(m0, m.multiplyMatrices(rootInv, b.matrixWorld)).decompose(p, q, scale);
-    rest[name] = { p, q, qInv: q.clone().invert(), parent: b.parent?.isBone ? b.parent.name : null };
+    rest[name] = { p, q, qInv: q.clone().invert(), parent: b.parent?.isBone ? normName(b.parent.name) : null };
   }
   // Primary (bone direction) and secondary (facing) axes at rest, as a basis to rotate from.
   const fwd = new Vector3(1, 0, 0); // the model's forward, in rider space
@@ -101,9 +116,12 @@ function buildRig(scene) {
   const pq = new Quaternion();
   parentM.decompose(pp, pq, scale);
   const len = (a, b) => rest[a].p.distanceTo(rest[b].p);
+  const extra = [];
+  scene.traverse((o) => o.isBone && !POSED.has(normName(o.name)) && rest[normName(o.name)]?.parent && extra.push(normName(o.name)));
   const rig = {
     bones,
     rest,
+    extra,
     hipsParentInv: parentM.clone().invert(),
     hipsParentQInv: pq.invert(),
     thigh: len('LeftUpLeg', 'LeftLeg'),
@@ -142,8 +160,9 @@ function solveKnee(hip, ankle, pole, l1, l2, out) {
   return out.copy(hip).addScaledVector(_d, along).addScaledVector(_pp, h);
 }
 
-function RiderModel({ boardRef }) {
-  const { scene } = useGLTF(MODEL_URL);
+function RiderModel({ boardRef, character }) {
+  const { scene } = useGLTF(MODELS[character]);
+  const isMe = character === 'me';
   const rig = useMemo(() => buildRig(scene), [scene]);
   const root = useRef(null);
   const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE, locoPhase: 0, idleT: 0, groundOff: 0 });
@@ -365,6 +384,55 @@ function RiderModel({ boardRef }) {
         for (const side of ['Left', 'Right']) follow(side + 'Hand');
       }
     }
+    // 'me' riding: the skating clip, board foot pinned to the deck (front bolts), the rest of the body around it.
+    // Steering leans the upper body (and a little of the hips) into the turn, about the travel axis.
+    function solveSkate(c) {
+      applySample(sampleClip(c, s.skateT, true, w.sampA));
+      const lean = -s.lean * 0.3;
+      if (lean) {
+        w.qL.setFromAxisAngle(w.v.set(0, 0, 1), lean);
+        for (const n of MOCAP_BONES) if (rest[n] && n !== 'Hips' && !/(UpLeg|Leg|Foot|ToeBase)$/.test(n)) Q[n].premultiply(w.qL);
+        w.qL.setFromAxisAngle(w.v.set(0, 0, 1), lean * 0.4);
+        Q.Hips.premultiply(w.qL);
+      }
+      const bf = c.boardFoot ? 'Right' : 'Left';
+      for (const n of ['UpLeg', 'Leg', 'Foot']) fk(bf + n);
+      w.v.set(0, DECK_TOP + rig.ankleH, FRONT_Z).sub(P[bf + 'Foot']);
+      P.Hips.add(w.v);
+      for (const side of ['Left', 'Right']) follow(side + 'Hand');
+    }
+    // 'me' on foot: the run clip while moving (0.8-1.2x, stride matched to speed within that), a still frame of it
+    // when stopped, blended by speed.
+    function solveRunIdle(fp, dt) {
+      const c = mocap.clips.run;
+      const v = Math.abs(fp.loco.v);
+      const k = smooth(Math.min(1, Math.max(0, (v - 0.1) / 0.5)));
+      applySample(sampleClip(c, c.idleT, true, w.sampB));
+      if (k > 0) {
+        s.runT = (s.runT ?? c.idleT) + Math.min(1.2, Math.max(0.8, v / c.speed)) * dt;
+        for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
+        w.hipsA.copy(P.Hips);
+        applySample(sampleClip(c, s.runT, true, w.sampA));
+        for (const n of MOCAP_BONES) {
+          if (!rest[n]) continue;
+          w.tmpQ.copy(Q[n]);
+          Q[n].copy(w.QA[n]).slerp(w.tmpQ, k);
+        }
+        P.Hips.lerpVectors(w.hipsA, w.v.copy(P.Hips), k);
+      } else s.runT = c.idleT;
+      groundFeet(4, dt);
+      const lean = Math.max(-0.22, Math.min(0.22, (fp.loco.turn ?? 0) * v * 0.05));
+      if (lean) {
+        w.qL.setFromAxisAngle(w.v.set(0, 0, 1), lean);
+        for (const n of MOCAP_BONES) if (rest[n]) Q[n].premultiply(w.qL);
+        const y = P.Hips.y;
+        P.Hips.y = 0;
+        P.Hips.add(w.v.set(0, y, 0).applyQuaternion(w.qL));
+      }
+      if (fp.loco.carry) holdBoard(fp);
+      for (const side of ['Left', 'Right']) follow(side + 'Hand');
+    }
+
     // A one-shot clip (the pick-up), timed by the choreography, right hand reaching for the board.
     function solveClip(fp, c) {
       applySample(sampleClip(c, fp.mocap.t * fp.mocap.rate, false, w.sampA));
@@ -523,13 +591,32 @@ function RiderModel({ boardRef }) {
       aim(side + 'ToeBase', w.toe, UP);
     }
 
+    // --- 'me' on the board: the skating clip, with the board foot planted on the deck and the steer lean on top.
+    // Tricks, air and manuals blend back to the coded pose above (it lifts the feet for flips and tucks in the air).
+    const skate = isMe && mocap.clips.skate;
+    if (skate && wOff < 1) {
+      const trick = a.air || a.flip >= 0 || popT >= 0 || m > 0.05 ? 1 : 0;
+      s.trickW = damp(s.trickW ?? 0, trick, trick ? 14 : 5, dt);
+      if (s.trickW < 0.999) {
+        for (const n of Object.keys(rest)) w.QA[n].copy(Q[n]);
+        w.hipsA.copy(P.Hips);
+        s.skateT = (s.skateT ?? 0) + dt;
+        solveSkate(skate);
+        if (s.trickW > 0.001) {
+          for (const n of Object.keys(rest)) Q[n].slerp(w.QA[n], s.trickW);
+          P.Hips.lerp(w.hipsA, s.trickW);
+        }
+      }
+    }
+
     // --- Off the board: solve the choreography's joint targets and blend them over the skate pose.
     if (wOff > 0) {
       for (const n of Object.keys(rest)) w.Qs[n].copy(Q[n]);
       w.Ps.copy(P.Hips);
       const loco = off.loco && mocap.status === 'ready' ? locoClips() : [];
       const clip = off.mocap?.clip && mocap.clips[off.mocap.clip];
-      if (loco.length && loco[0].speed > 0) solveMixed(off, loco, dt);
+      if (isMe && off.loco && mocap.clips.run) solveRunIdle(off, dt);
+      else if (loco.length && loco[0].speed > 0) solveMixed(off, loco, dt);
       else if (loco.length) solveLoco(off, loco, dt);
       else if (clip) solveClip(off, clip);
       else solveOff(off);
@@ -582,6 +669,9 @@ function RiderModel({ boardRef }) {
       g.quaternion.copy(w.cq);
     }
 
+    // Fingers and end joints keep their rest pose relative to their parent.
+    for (const n of rig.extra) follow(n);
+
     // --- Write the pose into the skeleton (local rotations; the hips also get their position).
     for (const name of Object.keys(rest)) {
       const b = bones[name];
@@ -617,14 +707,16 @@ class Fallback extends Component {
 }
 
 export default function Rider({ boardRef }) {
+  const [character, setCharacter] = useState(settings.character);
+  useEffect(() => onSettings((c) => setCharacter(c.character)), []);
   if (USE_OLD) return <Skater />;
   return (
     <Fallback>
       <Suspense fallback={<Skater />}>
-        <RiderModel boardRef={boardRef} />
+        <RiderModel key={character} boardRef={boardRef} character={character} />
       </Suspense>
     </Fallback>
   );
 }
 
-if (!USE_OLD) useGLTF.preload(MODEL_URL);
+if (!USE_OLD) useGLTF.preload(MODELS[settings.character] ?? MODELS.me);

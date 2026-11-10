@@ -12,6 +12,7 @@
 
 import { AnimationMixer, LoopOnce, Quaternion, Vector3 } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const DIR = '/models/skater/anims/';
 // Expected file names (Mixamo names the download after the animation). The first one found is used.
@@ -21,6 +22,7 @@ export const CLIP_FILES = {
   jog: ['Jogging.fbx'],
   run: ['Running.fbx'],
   pickup: ['Pick Up.fbx', 'Picking Up.fbx', 'Pickup.fbx', 'Pick up.fbx'],
+  skate: ['Skateboarding.glb', 'Skateboarding.fbx'], // riding / pushing loop (art/scripts/14_skate_anim.py, no mesh)
 };
 const FPS = 30;
 
@@ -159,7 +161,23 @@ function analyse(c) {
   let grab = 0;
   let low = Infinity;
   for (let i = 0; i < n; i++) if (rhand[i * 3 + 1] < low) (low = rhand[i * 3 + 1]), (grab = i * dt);
-  return { ...c, speed, cycles, cycleDur: dur / cycles, land0: lands[0] ?? 0, stride: speed * (dur / cycles), grab };
+  // The foot that stays on the board (skating clip): the one whose height changes least.
+  const std = (k) => {
+    let m = 0;
+    for (let i = 0; i < n; i++) m += y(k, i) / n;
+    let v2 = 0;
+    for (let i = 0; i < n; i++) v2 += (y(k, i) - m) ** 2 / n;
+    return Math.sqrt(v2);
+  };
+  const boardFoot = std(0) <= std(1) ? 0 : 1;
+  // A calm frame to stand still on (feet closest together, both low): the idle pose for now.
+  let idleT = 0;
+  let best = Infinity;
+  for (let i = 0; i < n; i++) {
+    const sep = Math.abs(fwd(0, i) - fwd(1, i)) + Math.abs(y(0, i) - y(1, i)) * 2 + (Math.min(y(0, i), y(1, i)) - minY) * 2;
+    if (sep < best) (best = sep), (idleT = i * dt);
+  }
+  return { ...c, speed, cycles, cycleDur: dur / cycles, land0: lands[0] ?? 0, stride: speed * (dur / cycles), grab, boardFoot, idleT };
 }
 
 // Read one frame (looping or clamped): fills prim/sec Vector3 maps and the hips position.
@@ -211,9 +229,18 @@ export async function loadMocap(hipHeight) {
           if (!res.ok) continue;
           const buf = await res.arrayBuffer();
           const head = new TextDecoder().decode(new Uint8Array(buf, 0, Math.min(20, buf.byteLength)));
-          if (!head.startsWith('Kaydara FBX Binary') && !head.startsWith('; FBX')) continue; // dev server's 404 page
-          const group = loader.parse(buf, DIR);
-          const clip = group.animations?.[0];
+          const glb = head.startsWith('glTF');
+          if (!glb && !head.startsWith('Kaydara FBX Binary') && !head.startsWith('; FBX')) continue; // dev server's 404 page
+          let group;
+          let clip;
+          if (glb) {
+            const g = await new GLTFLoader().parseAsync(buf, DIR);
+            group = g.scene;
+            clip = g.animations?.[0];
+          } else {
+            group = loader.parse(buf, DIR);
+            clip = group.animations?.[0];
+          }
           if (!clip) throw new Error(`${name} has no animation`);
           mocap.clips[key] = { ...bakeClip(group, clip, hipHeight), file: name };
           return;
