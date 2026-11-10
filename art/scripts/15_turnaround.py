@@ -1,6 +1,6 @@
 # Turnaround sheet: the character at rest from 5 angles (front, 3/4, side, 3/4 back, back)
 # side by side in one orthographic render, 768 px per view, into art/renders/.
-# Run: blender -b --python art/scripts/15_turnaround.py -- <file.glb> <out_name>
+# Run: blender -b --python art/scripts/15_turnaround.py -- <file.glb|file.fbx> <out_name>
 import bpy, sys, math, os
 from mathutils import Vector
 
@@ -21,7 +21,10 @@ lo = Vector((1e9,) * 3)
 hi = Vector((-1e9,) * 3)
 for i, (label, ang) in enumerate(VIEWS):
     before = set(scn.objects)
-    bpy.ops.import_scene.gltf(filepath=path)
+    if path.lower().endswith('.fbx'):
+        bpy.ops.import_scene.fbx(filepath=path)
+    else:
+        bpy.ops.import_scene.gltf(filepath=path)
     new = [o for o in scn.objects if o not in before]
     for o in new:
         if o.name.startswith('Icosphere'):  # glTF bone-display sphere
