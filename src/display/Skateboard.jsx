@@ -8,6 +8,7 @@ import { commands, settings, updateSettings } from '../settings.js';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
+import { mocap } from './mocap.js';
 import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, trackWeight, walkPose, walkRate } from './choreo.js';
 
 // Tuning
@@ -314,7 +315,10 @@ export default function Skateboard() {
     const dx = L.x - p.x;
     const dz = L.z - p.z;
     const b = { x: dx * c - dz * sn, y: Math.max(0, L.y - (p.y - HALF.y)), z: dx * sn + dz * c, yaw: wrapAngle(L.yaw - y) };
-    st.track = pickupTrack(walkPose(st.walkPhase, st.walkSpeed, false, st.turnVel ?? 0), b);
+    // With the mocap pick-up clip, follow its timing (sped up to about 1.3 s) so the hand closes when the clip's does.
+    const pc = mocap.clips.pickup;
+    st.pickRate = pc ? Math.max(1, pc.dur / 1.3) : 1;
+    st.track = pickupTrack(walkPose(st.walkPhase, st.walkSpeed, false, st.turnVel ?? 0), b, pc ? { dur: pc.dur / st.pickRate, grab: pc.grab / st.pickRate } : undefined);
     Object.assign(st, { mode: 'pickup', modeT: 0, offSpeed: 0, offDrag: 0, walkSpeed: 0, turnVel: 0, loose: null });
   };
   const startMount = (carry) => {
@@ -524,6 +528,8 @@ export default function Skateboard() {
         pose = finish(walkPose(st.walkPhase, st.walkSpeed, !st.loose, turn));
       }
       board.pose = pose && { w, state: st.mode, ...pose };
+      if (board.pose && st.mode === 'walk') board.pose.loco = { v: st.walkSpeed, turn, carry: !st.loose };
+      if (board.pose && st.mode === 'pickup') board.pose.mocap = { clip: 'pickup', t: st.modeT, rate: st.pickRate ?? 1 };
       resetBoardVisuals();
       placeBoard(pose?.board);
       showLoose(!!st.loose && !pose?.board);

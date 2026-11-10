@@ -692,8 +692,8 @@ export function dismountTrack() {
 
 // --- Picking the board up off the ground (walked within ~1 m of it after a bail): step to it, squat, grab the near
 // edge with the right hand, stand up with it at the side. start: the walk pose now; b: the board in rider space
-// { x, y, z, yaw } (yaw relative to the rider, nose = -Z at 0).
-export function pickupTrack(start, b) {
+// { x, y, z, yaw } (yaw relative to the rider, nose = -Z at 0). timing: { dur, grab } to follow a mocap pick-up clip.
+export function pickupTrack(start, b, timing = { dur: 0.6, grab: 0.26 }) {
   // The board looks the same both ways round: turn it so its local -X edge is the one nearest the rider.
   const R = [b.x - 0.2, b.z + 0.24]; // stand here: board under the right shoulder, a little ahead
   let yaw = b.yaw;
@@ -729,13 +729,15 @@ export function pickupTrack(start, b) {
     board: { p: lerp3(board0.p, end.board.p, 0.5), q: lerpPose(board0, end.board, 0.5).q },
     grip: { hand: 1, local: lerp3(g.local, EDGE_GRIP, 0.5), w: 1 },
   };
+  const { dur } = timing;
+  const grab = Math.min(dur * 0.8, Math.max(dur * 0.2, timing.grab));
   const keys = [
     [0, k0],
-    [0.26, k1, 'out'],
-    [0.42, k2, 'in'],
-    [0.6, end, 'out'],
+    [grab, k1, 'out'],
+    [grab + (dur - grab) * 0.45, k2, 'in'],
+    [dur, end, 'out'],
   ];
-  return { keys, dur: 0.6, blendIn: 0 };
+  return { keys, dur, blendIn: 0 };
 }
 
 // --- Dropping back in. start: the walk pose at this moment (at the origin). carry: drop the board from the hand

@@ -1,9 +1,10 @@
-import { Component, Suspense, useMemo, useRef } from 'react';
+import { Component, Suspense, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
 import { finish, walkPose } from './choreo.js';
+import { MOCAP_BONES, loadMocap, locoClips, mocap, sampleClip } from './mocap.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
 
@@ -22,6 +23,8 @@ import Skater from './Skater.jsx';
 // ?oldskater in the URL shows the old primitive skater instead.
 // While the board is in the right hand it is pinned to the RightHand bone (boardRef = the board's group), and every
 // change of state (riding, falling, walking, grabbing, getting on / off) crossfades over FADE seconds.
+// On foot, idle / walk / jog / run and the pick-up come from Mixamo motion capture (mocap.js) once the clips are in
+// public/models/skater/anims/; until then the procedural walk (choreo.js) stands in.
 
 const MODEL_URL = '/models/skater/skater.glb';
 const USE_OLD = new URLSearchParams(window.location.search).has('oldskater');
@@ -143,7 +146,10 @@ function RiderModel({ boardRef }) {
   const { scene } = useGLTF(MODEL_URL);
   const rig = useMemo(() => buildRig(scene), [scene]);
   const root = useRef(null);
-  const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE });
+  const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE, locoPhase: 0, idleT: 0, groundOff: 0 });
+  useEffect(() => {
+    loadMocap(rig.rest.Hips.p.y);
+  }, [rig]);
   const w = useMemo(() => {
     const Q = {};
     const P = {};
@@ -164,6 +170,9 @@ function RiderModel({ boardRef }) {
       // board in the right hand: hand -> board offset, and scratch
       offset: null, H: new Matrix4(), B: new Matrix4(), bp: new Vector3(), bq: new Quaternion(), bs: new Vector3(),
       cq: new Quaternion(), cp: new Vector3(),
+      // motion capture
+      sampA: { prim: {}, sec: {} }, sampB: { prim: {}, sec: {} },
+      QA: Object.fromEntries(Object.keys(rig.rest).map((n) => [n, new Quaternion()])), hipsA: new Vector3(), qL: new Quaternion(),
     };
   }, [rig]);
 
@@ -252,6 +261,88 @@ function RiderModel({ boardRef }) {
         fk(side + 'ToeBase');
         aim(side + 'ToeBase', toe, sole);
       }
+    }
+
+    // One arm by IK to a wrist target, elbow pointing along `pole` (also used to hold the board over mocap clips).
+    function solveArm(side, target, pole) {
+      fk(side + 'Shoulder');
+      fk(side + 'Arm');
+      const sh = P[side + 'Arm'];
+      solveKnee(sh, target, pole, rig.upper, rig.fore, w.knee);
+      w.sec.copy(pole).negate();
+      aim(side + 'Arm', w.prim.subVectors(w.knee, sh), w.sec);
+      fk(side + 'ForeArm');
+      aim(side + 'ForeArm', w.prim.subVectors(target, P[side + 'ForeArm']), w.sec);
+      fk(side + 'Hand');
+      follow(side + 'Hand');
+    }
+
+    // A baked mocap frame onto the skeleton: every retargeted bone aimed like the source's, hips from the clip.
+    function applySample(smp) {
+      for (const b of MOCAP_BONES) if (rest[b]?.basisT && smp.prim[b]) aim(b, smp.prim[b], smp.sec[b]);
+      P.Hips.copy(smp.hips);
+    }
+    // Keep the feet on the ground: the source's legs aren't the skater's length, so shift the hips so the lower
+    // ankle sits at ankle height (eased, so the run's flight phase still leaves the ground).
+    function groundFeet(rate, dt) {
+      for (const side of ['Left', 'Right']) for (const n of ['UpLeg', 'Leg', 'Foot']) fk(side + n);
+      const low = Math.min(P.LeftFoot.y, P.RightFoot.y);
+      s.groundOff = rate ? damp(s.groundOff, rig.ankleH - low, rate, dt) : rig.ankleH - low;
+      P.Hips.y += s.groundOff;
+    }
+    // Hold the board in the right hand over a clip: wrist where the choreography wants it, relative to the hips.
+    function holdBoard(fp) {
+      for (const n of ['Spine', 'Spine1', 'Spine2']) fk(n);
+      w.target.fromArray(fp.hands[1]).sub(w.v.fromArray(fp.hips)).add(P.Hips);
+      w.pole.fromArray(fp.elbows[1]).normalize();
+      solveArm('Right', w.target, w.pole);
+    }
+
+    // Walking / running from mocap: idle -> walk -> jog -> run blended by speed (two clips at a time), all on one
+    // step phase so they stay in step, advancing at speed / stride so the planted foot moves at ground speed.
+    function solveLoco(fp, list, dt) {
+      const v = Math.abs(fp.loco.v);
+      let a = list[0];
+      let b = list[0];
+      for (let i = 0; i < list.length; i++) if (v >= list[i].speed) (a = list[i]), (b = list[i + 1] ?? list[i]);
+      const t = b === a ? 0 : (v - a.speed) / (b.speed - a.speed);
+      const strideOf = (l) => (l.speed > 0 ? l.c.stride : (list.find((x) => x.speed > 0)?.c.stride ?? 1));
+      const stride = strideOf(a) + (strideOf(b) - strideOf(a)) * t;
+      s.locoPhase += (Math.sign(fp.loco.v || 1) * v * dt) / Math.max(0.1, stride);
+      s.idleT += dt;
+      const timeOf = (l) => (l.speed > 0 ? l.c.land0 + s.locoPhase * l.c.cycleDur : s.idleT);
+      applySample(sampleClip(a.c, timeOf(a), true, w.sampA));
+      if (t > 0) {
+        for (const n of MOCAP_BONES) if (rest[n]) w.QA[n].copy(Q[n]);
+        w.hipsA.copy(P.Hips);
+        applySample(sampleClip(b.c, timeOf(b), true, w.sampB));
+        for (const n of MOCAP_BONES) {
+          if (!rest[n]) continue;
+          w.tmpQ.copy(Q[n]);
+          Q[n].copy(w.QA[n]).slerp(w.tmpQ, t);
+        }
+        P.Hips.lerpVectors(w.hipsA, w.v.copy(P.Hips), t);
+      }
+      groundFeet(4, dt);
+      // Lean into turns: tip the whole body about the feet toward the inside of the turn.
+      const lean = Math.max(-0.22, Math.min(0.22, (fp.loco.turn ?? 0) * v * 0.05));
+      if (lean) {
+        w.qL.setFromAxisAngle(w.v.set(0, 0, 1), lean);
+        for (const n of MOCAP_BONES) if (rest[n]) Q[n].premultiply(w.qL);
+        const y = P.Hips.y;
+        P.Hips.y = 0;
+        w.v.set(0, y, 0).applyQuaternion(w.qL);
+        P.Hips.add(w.v);
+      }
+      if (fp.loco.carry) holdBoard(fp);
+      for (const side of ['Left', 'Right']) follow(side + 'Hand');
+    }
+    // A one-shot clip (the pick-up), timed by the choreography, right hand reaching for the board.
+    function solveClip(fp, c) {
+      applySample(sampleClip(c, fp.mocap.t * fp.mocap.rate, false, w.sampA));
+      groundFeet(0, 0);
+      holdBoard(fp);
+      follow('LeftHand');
     }
 
     // Hand -> board offset, once: pose the carry stance and see where the right hand is relative to the board.
@@ -408,7 +499,11 @@ function RiderModel({ boardRef }) {
     if (wOff > 0) {
       for (const n of Object.keys(rest)) w.Qs[n].copy(Q[n]);
       w.Ps.copy(P.Hips);
-      solveOff(off);
+      const loco = off.loco && mocap.status === 'ready' ? locoClips() : [];
+      const clip = off.mocap?.clip && mocap.clips[off.mocap.clip];
+      if (loco.length) solveLoco(off, loco, dt);
+      else if (clip) solveClip(off, clip);
+      else solveOff(off);
       if (wOff < 1) {
         for (const n of Object.keys(rest)) {
           w.tmpQ.copy(Q[n]);
