@@ -530,7 +530,17 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
           <canvas ref={canvasRef} className="deck-trail" />
         </div>
       )}
-      <button className="onoff-btn" onClick={getOnOff} disabled={mode === 'off' || mode === 'find'}>
+      {/* Fires on touch-down, not click: phones don't send a click for a tap while another finger is on the screen
+          (your thumb on the joystick), so a click-only button ignored Get on while running. */}
+      <button
+        className="onoff-btn"
+        onPointerDown={(e) => {
+          e.preventDefault();
+          getOnOff();
+        }}
+        onClick={(e) => e.detail === 0 && getOnOff() /* keyboard Enter / Space */}
+        disabled={mode === 'off' || mode === 'find'}
+      >
         {mode === 'ride' ? 'Get off' : mode === 'carry' ? 'Get on' : 'Go to board'}
       </button>
       <div className="deck-foot">
