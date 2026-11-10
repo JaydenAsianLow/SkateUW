@@ -9,7 +9,7 @@ import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
 import { mocap, runTopSpeed } from './mocap.js';
-import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, trackWeight, walkPose, walkRate } from './choreo.js';
+import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, walkPose, walkRate } from './choreo.js';
 
 // Tuning
 export const GRAVITY = 15; // m/s². A bit over real g so jumps feel snappy without floating.
@@ -48,6 +48,7 @@ const RUN_SPEED = 4.2; // m/s at full push (without a run clip; with one, its ow
 const stickSpeed = (m) => runTopSpeed(RUN_SPEED) * clamp01((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 2;
 const TURN_MAX = 6; // rad/s; the turn rate itself eases in/out so the body doesn't snap round
 const AUTO_GRAB = 1.0; // m: walking this close to a board on the ground picks it up
+const ON_THE_MOVE = 1.5; // m/s: faster than this, Get on is a running jump and Get off a hop into a run
 const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
 // Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
 // The meter: below MANUAL_IN (too far forward) the front wheels drop back down; MANUAL_IN..MANUAL_FALL is the
@@ -88,6 +89,8 @@ const POSE_TEST = import.meta.env.DEV ? new URLSearchParams(window.location.sear
 function poseTestTrack(kind, a) {
   if (kind === 'dismount') return dismountTrack();
   if (kind === 'mount') return mountTrack(walkPose(0.3, 1.2, true), true);
+  if (kind === 'runmount') return runMountTrack(walkPose(0, 5, true));
+  if (kind === 'hopoff') return runDismountTrack(4, a > 0);
   if (kind === 'pickup') return pickupTrack(walkPose(0.2, 1.2, false), { x: 0.45, y: 0, z: -0.75, yaw: 0.6 });
   return bailTrack(kind, a);
 }
@@ -295,6 +298,14 @@ export default function Skateboard() {
   // Get off: step off to the heel side, stamp the tail and catch the board in the right hand.
   const startDismount = (speed) => {
     const st = s.current;
+    if (speed > ON_THE_MOVE) {
+      // Hop off into a run: keep going, easing down to running pace over the hop if you were faster.
+      const run = runTopSpeed(RUN_SPEED);
+      const fakie = st.stance === 1;
+      st.stance = 0; // the hop starts from the fakie stance turned round, so nothing visibly flips
+      Object.assign(st, { mode: 'dismount', modeT: 0, track: runDismountTrack(Math.min(speed, run), fakie), offSpeed: speed, offDrag: speed > run ? Math.log(speed / run) / 0.36 : 0, pushLeft: 0, pushT: -1, manual: 0, manualT: 0 });
+      return;
+    }
     st.offSpeed = speed;
     if (st.stance === 1) {
       // Off the board you walk nose first: turn the body round (same look) and keep sliding the same way.
@@ -323,12 +334,14 @@ export default function Skateboard() {
   };
   const startMount = (carry) => {
     const st = s.current;
-    st.track = mountTrack(walkPose(st.walkPhase, st.walkSpeed, carry), carry);
+    const start = walkPose(st.walkPhase, st.walkSpeed, carry);
+    const running = carry && st.walkSpeed > ON_THE_MOVE;
+    st.track = running ? runMountTrack(start) : mountTrack(start, carry);
     st.mode = 'mount';
     st.modeT = 0;
     st.stance = 0;
-    st.offSpeed = Math.max(0, st.walkSpeed) * 0.9;
-    st.offDrag = 0.3;
+    st.offSpeed = Math.max(0, st.walkSpeed) * (running ? 1 : 0.9);
+    st.offDrag = running ? 0 : 0.3; // a running jump-on keeps all its speed
     st.walkSpeed = 0;
     st.loose = null;
   };
@@ -493,7 +506,7 @@ export default function Skateboard() {
             if (st.stance === 1) (st.heading += Math.PI), (st.stance = 0); // walk nose first (same look)
             Object.assign(st, { mode: 'walk', walkSpeed: 0, walkPhase: 0, offSpeed: 0, turnVel: 0 }); // walk to the board
           } else if (st.mode === 'dismount' || st.mode === 'pickup') {
-            Object.assign(st, { mode: 'walk', walkSpeed: Math.max(0, st.offSpeed), walkPhase: 0, offSpeed: 0, turnVel: 0 });
+            Object.assign(st, { mode: 'walk', walkSpeed: Math.min(runTopSpeed(RUN_SPEED), Math.max(0, st.offSpeed)), walkPhase: 0, offSpeed: 0, turnVel: 0 });
           } else {
             st.mode = 'ride';
           }

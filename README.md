@@ -51,7 +51,7 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
 | Revert | One finger draws a **half circle** (on the ground). You ride away fakie; revert again to go back |
 | Frontside 180 | Down, up, then the **left finger half-circles down while the right finger half-circles up** (one counter-clockwise half circle also works; clockwise = backside 180) |
 | Steer / brake | Tilt left / right; tilt the top edge toward you to brake |
-| Get off / on | Tap **Get off**: the skater steps off and catches the board in the right hand, and the phone shows a joystick (15% dead zone, squared response: a little push walks, the edge runs; directions are relative to the camera). Tap **Get on** to drop the board and step on; the phone switches back to the deck. After a fall the button reads **Go to board** until you walk to the board and pick it up |
+| Get off / on | Tap **Get off**: the skater steps off and catches the board in the right hand, and the phone shows a joystick (15% dead zone, squared response: a little push walks, the edge runs; directions are relative to the camera). Tap **Get on** to drop the board and step on; the phone switches back to the deck. Both work on the move: Get on while running is a running jump onto the board (keeps your speed), Get off while rolling is a hop off into a run. After a fall the button reads **Go to board** until you walk to the board and pick it up |
 | Respawn | Tap **Reset** on the phone (or the back-to-spawn key on the laptop, Space by default) |
 
 Land before a trick finishes rotating and you bail. Ollies pop about 0.3–0.6 m depending on how hard you swipe.

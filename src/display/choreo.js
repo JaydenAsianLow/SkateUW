@@ -740,6 +740,109 @@ export function pickupTrack(start, b, timing = { dur: 0.6, grab: 0.26 }) {
   return { keys, dur, blendIn: 0 };
 }
 
+// --- On the move. Turn a whole pose half round (riding fakie: the rider's stance faces the other way).
+function rotY180(p) {
+  const r = (v) => [-v[0], v[1], -v[2]];
+  return {
+    ...p,
+    hips: r(p.hips),
+    up: r(p.up),
+    front: r(p.front),
+    hands: p.hands.map(r),
+    elbows: p.elbows.map(r),
+    ankles: p.ankles.map(r),
+    knees: p.knees.map(r),
+    toes: p.toes.map(r),
+    soles: p.soles.map(r),
+    board: p.board && { p: r(p.board.p), q: [p.board.q[2], p.board.q[3], -p.board.q[0], -p.board.q[1]] }, // (0,1,0,0) * q
+  };
+}
+
+// Hop off while rolling: spring off the board, swing round to face forward, pop the board up into the right hand
+// and land running (left foot first, phase 0 of the run, so the run carries straight on). v: landing speed (m/s).
+// fakie: you were riding fakie, so the start is the stance turned half round. About 0.36 s.
+export function runDismountTrack(v, fakie) {
+  const g = { hand: 1, local: NOSE_GRIP, w: 0 };
+  const start = fakie ? rotY180(STANCE) : STANCE;
+  const d0 = { ...start, board: FLAT(), grip: g };
+  const pop = { p: [0.12, 0.22, 0.05], q: qAxis([1, 0, 0], 1.1) };
+  const d1 = {
+    ...d0,
+    hips: [0.0, 1.0, -0.05],
+    ...torso(fakie ? -2.25 : -0.9, 0.15), // turning to face forward (-Z) from either stance
+    bend: 0.25,
+    twist: 0,
+    headYaw: 0,
+    headPitch: 0.1,
+    hands: [at(-0.3, 1.0, -0.1), at(0.15, 0.75, 0.0)],
+    elbows: [norm([-0.6, -0.5, 0.6]), norm([0.6, 0, 0.6])],
+    ankles: [at(-0.08, 0.42, -0.15), at(0.06, 0.48, 0.18)],
+    knees: [norm([0.2, 0.3, -1]), norm([0.2, 0.3, -1])],
+    toes: [norm([0, -0.4, -1]), norm([0, -0.4, -1])],
+    soles: [UP, UP],
+    board: pop,
+    grip: { ...g, w: 0.6 },
+  };
+  const end = walkPose(0, v, true);
+  const d2 = { ...lerpPose(d1, end, 0.5), board: { p: lerp3(pop.p, end.board.p, 0.5), q: lerpPose(pop, end.board, 0.5).q }, grip: { hand: 1, local: lerp3(NOSE_GRIP, EDGE_GRIP, 0.5), w: 1 } };
+  const keys = [
+    [0, d0],
+    [0.12, d1, 'out'],
+    [0.24, d2],
+    [0.36, end, 'in'],
+  ];
+  return { keys, dur: 0.36, blendIn: 0.06 };
+}
+
+// Jump on while running: toss the board down just ahead, jump, land on it in the riding stance. start: the run pose
+// now (board in the right hand). About 0.42 s; the body keeps its speed.
+export const RUN_GAP = 0.35;
+export function runMountTrack(start) {
+  const B = -RUN_GAP;
+  const g = { hand: 1, local: EDGE_GRIP, w: 1 };
+  const m0 = { ...start, grip: start.grip ?? g };
+  const m1 = {
+    ...m0,
+    hips: [0, 0.8, 0.02],
+    ...torso(WALK_FACE, 0.3),
+    bend: 0.2,
+    twist: 0,
+    headPitch: 0.4,
+    hands: [at(-0.25, 0.95, -0.2), at(0.2, 0.42, -0.25)],
+    ankles: [at(-0.1, ANK, 0.02), at(0.1, 0.3, 0.3)],
+    knees: [norm([-0.1, 0, -1]), norm([0.1, 0, -1])],
+    toes: [norm([-0.08, 0, -1]), norm([0.08, -0.4, -1])],
+    soles: [UP, UP],
+    board: { p: [0.08, 0.14, B + 0.1], q: lerpPose({ q: CARRY_Q }, { q: [0, 0, 0, 1] }, 0.8).q },
+    grip: { ...g, w: 0 },
+  };
+  const m2 = {
+    ...m1,
+    root: [0, B * 0.5],
+    hips: [-0.02, 1.02, B * 0.6],
+    ...torso(-1.0, 0.1),
+    twist: -0.2,
+    headYaw: -0.5,
+    headPitch: 0.3,
+    hands: [at(-0.2, 1.05, B - 0.3), at(0.15, 1.0, B + 0.35)],
+    elbows: STANCE.elbows,
+    ankles: [at(-0.05, 0.42, B - 0.2), at(-0.02, 0.45, B + 0.22)],
+    knees: [norm([0.6, 0.3, -1]), norm([0.8, 0.3, -0.4])],
+    toes: [norm(yd(-0.6)), norm(yd(-0.1))],
+    board: FLAT(B),
+  };
+  const land = { ...shift(CROUCH, 0, B), board: FLAT(B), grip: { ...g, w: 0 } };
+  const m4 = { ...shift(STANCE, 0, B), board: FLAT(B), grip: { ...g, w: 0 } };
+  const keys = [
+    [0, m0],
+    [0.1, m1, 'out'],
+    [0.22, m2, 'out'],
+    [0.32, land, 'in'],
+    [0.46, m4],
+  ];
+  return { keys, dur: 0.46, blendOut: 0.12 };
+}
+
 // --- Dropping back in. start: the walk pose at this moment (at the origin). carry: drop the board from the hand
 // first; otherwise the board is already on the ground 0.55 m ahead. Ends in the riding stance on the board, with
 // the body (root) moved onto it.
