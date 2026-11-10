@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier';
@@ -72,6 +72,11 @@ export default function Skateboard() {
   const boardG = useRef(null); // the board's offset from the rider (stepping off / on, carrying)
   const looseG = useRef(null); // the board loose in the world (after a bail)
   const looseWheels = useRef([]);
+  // The rigid body's scene object (stanceG's parent) is what Rapier moves to the interpolated position each frame.
+  useEffect(() => {
+    board.drawn = stanceG.current.parent.position;
+    return () => (board.drawn = null);
+  }, []);
   const [, getKeys] = useKeyboardControls();
   const { world, rapier } = useRapier();
   const camera = useThree((t) => t.camera);

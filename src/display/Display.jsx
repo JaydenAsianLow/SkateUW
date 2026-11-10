@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { KeyboardControls } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
@@ -67,8 +67,11 @@ export default function Display() {
   }, [waiting]);
   const phoneLost = waiting && lostLong;
   const running = screen === 'play' && !phoneLost;
-  game.running = running;
-  game.keyboard = keyboard;
+  // Shared with the 3D scene; set after render (before the next frame) rather than during it.
+  useLayoutEffect(() => {
+    game.running = running;
+    game.keyboard = keyboard;
+  }, [running, keyboard]);
 
   // Pairing finishes on its own once the phone is streaming tilt.
   useEffect(() => {
@@ -133,14 +136,17 @@ export default function Display() {
     <KeyboardControls map={keyMap}>
       <div className="display">
         <Canvas
-          shadows
+          shadows="percentage" // PCF: what three.js uses anyway since it dropped PCFSoft (no console warning)
           flat
           dpr={[1, 1.5]} // above 1.5x the GPU cost grows ~4x for a barely visible gain on a laptop screen
           camera={{ position: [4, 1.1, -17], fov: 50, near: 0.05, far: 1500 }}
           // The effect chain renders into its own buffers and does its own anti-aliasing (SMAA), so the canvas's
           // multisampling would only cost memory and bandwidth.
           gl={{ powerPreference: 'high-performance', antialias: false }}
-          onCreated={({ gl }) => (gl.toneMappingExposure = 1.1)}
+          onCreated={(state) => {
+            state.gl.toneMappingExposure = 1.1;
+            if (import.meta.env.DEV) window.__skate.three = state; // console / test access to the scene and camera
+          }}
         >
           <Suspense fallback={null}>
             <Physics gravity={[0, -GRAVITY, 0]} paused={!running}>
