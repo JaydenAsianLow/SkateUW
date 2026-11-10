@@ -5,6 +5,8 @@ export const phone = {
   lean: 0, // -1 (back / brake) .. 1 (forward / push)
   beta: 0,
   gamma: 0,
+  jx: 0, // on-foot joystick, -1..1 (right +, up +)
+  jy: 0,
   lastUpdate: 0, // performance.now() of the last packet
   packets: 0,
   // Queued swipe moves, consumed by the skateboard each frame.

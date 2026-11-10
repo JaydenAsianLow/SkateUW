@@ -99,7 +99,8 @@ export default function Display() {
     s.on('carry', () => (phone.carryQueued = true));
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
-      if (net.connected && net.controllers > 0) s.volatile.emit('board', board.view);
+      // Only while actually playing, so a second laptop tab (menu, paused) never contradicts the game's state.
+      if (net.connected && net.controllers > 0 && game.running) s.volatile.emit('board', board.view);
     }, 33);
     // Closing the tab: say goodbye straight away so the phone shows "Reconnect device" at once
     // (otherwise the server only notices on its heartbeat timeout).

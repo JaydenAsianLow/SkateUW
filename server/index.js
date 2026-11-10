@@ -67,6 +67,8 @@ io.on('connection', (socket) => {
       lean: num(d.lean, -1, 1),
       beta: num(d.beta, -180, 180),
       gamma: num(d.gamma, -90, 90),
+      jx: num(d.jx, -1, 1), // joystick while on foot (right +)
+      jy: num(d.jy, -1, 1), // (up +)
     });
   });
 

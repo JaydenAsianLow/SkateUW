@@ -32,6 +32,7 @@ function screenAxes(beta, gamma) {
 export default function Controller() {
   const socketRef = useRef(null);
   const raw = useRef({ beta: 0, gamma: 0, has: false });
+  const stick = useRef({ x: 0, y: 0 }); // on-foot joystick (right +, up +), sent with the tilt stream
   const offset = useRef(null); // calibration "neutral" pose
   const [conn, setConn] = useState('connecting');
   const [displays, setDisplays] = useState(0);
@@ -97,7 +98,7 @@ export default function Controller() {
       sm.lean += (shape(-(a.y - offset.current.y), range) - sm.lean) * SMOOTH;
       const steer = clamp(Math.abs(sm.steer) < 0.01 ? 0 : sm.steer);
       const lean = clamp(Math.abs(sm.lean) < 0.01 ? 0 : sm.lean);
-      const packet = { steer, lean, beta: r.beta, gamma: r.gamma };
+      const packet = { steer, lean, beta: r.beta, gamma: r.gamma, jx: stick.current.x, jy: stick.current.y };
       socketRef.current?.volatile.emit('tilt', packet);
       if (++tick % 5 === 0) setView(packet);
     }, 1000 / SEND_HZ);
@@ -223,6 +224,7 @@ export default function Controller() {
       ) : (
         <Deck
           socketRef={socketRef}
+          stickRef={stick}
           steer={view.steer}
           onCalibrate={calibrate}
           sens={sens}
@@ -258,7 +260,7 @@ const HOLD_MS = 90; // a finger resting this long without moving counts as holdi
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
-function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
+function Deck({ socketRef, stickRef, steer, onCalibrate, sens, onDisconnect, error }) {
   const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
@@ -267,10 +269,11 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
   const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 } });
   const steerRef = useRef(steer);
   steerRef.current = steer;
-  // From the laptop: 'ride' | 'walk' (board in hand) | 'find' (walking back to the board after a fall) |
-  // 'near' (next to it) | 'off' (down on the ground)
+  // From the laptop: 'ride' | 'find' (on foot, board away) | 'near' (close enough to get on) | 'off' (down after a
+  // fall). The phone only follows the laptop, and only once two packets in a row agree, so it can't flicker.
   const [mode, setMode] = useState('ride');
-  const onFoot = mode === 'walk' || mode === 'find' || mode === 'near';
+  const pendingMode = useRef({ mode: 'ride', n: 0 });
+  const onFoot = mode !== 'ride'; // joystick instead of the deck
 
   useEffect(() => {
     const s = socketRef.current;
@@ -278,7 +281,11 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
     const onBoard = (d) => {
       mirror.current.target = d;
       mirror.current.at = performance.now();
-      setMode(d.mode ?? 'ride');
+      const m = d.mode ?? 'ride';
+      const pm = pendingMode.current;
+      pm.n = pm.mode === m ? pm.n + 1 : 1;
+      pm.mode = m;
+      if (pm.n >= 2) setMode(m);
     };
     s.on('board', onBoard);
     return () => s.off('board', onBoard);
@@ -432,11 +439,11 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
     tracker.up(e.pointerId);
   };
 
-  // Walk / Ride: step off and carry the board, or drop back in. The laptop decides (e.g. not mid-air).
-  const carry = () => {
+  // Get off / Get on (one button). The laptop decides whether it happens (not mid-air, close enough to the board).
+  const getOnOff = () => {
     socketRef.current?.emit('carry');
     navigator.vibrate?.(25);
-    setFlash({ label: onFoot ? 'DROP IN' : 'STEP OFF', key: performance.now() });
+    if (onFoot && mode !== 'near') setFlash({ label: 'WALK TO YOUR BOARD', key: performance.now() });
   };
 
   const reset = () => {
@@ -447,38 +454,42 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
 
   return (
     <div className="deck-wrap">
-      <div
-        ref={deckRef}
-        className="deck-stage"
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerCancel={onUp}
-      >
-        <div ref={shadowRef} className="board-shadow" />
-        <Board3D ref={boardRef} />
-        <div className="hold-zone">HOLD</div>
-        <div className="combo">
-          {['↓', '↑', '★'].map((g, i) => (
-            <span key={g} className={`pip ${i < pips ? 'on' : ''}`}>
-              {g}
-            </span>
-          ))}
+      {onFoot ? (
+        <Joystick
+          stickRef={stickRef}
+          flash={flash}
+          hint={mode === 'off' ? 'Getting up…' : mode === 'near' ? 'Walk onto your board or tap Get on' : 'Push a little to walk, all the way to run'}
+        />
+      ) : (
+        <div
+          ref={deckRef}
+          className="deck-stage"
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+        >
+          <div ref={shadowRef} className="board-shadow" />
+          <Board3D ref={boardRef} />
+          <div className="hold-zone">HOLD</div>
+          <div className="combo">
+            {['↓', '↑', '★'].map((g, i) => (
+              <span key={g} className={`pip ${i < pips ? 'on' : ''}`}>
+                {g}
+              </span>
+            ))}
+          </div>
+          {flash && (
+            <div key={flash.key} className="move-flash">
+              {flash.label}
+            </div>
+          )}
+          <canvas ref={canvasRef} className="deck-trail" />
         </div>
-        {flash && (
-          <div key={flash.key} className="move-flash">
-            {flash.label}
-          </div>
-        )}
-        <canvas ref={canvasRef} className="deck-trail" />
-        {onFoot && (
-          <div className="walk-hint">
-            <b>{mode === 'walk' ? 'WALKING' : 'GET YOUR BOARD'}</b>
-            <span>Tilt forward to walk, further to run. Tilt sideways to turn.</span>
-            <span>{mode === 'find' ? 'Walk back to your board.' : mode === 'near' ? 'Tap Ride to hop on.' : 'Tap Ride to drop back in.'}</span>
-          </div>
-        )}
-      </div>
+      )}
+      <button className="onoff-btn" onClick={getOnOff} disabled={mode === 'off'}>
+        {onFoot ? 'Get on' : 'Get off'}
+      </button>
       <div className="deck-foot">
         <button className="secondary small-btn" onClick={onCalibrate}>
           Calibrate
@@ -490,14 +501,70 @@ function Deck({ socketRef, steer, onCalibrate, sens, onDisconnect, error }) {
           {steer >= 0 ? '+' : ''}
           {steer.toFixed(2)}
         </span>
-        <button className={`walk-btn ${onFoot ? 'on' : ''}`} onClick={carry} disabled={mode === 'off' || mode === 'find'}>
-          {onFoot ? 'Ride' : 'Walk'}
-        </button>
         <button className="reset-btn" onClick={reset}>
           Reset
         </button>
       </div>
       {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+
+// On-foot thumbstick: drag the knob anywhere in the area; distance from the centre = speed (walk -> run), direction is
+// relative to the laptop's camera. Written straight to the DOM and a ref (no React state) so it tracks the thumb with no
+// lag; the knob springs back and the skater stops when you let go.
+function Joystick({ stickRef, hint, flash }) {
+  const baseRef = useRef(null);
+  const knobRef = useRef(null);
+  const active = useRef(null);
+  const set = (dx, dy, spring) => {
+    const k = knobRef.current;
+    if (!k) return;
+    k.style.transition = spring ? 'transform 120ms ease-out' : 'none';
+    k.style.transform = `translate(${dx}px, ${dy}px)`;
+  };
+  const track = (e) => {
+    const b = baseRef.current;
+    if (!b) return;
+    const r = b.getBoundingClientRect();
+    const max = r.width * 0.32;
+    let dx = e.clientX - (r.left + r.width / 2);
+    let dy = e.clientY - (r.top + r.height / 2);
+    const len = Math.hypot(dx, dy);
+    if (len > max) (dx *= max / len), (dy *= max / len);
+    stickRef.current = { x: dx / max, y: -dy / max };
+    set(dx, dy, false);
+  };
+  const release = (e) => {
+    if (e.pointerId !== active.current) return;
+    active.current = null;
+    stickRef.current = { x: 0, y: 0 };
+    set(0, 0, true);
+  };
+  useEffect(() => () => (stickRef.current = { x: 0, y: 0 }), [stickRef]);
+  return (
+    <div
+      className="stick-zone"
+      onPointerDown={(e) => {
+        if (active.current != null) return;
+        active.current = e.pointerId;
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        track(e);
+      }}
+      onPointerMove={(e) => e.pointerId === active.current && track(e)}
+      onPointerUp={release}
+      onPointerCancel={release}
+    >
+      <div ref={baseRef} className="stick-base">
+        <div className="stick-ring" />
+        <div ref={knobRef} className="stick-knob" />
+      </div>
+      <div className="stick-hint">{hint}</div>
+      {flash && (
+        <div key={flash.key} className="move-flash">
+          {flash.label}
+        </div>
+      )}
     </div>
   );
 }

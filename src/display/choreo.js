@@ -657,6 +657,26 @@ export function dismountTrack() {
   return { keys, dur: 1.02, blendIn: 0.14 };
 }
 
+// --- Getting off and leaving the board where it is: back foot to the ground on the toe side, then the front foot,
+// turning to face the way you were going. The board is loose in the world (not part of the pose).
+export function stepOffTrack() {
+  const ks = dismountTrack().keys.slice(0, 3).map(([t, p, e]) => [t, { ...p, board: null, grip: null }, e]);
+  const d2 = ks[2][1];
+  const d3 = P(d2, {
+    root: [0.2, 0.03],
+    hips: [0.26, 0.84, 0.04],
+    ...torso(-1.2, 0.05),
+    twist: 0,
+    headYaw: -0.2,
+    headPitch: 0.15,
+    ankles: [at(0.16, 0.26, 0.0), d2.ankles[1]],
+    knees: [norm([0.3, 0, -1]), d2.knees[1]],
+    toes: [norm(yd(-1.4)), d2.toes[1]],
+  });
+  ks.push([0.4, d3, 'out'], [0.6, idle(0.3, 0.06), 'in']);
+  return { keys: ks, dur: 0.6, blendIn: 0.12 };
+}
+
 // --- Dropping back in. start: the walk pose at this moment (at the origin). carry: drop the board from the hand
 // first; otherwise the board is already on the ground 0.55 m ahead. Ends in the riding stance on the board, with
 // the body (root) moved onto it.

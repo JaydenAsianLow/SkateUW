@@ -45,7 +45,7 @@ export default function Hud({ onMenu }) {
         </div>
       )}
       {(foot === 'find' || foot === 'near') && (
-        <div className="foot-hint">{foot === 'near' ? 'Tap Ride on the phone (or B) to hop on' : 'Walk back to your board'}</div>
+        <div className="foot-hint">{foot === 'near' ? 'Walk onto your board, or tap Get on (B)' : 'Walk back to your board'}</div>
       )}
       <BalanceMeter />
     </>
