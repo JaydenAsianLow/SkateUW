@@ -206,13 +206,18 @@ export function sampleClip(c, t, loop, out) {
 // Top speed on foot: the run clip's own speed (so a full push plays it 1:1), else the fallback.
 export const runTopSpeed = (fallback) => (mocap.clips.run?.speed > 0.2 ? mocap.clips.run.speed : fallback);
 
-// Locomotion clips by speed (idle first). Only those that loaded.
+// Locomotion clips by speed (idle first). Only those that loaded. Read every frame while walking, so the list is
+// built once loading has finished (the clips never change after that).
+let locoList = null;
 export function locoClips() {
+  if (locoList) return locoList;
   const out = [];
   if (mocap.clips.idle) out.push({ name: 'idle', c: mocap.clips.idle, speed: 0 });
   for (const k of ['walk', 'jog', 'run']) if (mocap.clips[k]?.speed > 0.2) out.push({ name: k, c: mocap.clips[k], speed: mocap.clips[k].speed });
   out.sort((a, b) => a.speed - b.speed);
-  return out.some((l) => l.speed > 0) ? out : [];
+  const list = out.some((l) => l.speed > 0) ? out : [];
+  if (mocap.status === 'ready') locoList = list;
+  return list;
 }
 
 // Load every clip (once). Missing files are listed in mocap.missing and the console; the game falls back to the

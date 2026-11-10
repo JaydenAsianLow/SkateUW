@@ -36,6 +36,21 @@ const _q = new Quaternion();
 const _v = new Vector3();
 const DROP = new Vector3(0, -HALF.y, 0);
 
+// Per-frame body updates. Rapier copies the values, so one scratch object each is reused.
+const _vel = { x: 0, y: 0, z: 0 };
+const _rot = { x: 0, y: 0, z: 0, w: 1 };
+function setVelocity(rb, x, y, z) {
+  _vel.x = x;
+  _vel.y = y;
+  _vel.z = z;
+  rb.setLinvel(_vel, true);
+}
+function setHeading(rb, heading) {
+  _rot.y = Math.sin(heading / 2);
+  _rot.w = Math.cos(heading / 2);
+  rb.setRotation(_rot, true);
+}
+
 // Dev only: ?posetest=back:0.8 (or side, slam, dismount, mount, pickup, walk:<speed>) loops one off-board animation
 // in place; add a third value to freeze it at that time, e.g. ?posetest=slam:1:0.5. Use with ?play&sidecam.
 const POSE_TEST = import.meta.env.DEV ? urlParams.get('posetest') : null;
@@ -481,8 +496,8 @@ export default function Skateboard() {
       const fx = -Math.sin(st.heading);
       const fz = -Math.cos(st.heading);
       rb.setGravityScale(1, true);
-      rb.setLinvel({ x: fx * fwdSpeed + latX, y: v.y, z: fz * fwdSpeed + latZ }, true);
-      rb.setRotation({ x: 0, y: Math.sin(st.heading / 2), z: 0, w: Math.cos(st.heading / 2) }, true);
+      setVelocity(rb, fx * fwdSpeed + latX, v.y, fz * fwdSpeed + latZ);
+      setHeading(rb, st.heading);
 
       // Pose for the rider, board placement.
       let pose = null;
@@ -683,8 +698,8 @@ export default function Skateboard() {
 
     // Popped jumps use the lighter airtime gravity; rolling off a ledge falls normally.
     rb.setGravityScale(st.popT >= 0 && !grounded ? air.g / GRAVITY : 1, true);
-    rb.setLinvel({ x: nfx * speed, y: vy, z: nfz * speed }, true);
-    rb.setRotation({ x: 0, y: Math.sin(st.heading / 2), z: 0, w: Math.cos(st.heading / 2) }, true);
+    setVelocity(rb, nfx * speed, vy, nfz * speed);
+    setHeading(rb, st.heading);
 
     // --- Visuals.
     const tr = st.trick;

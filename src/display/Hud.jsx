@@ -60,14 +60,25 @@ function BalanceMeter() {
   useEffect(() => {
     let raf;
     let shownUntil = 0;
+    let shown = null;
+    let meter = null;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const a = board.anim;
       const now = performance.now();
       if ((a.balance ?? -1) >= 0) shownUntil = now + 700;
       if (a.pushT >= 0 || a.air) shownUntil = 0;
-      if (wrap.current) wrap.current.style.opacity = now < shownUntil ? '1' : '0';
-      if (needle.current) needle.current.style.left = `${(a.meter ?? 0) * 100}%`;
+      // Only touch the DOM when something changed (this runs every frame).
+      const show = now < shownUntil;
+      if (wrap.current && show !== shown) {
+        shown = show;
+        wrap.current.style.opacity = show ? '1' : '0';
+      }
+      const m = a.meter ?? 0;
+      if (needle.current && m !== meter) {
+        meter = m;
+        needle.current.style.left = `${m * 100}%`;
+      }
     };
     tick();
     return () => cancelAnimationFrame(raf);
