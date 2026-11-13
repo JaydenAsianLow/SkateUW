@@ -82,19 +82,19 @@ for lv in LV['list']:
     poly, kinds = lv['polygon'], {int(k): v for k, v in lv['edges'].items()}
     nm = lv['name']
     b.slab('M_paverbrick', [P(*p) for p in poly], 0.0, H)
-    b.slab('COLMESH_' + nm, [P(*p) for p in poly], H - 0.05, H)
+    b.mesh('COLMESH_' + nm, [V(p, H) for p in poly], [tuple(range(len(poly)))])
     toes = {}
     for i, kind in sorted(kinds.items()):
         p, q = poly[i], poly[(i + 1) % len(poly)]
         n = out_normal(p, q, poly)
-        if kind in ('bank', 'ramp'):
-            run, low = (RUN, CURB) if kind == 'bank' else (RAMP, 0.0)
+        if kind == 'bank':
+            run, low = RUN, CURB
             tp, tq = off(p, n, run), off(q, n, run)
             top = [V(p, H), V(q, H), V(tq, low), V(tp, low)]
-            b.solid_down('M_granite' if kind == 'bank' else 'M_paverbrick', top)
+            b.solid_down('M_granite', top)
             b.mesh('COLMESH_' + nm, top, [(0, 1, 2, 3)])
             b.rail(f'{nm}_{kind}{i}_top', V(p, H), V(q, H))
-            if kind == 'bank':  # aggregate curb at the toe (photo 4709)
+            if True:  # aggregate curb at the toe (photo 4709)
                 cp, cq = off(tp, n, 0.06), off(tq, n, 0.06)
                 b.solid_down('M_aggregate', [V(tp, CURB), V(tq, CURB), V(cq, 0.01), V(cp, 0.01)])
                 b.mesh('COLMESH_' + nm, [V(tp, CURB), V(tq, CURB), V(cq, 0.0), V(cp, 0.0)], [(0, 1, 2, 3)])
@@ -107,12 +107,61 @@ for lv in LV['list']:
                 o0, o1 = k * ST, (k + 1) * ST
                 band = [V(off(p, n, o0), h), V(off(q, n, o0), h), V(off(q, n, o1), h), V(off(p, n, o1), h)]
                 b.solid_down('M_concrete', band)
-                b.mesh('COLMESH_' + nm, band, [(0, 1, 2, 3)])
-                riser = [V(off(p, n, o0), h), V(off(q, n, o0), h), V(off(q, n, o0), h + rise), V(off(p, n, o0), h + rise)]
-                b.mesh('COLMESH_' + nm, riser, [(0, 1, 2, 3)])
-            last = (SR - 1) * ST
-            b.mesh('COLMESH_' + nm, [V(off(p, n, last), 0), V(off(q, n, last), 0), V(off(q, n, last), rise), V(off(p, n, last), rise)], [(0, 1, 2, 3)])
+                mid = off(((p[0] + q[0]) / 2, (p[1] + q[1]) / 2), n, (o0 + o1) / 2)
+                ln = math.hypot(q[0] - p[0], q[1] - p[1])
+                b.col_center(f'{nm}_stair{i}_{k}', (*P(*mid), h / 2), (ln, ST, h), (0, 0, math.atan2(-(q[1] - p[1]), q[0] - p[0])))
             b.rail(f'{nm}_stairs{i}_top', V(p, H), V(q, H))
+    # Smooth hill over each run of consecutive 'ramp' edges: the toe line bulges out in a curve and the slope eases
+    # in at the top and out at the bottom (a cosine profile), so it rolls like the real one (videos).
+    ramps = sorted(i for i, k in kinds.items() if k == 'ramp')
+    chains = []
+    for i in ramps:
+        if chains and chains[-1][-1] == i - 1:
+            chains[-1].append(i)
+        else:
+            chains.append([i])
+    for ch in chains:
+        pts = [poly[i] for i in ch] + [poly[(ch[-1] + 1) % len(poly)]]
+        samples = []  # (point on the top edge, outward normal)
+        for a_i in range(len(pts) - 1):
+            p, q = pts[a_i], pts[a_i + 1]
+            n = out_normal(p, q, poly)
+            seg = math.hypot(q[0] - p[0], q[1] - p[1])
+            steps = max(2, int(seg / 0.8))
+            for k in range(steps + (1 if a_i == len(pts) - 2 else 0)):
+                t = k / steps
+                samples.append(((p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t), n))
+        # smooth the normals along the chain so the hill has no creases at the corners
+        nrm = []
+        for k in range(len(samples)):
+            sx = sum(samples[j][1][0] for j in range(max(0, k - 4), min(len(samples), k + 5)))
+            sz = sum(samples[j][1][1] for j in range(max(0, k - 4), min(len(samples), k + 5)))
+            l_ = math.hypot(sx, sz)
+            nrm.append((sx / l_, sz / l_))
+        ROWS = 12
+        grid = []
+        for k, ((px, pz), (nx, nz)) in enumerate(samples):
+            u = k / (len(samples) - 1)
+            reach = 2.5 + (RAMP - 2.5) * math.sin(math.pi * u) ** 0.8   # curved toe line, tapering at both ends
+            row = []
+            for r in range(ROWS + 1):
+                t = r / ROWS
+                h = H * 0.5 * (1 + math.cos(math.pi * t))
+                row.append(V((px + nx * reach * t, pz + nz * reach * t), h))
+            grid.append(row)
+        verts = [v for row in grid for v in row]
+        faces = []
+        for k in range(len(grid) - 1):
+            for r in range(ROWS):
+                a0 = k * (ROWS + 1) + r
+                quad = (a0, a0 + 1, a0 + ROWS + 2, a0 + ROWS + 1)
+                (x0_, y0_, _), (x1_, y1_, _), (x2_, y2_, _) = verts[quad[0]], verts[quad[1]], verts[quad[2]]
+                up = (x1_ - x0_) * (y2_ - y0_) - (y1_ - y0_) * (x2_ - x0_)
+                faces.append(quad if up > 0 else quad[::-1])
+        b.mesh('M_paverbrick', verts, faces)
+        b.mesh('COLMESH_' + nm, verts, faces)
+        b.rail(f'{nm}_hill{ch[0]}_crest', V(pts[0], H), V(pts[-1], H))
+
     # fill the wedge at each corner between two neighbouring sloped edges
     for i in toes:
         j = (i + 1) % len(poly)
@@ -157,7 +206,7 @@ ob = L['obelisk']
 cx, cy = P(*ob['center'])
 yaw = -ob['yaw']  # game yaw about +Y -> Blender yaw about +Z (z flips)
 c, s = math.cos(yaw), math.sin(yaw)
-PT, PBS, PHT = 2.4, 4.0, 0.55        # plinth half-size top / bottom, height
+PT, PBS, PHT = 3.3, 5.6, 0.75        # plinth half-size top / bottom, height
 b.frustum('M_aggregate', cx, cy, H, H + 0.14, PBS + 0.3, PBS + 0.3, PBS + 0.28, PBS + 0.28, yaw)   # curb frame
 b.frustum('M_granite', cx, cy, H, H + PHT, PBS, PBS, PT, PT, yaw)
 b.collider('obelisk_plinth_top', cx - PT, cx + PT, cy - PT, cy + PT, H, H + PHT, rotz=yaw)
@@ -170,43 +219,70 @@ for side in range(4):  # each sloped side is a little bank
     tc = (cx + nx * d - 0.08 * nx * math.sin(ang), cy + ny * d - 0.08 * ny * math.sin(ang), H + PHT / 2 - 0.08 * math.cos(ang))
     b.col_center(f'obelisk_bank{side}', tc, (2 * PBS, L_, 0.16), (-ang, 0, a - math.pi / 2))
     b.rail(f'obelisk_edge{side}', (cx + nx * PT - ny * PT, cy + ny * PT + nx * PT, H + PHT), (cx + nx * PT + ny * PT, cy + ny * PT - nx * PT, H + PHT))
-PB, PY = 1.75, 2.7                 # pyramid half base, height
+PB, PY = 2.3, 3.5                  # pyramid half base, height
 base = H + PHT
 b.frustum('M_corten', cx, cy, base, base + PY, PB, PB, 0, 0, yaw)
-SW = 0.5                           # shaft half width
+SW = 0.62                          # shaft half width
 tip = base + PY
-b.frustum('M_corten', cx, cy, tip, tip + 0.75, 0.0, 0.0, SW, SW, yaw)              # inverted pyramidion
-b.frustum('M_corten', cx, cy, tip + 0.75, tip + 5.0, SW, SW, SW * 0.98, SW * 0.98, yaw)
+b.frustum('M_corten', cx, cy, tip, tip + 0.95, 0.0, 0.0, SW, SW, yaw)              # inverted pyramidion
+b.frustum('M_corten', cx, cy, tip + 0.95, tip + 6.6, SW, SW, SW * 0.98, SW * 0.98, yaw)
 for k, (ox, oy, hh) in enumerate(((-0.3, -0.3, 0.55), (0.25, -0.2, 0.3), (0.2, 0.3, 0.7), (-0.25, 0.25, 0.4))):
     px, py = cx + ox * c - oy * s, cy + ox * s + oy * c
-    b.frustum('M_corten', px, py, tip + 5.0, tip + 5.0 + hh, 0.22, 0.22, 0.03, 0.05, yaw + k)   # torn top
-b.collider('pyramid', cx - 1.1, cx + 1.1, cy - 1.1, cy + 1.1, base, base + 1.6, rotz=yaw)
-b.collider('shaft', cx - SW, cx + SW, cy - SW, cy + SW, tip, tip + 5.5, rotz=yaw)
+    b.frustum('M_corten', px, py, tip + 6.6, tip + 6.6 + hh, 0.27, 0.27, 0.03, 0.05, yaw + k)   # torn top
+b.collider('pyramid', cx - 1.45, cx + 1.45, cy - 1.45, cy + 1.45, base, base + 2.1, rotz=yaw)
+b.collider('shaft', cx - SW, cx + SW, cy - SW, cy + SW, tip, tip + 7.2, rotz=yaw)
 
-# --- Planter slabs: exposed-aggregate rims round a brick top, set in a pinwheel round the radial drain
+# --- Planter slabs (photos 4711, 4713, 4714, webcam): long low exposed-aggregate pads in a pinwheel round the brass
+# drain, each with an aggregate coping along the plaza edge, a recessed brick top, a gutter channel on the inside,
+# angled end caps and a brick soldier course along the sides. All of it is ledge.
 pc = P(*L['planters']['center'])
 b.cyl('M_brass', pc[0], pc[1], -0.02, 0.015, 0.9, 0.9, 32)                      # brass drain cover (photo 4711)
+b.cyl('M_aggregate', pc[0], pc[1], -0.02, 0.01, 1.05, 1.05, 32)                  # its aggregate collar
+for k in range(36):                                                                # radial brick around it (4736)
+    a_ = k * math.pi / 18
+    for r0 in (1.1, 2.3):
+        x0_, y0_ = pc[0] + math.cos(a_) * r0, pc[1] + math.sin(a_) * r0
+        x1_, y1_ = pc[0] + math.cos(a_) * (r0 + 1.1), pc[1] + math.sin(a_) * (r0 + 1.1)
+        b.mesh('M_brick_dark', [(x0_ - math.sin(a_) * 0.012, y0_ + math.cos(a_) * 0.012, 0.004),
+                                (x1_ - math.sin(a_) * 0.012, y1_ + math.cos(a_) * 0.012, 0.004),
+                                (x1_ + math.sin(a_) * 0.012, y1_ - math.cos(a_) * 0.012, 0.004),
+                                (x0_ + math.sin(a_) * 0.012, y0_ - math.cos(a_) * 0.012, 0.004)], [(0, 3, 2, 1)])
 SH = L['planters']['height']
 for i, (rot, length, width, gap) in enumerate(L['planters']['slabs']):
     a = math.radians(rot)
     ca, sa = math.cos(a), math.sin(a)
     T = lambda u, v: (pc[0] + u * ca - v * sa, pc[1] + u * sa + v * ca)
     u0, u1 = gap, gap + length
-    v0, v1 = 1.2, 1.2 + width
-    outer = [T(u0, v0), T(u1, v0), T(u1 - 1.4, v1), T(u0 + 0.6, v1)]          # angled far end (photo 4713)
-    inner = [T(u0 + 0.5, v0 + 0.5), T(u1 - 0.75, v0 + 0.5), T(u1 - 1.7, v1 - 0.45), T(u0 + 0.9, v1 - 0.45)]
-    b.slab('M_aggregate', outer, 0.0, SH - 0.06)
-    b.slab('M_aggregate', [T(u0, v0), T(u1, v0), T(u1 - 0.2, v0 + 0.5), T(u0 + 0.05, v0 + 0.5)], SH - 0.06, SH)  # raised rim
-    b.slab('M_paverbrick', inner, SH - 0.06, SH - 0.04)
-    cu, cv = (u0 + u1 - 0.4) / 2, (v0 + v1) / 2
+    v0, v1 = 1.3, 1.3 + width
+    cut = 0.35 * width                                   # the far end is cut at an angle (photo 4713)
+    outer = [T(u0, v0), T(u1, v0), T(u1 - cut, v1), T(u0 + 0.5, v1)]
+    b.slab('M_aggregate', outer, 0.0, SH - 0.1)
+    # coping along the plaza edge (the grind edge), a thinner one along the back, end caps
+    b.slab('M_aggregate', [T(u0, v0), T(u1, v0), T(u1 - 0.08, v0 + 0.6), T(u0 + 0.06, v0 + 0.6)], SH - 0.1, SH)
+    b.slab('M_aggregate', [T(u0 + 0.5 - 0.05, v1 - 0.35), T(u1 - cut - 0.05, v1 - 0.35), T(u1 - cut, v1), T(u0 + 0.5, v1)], SH - 0.1, SH - 0.02)
+    b.slab('M_aggregate', [T(u1 - 0.55, v0 + 0.6), T(u1, v0), T(u1 - cut, v1), T(u1 - cut - 0.5, v1 - 0.35)], SH - 0.1, SH - 0.01)
+    b.slab('M_aggregate', [T(u0, v0), T(u0 + 0.45, v0 + 0.6), T(u0 + 0.85, v1 - 0.35), T(u0 + 0.5, v1)], SH - 0.1, SH - 0.01)
+    # recessed brick top and the gutter channel inside the coping
+    b.slab('M_paverbrick', [T(u0 + 0.45, v0 + 0.85), T(u1 - 0.6, v0 + 0.85), T(u1 - cut - 0.45, v1 - 0.35), T(u0 + 0.85, v1 - 0.35)], SH - 0.1, SH - 0.06)
+    b.slab('M_brick_dark', [T(u0 + 0.45, v0 + 0.6), T(u1 - 0.55, v0 + 0.6), T(u1 - 0.6, v0 + 0.85), T(u0 + 0.45, v0 + 0.85)], SH - 0.1, SH - 0.085)
+    # brick soldier course along both long sides
+    for (pa, pb, nv) in ((T(u0, v0), T(u1, v0), -1), (T(u0 + 0.5, v1), T(u1 - cut, v1), 1)):
+        dx, dy = pb[0] - pa[0], pb[1] - pa[1]
+        ln = math.hypot(dx, dy)
+        nx, ny = -dy / ln * -nv, dx / ln * -nv
+        q0 = (pa[0] + nx * 0.012, pa[1] + ny * 0.012)
+        q1 = (pb[0] + nx * 0.012, pb[1] + ny * 0.012)
+        b.mesh('M_brick', [(*pa, 0.04), (*pb, 0.04), (*pb, 0.26), (*pa, 0.26)], [(0, 1, 2, 3)])
+        b.mesh('M_brick', [(*q0, 0.04), (*q1, 0.04), (*q1, 0.26), (*q0, 0.26)], [(3, 2, 1, 0)])
+    cu, cv = (u0 + u1 - cut / 2) / 2, (v0 + v1) / 2
     ccx, ccy = T(cu, cv)
-    b.col_center(f'slab{i}', (ccx, ccy, SH / 2), (length - 0.7, width, SH), (0, 0, a))
+    b.col_center(f'slab{i}', (ccx, ccy, SH / 2), (length - cut / 2, width, SH), (0, 0, a))
     b.rail(f'slab{i}_edge', (*T(u0, v0), SH), (*T(u1, v0), SH))
-    b.rail(f'slab{i}_back', (*T(u0 + 0.6, v1), SH), (*T(u1 - 1.4, v1), SH))
+    b.rail(f'slab{i}_back', (*T(u0 + 0.5, v1), SH - 0.02), (*T(u1 - cut, v1), SH - 0.02))
 
 b.finish('landmarks')
 export('landmarks')
 mx, my = P(-22, -12)
-preview('landmarks', [('monoliths', (mx + 18, my - 18, 6), (-25, 24, 8), 24),
+preview('landmarks', [('monoliths', (mx + 18, my - 18, 6), (-25, 24, 8), 24), ('hill', (cx + 26, cy - 20, 4), (cx + 10, cy, 1), 30),
                       ('obelisk', (cx - 12, cy - 9, 3), (cx, cy, 2.5), 30),
                       ('planters', (pc[0] + 14, pc[1] - 14, 7), (pc[0], pc[1], 0), 30)])

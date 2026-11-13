@@ -66,6 +66,21 @@ def pointed_arch(w, spring, rise, n=7):
     return [(-hw, 0.0), (hw, 0.0)] + right + [(0.0, spring + rise)] + [(-x, z) for x, z in reversed(right)]
 
 
+BEVEL = 0.035  # metres: rounded arrises on every modelled edge (nothing real has razor-sharp corners)
+
+
+def soften(o):
+    """Bevel the hard edges a little and shade smooth with hardened normals: catches the light like real masonry."""
+    mod = o.modifiers.new('bevel', 'BEVEL')
+    mod.width = BEVEL
+    mod.segments = 2
+    mod.limit_method = 'ANGLE'
+    mod.angle_limit = math.radians(35)
+    mod.use_clamp_overlap = True
+    mod.harden_normals = True
+    o.data.shade_smooth()
+
+
 class Builder:
     def __init__(self):
         self.bms = {}
@@ -241,7 +256,6 @@ class Builder:
         made = []
         for m, bm in self.bms.items():
             bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-            bmesh.ops.triangulate(bm, faces=bm.faces[:])
             mesh = bpy.data.meshes.new(f'{name}_{m}')
             bm.to_mesh(mesh)
             bm.free()
@@ -253,6 +267,7 @@ class Builder:
             mesh.materials.append(get_mat(m) if not isinstance(m, tuple) else get_mat(*m))
             o = bpy.data.objects.new(f'{name}_{m if isinstance(m, str) else m[0]}', mesh)
             coll.objects.link(o)
+            soften(o)
             made.append(o)
         # Colliders: a shared unit cube, sized and placed by the object transform (the game reads the node
         # transform: half extents = scale / 2, position, rotation about the vertical).

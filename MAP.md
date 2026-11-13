@@ -224,4 +224,10 @@ Each step is its own script in `art/scripts/` and writes a GLB to `public/models
   (collected in `grindLines` in Glb.jsx, for the grind moves later).
 - Estimated from photos, not measured: the monolith height (19 m; OSM says 13), the planter slab positions,
   step counts and building heights. Correct them in the JSON files.
-- Dev views: `?clean` hides menus, `?cam=x,y,z,lookX,lookY,lookZ` pins the camera, `?topdown` shows the map.
+- Every model is bevelled (rounded edges, smoothed shading) at export (`rs_lib.soften`).
+- Textures: `18_textures.py` cuts a seamless exposed-aggregate tile from IMG_4713 (planters, steps, copings, and a
+  faint layer on Kane's concrete); brick colours come from IMG_4726; Gothic stone gets block joints in the shader.
+- Raised levels: `COLMESH_*` surfaces (level tops, the granite bank, the curved hill) are trimeshes whose triangles
+  Glb.jsx turns to face up; stair bands, pads, plinths are boxes.
+- Dev views: `?clean` hides menus, `?cam=x,y,z,lookX,lookY,lookZ` pins the camera, `?topdown` shows the map,
+  `?raycheck` (or `?raycheck=x,z;x,z`) writes the ground height under test spots into the page (`--dump-dom`).

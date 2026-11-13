@@ -7,6 +7,7 @@ import { board, game, phone, net, phoneIsLive } from '../state.js';
 import { commands, onSettings, settings } from '../settings.js';
 import World from './World.jsx';
 import Skateboard from './Skateboard.jsx';
+import RayCheck from './RayCheck.jsx';
 import { GRAVITY } from './tuning.js';
 import CameraRig from './CameraRig.jsx';
 import Effects from './Effects.jsx';
@@ -154,6 +155,7 @@ export default function Display() {
             <Physics gravity={[0, -GRAVITY, 0]} paused={!running}>
               <World />
               <Skateboard />
+              {import.meta.env.DEV && urlParams.has('raycheck') && <RayCheck />}
             </Physics>
             <CameraRig />
             <Effects />

@@ -66,6 +66,15 @@ function prepare(scene) {
       const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       g.applyMatrix4(o.matrixWorld);
       const verts = Float32Array.from(g.attributes.position.array);
+      // These are ground surfaces (level tops, banks, the hill). With FIX_INTERNAL_EDGES a trimesh is one-sided, so
+      // every triangle must face up, or the skater falls straight through it: flip any that face down.
+      for (let i = 0; i < verts.length; i += 9) {
+        const ux = verts[i + 3] - verts[i], uz = verts[i + 5] - verts[i + 2];
+        const vx = verts[i + 6] - verts[i], vz = verts[i + 8] - verts[i + 2];
+        if (uz * vx - ux * vz < 0) {
+          for (let k = 0; k < 3; k++) [verts[i + 3 + k], verts[i + 6 + k]] = [verts[i + 6 + k], verts[i + 3 + k]];
+        }
+      }
       trimeshes.push({ verts, idx: Uint32Array.from({ length: verts.length / 3 }, (_, i) => i) });
       return;
     }

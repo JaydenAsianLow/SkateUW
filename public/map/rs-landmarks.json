@@ -83,41 +83,42 @@
  },
  "obelisk": {
   "center": [
-   33.5,
-   -9.98
+   36,
+   -12.5
   ],
   "yaw": 0.2
  },
  "planters": {
+  "_note": "[rotation deg, length, width, gap from the drain] per slab; centre placed from the webcam view and photos 4711/4736",
   "center": [
-   -24,
-   22
+   -6,
+   12
   ],
-  "height": 0.45,
+  "height": 0.5,
   "slabs": [
    [
-    15,
-    8,
-    3.2,
-    0.8
+    20,
+    14,
+    4.4,
+    1.4
    ],
    [
-    105,
-    8,
-    3.2,
-    0.8
+    110,
+    11,
+    4.0,
+    1.4
    ],
    [
-    195,
-    8,
-    3.2,
-    0.8
+    200,
+    13,
+    4.4,
+    1.4
    ],
    [
-    285,
-    8,
-    3.2,
-    0.8
+    290,
+    9.5,
+    3.8,
+    1.4
    ]
   ]
  },

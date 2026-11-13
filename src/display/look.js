@@ -7,6 +7,7 @@ import {
   MeshStandardMaterial,
   RepeatWrapping,
   SRGBColorSpace,
+  TextureLoader,
   Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -226,8 +227,8 @@ function wallBrickMaterial() {
   const { map } = brickCanvases({
     cols: 7, // 1.5 m tile → ~21 × 7.5 cm bricks
     rows: 20,
-    colors: [C.buildingBrick, '#83402F', '#6E3326', '#8A4636', '#73382B'],
-    mortar: '#9a8573',
+    colors: ['#94603F', '#7E4E33', '#A06A47', '#6B4330', '#8B5A3B', '#5E3A28'], // from IMG_4726
+    mortar: '#b3a998',
     mortarPx: 3,
     seed: 21,
   });
@@ -297,20 +298,60 @@ function facadeBrickMaterial(stone = false) {
 }
 
 // Limestone with soft weathering variation so trim doesn't look like plastic.
-function stoneMaterial(color = '#B5A38B', key = 'stone') {
+// Stone and concrete with soft weathering. Options: `ashlar` = [block length, course height] draws the mortar joints
+// of cut-stone blocks (Gothic cast stone); `photo` = a tileable photo texture (public/textures/redsquare/) mapped in
+// world space on all three axes, `scale` metres per tile (`strength` 0..1 how much of it shows), so Blender models
+// need no UVs.
+function stoneMaterial(color = '#B5A38B', key = 'stone', { ashlar = null, photo = null, scale = 1, strength = 1 } = {}) {
   const mat = new MeshStandardMaterial({ color, roughness: 0.9 });
+  if (photo) {
+    const t = new TextureLoader().load(photo);
+    t.wrapS = t.wrapT = RepeatWrapping;
+    t.colorSpace = SRGBColorSpace;
+    t.anisotropy = 4;
+    mat.map = t;
+  }
   mat.onBeforeCompile = (shader) => {
     addWorldVaryings(shader);
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <color_fragment>',
-      `#include <color_fragment>
+    const joints = ashlar
+      ? `{
+          // running-bond blocks on vertical faces: courses every ${ashlar[1]} m, joints every ${ashlar[0]} m, offset by half
+          vec3 an = abs(vLkWNrm);
+          vec2 w = an.x > an.z ? p.zy : p.xy;
+          float row = floor(w.y / ${ashlar[1].toFixed(3)});
+          vec2 q = vec2(w.x / ${ashlar[0].toFixed(3)} + 0.5 * mod(row, 2.0), w.y / ${ashlar[1].toFixed(3)});
+          vec2 f = abs(fract(q) - 0.5);
+          float jx = smoothstep(0.497, 0.4995, f.x) * step(an.y, 0.6);
+          float jy = smoothstep(0.49, 0.497, f.y) * step(an.y, 0.6);
+          diffuseColor.rgb *= 1.0 - 0.28 * max(jx, jy);
+          diffuseColor.rgb *= 0.94 + 0.12 * lkHash(floor(q) + 7.0); // each block a slightly different shade
+        }`
+      : '';
+    const photoMap = photo
+      ? `{
+          vec3 an = pow(abs(vLkWNrm), vec3(4.0));
+          an /= an.x + an.y + an.z;
+          vec3 c = texture2D(map, p.zy / ${scale.toFixed(2)}).rgb * an.x + texture2D(map, p.xz / ${scale.toFixed(2)}).rgb * an.y
+                 + texture2D(map, p.xy / ${scale.toFixed(2)}).rgb * an.z;
+          diffuseColor.rgb *= mix(vec3(1.0), c * 1.6, ${strength.toFixed(2)});
+        }`
+      : '';
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <map_fragment>', '')
+      .replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
       {
         vec3 p = vLkWPos;
+        ${photoMap}
         float n = lkNoise(p.xy * 1.7 + p.zz * 1.3) * 0.5 + lkNoise(p.zy * 6.0 + p.xx * 2.0) * 0.3 + lkNoise(p.xz * 0.4) * 0.2;
-        diffuseColor.rgb *= 0.8 + 0.3 * n;
-        diffuseColor.rgb *= 1.0 - 0.12 * smoothstep(0.6, 0.0, p.y); // grime near the ground
+        diffuseColor.rgb *= ${photo ? '0.9 + 0.15' : '0.8 + 0.3'} * n;
+        ${joints}
+        // rain streaks below sills and copings, grime near the ground
+        diffuseColor.rgb *= 1.0 - 0.1 * smoothstep(0.55, 0.9, lkNoise(vec2(p.x * 3.0 + p.z * 3.0, p.y * 0.15)));
+        diffuseColor.rgb *= 1.0 - 0.12 * smoothstep(0.6, 0.0, p.y);
       }`,
-    );
+      );
   };
   mat.customProgramCacheKey = () => 'lk-' + key;
   return mat;
@@ -349,9 +390,9 @@ export function materials() {
     wallBrick: wallBrickMaterial(),
     limestone: stoneMaterial(),
     // Red Square buildings modelled in Blender (redSquare/Glb.jsx maps their material names onto these)
-    castConcrete: stoneMaterial('#a7a39b', 'cast-concrete'), // Kane Hall board-formed concrete
-    aggregate: stoneMaterial('#9d9890', 'aggregate'), // exposed-aggregate planters, steps and copings
-    gothicStone: stoneMaterial('#c4b0a6', 'gothic-stone'), // Suzzallo / Gerberding pinkish cast stone
+    castConcrete: stoneMaterial('#b4afa6', 'cast-concrete', { photo: '/textures/redsquare/aggregate.jpg', scale: 2.4, strength: 0.3 }), // Kane Hall concrete
+    aggregate: stoneMaterial('#a39e96', 'aggregate', { photo: '/textures/redsquare/aggregate.jpg', scale: 0.7 }), // planters, steps, copings (IMG_4713)
+    gothicStone: stoneMaterial('#c4b0a6', 'gothic-stone', { ashlar: [1.2, 0.6] }), // Suzzallo / Gerberding cast stone blocks
     brickTan: std({ color: '#8f7656', roughness: 0.9 }), // Suzzallo's buff brick infill between the windows
     brickDark: std({ color: '#4a2a20', roughness: 0.9 }), // Meany's dark header-brick dots and bands
     roofMetal: std({ color: '#6b6a61', roughness: 0.55, metalness: 0.5 }), // Meany's standing-seam roof
