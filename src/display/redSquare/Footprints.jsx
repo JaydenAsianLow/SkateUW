@@ -4,6 +4,7 @@ import { BufferGeometry, Float32BufferAttribute } from 'three';
 import { materials, merge } from '../look.js';
 import { edgeBox, edgeRotY, edges, flatPolygon } from './geo.js';
 import { LOW } from './layout.js';
+import { onFacade } from './Glb.jsx';
 
 // Buildings extruded from their OpenStreetMap footprints (MAP.md §7):
 //  - mid tier (Kane, Odegaard, Meany, Gerberding): correct footprint + height, windows with real depth
@@ -65,6 +66,7 @@ function midParts(pts, height, styleName) {
   const trim = [];
   let lit = 0;
   for (const ed of edges(pts)) {
+    if (onFacade(ed)) continue; // modelled in Blender (Glb.jsx)
     // Parapet coping along the top.
     trim.push(edgeBox(ed, ed.len / 2, height + 0.2, 0.05, [ed.len + 0.35, 0.5, 0.6]));
     const n = Math.floor((ed.len - 1.2) / st.bay);
@@ -163,35 +165,5 @@ export function Backdrop({ buildings }) {
       <mesh geometry={geo.roofs} material={m.roofFlat} receiveShadow />
       <mesh geometry={geo.coping} material={m.limestone} castShadow />
     </group>
-  );
-}
-
-// Brick tower on a footprint (the Red Square monoliths): stone cap, louvred vents near the top.
-export function Monolith({ pts, height }) {
-  const m = materials();
-  const geo = useMemo(() => {
-    const trim = [];
-    const vents = [];
-    for (const ed of edges(pts)) {
-      trim.push(edgeBox(ed, ed.len / 2, height + 0.15, 0.06, [ed.len + 0.3, 0.3, 0.42]));
-      trim.push(edgeBox(ed, ed.len / 2, 0.25, 0.05, [ed.len + 0.2, 0.5, 0.25])); // base course
-      if (ed.len > 2) for (let k = 0; k < 4; k++) vents.push(edgeBox(ed, ed.len / 2, height - 2.6 + k * 0.32, 0.03, [ed.len * 0.55, 0.12, 0.08]));
-    }
-    return {
-      walls: wallGeometry(pts, height),
-      cap: flatPolygon(pts, height + 0.3),
-      trim: merge(trim),
-      vents: merge(vents),
-      colliders: edgeColliders(pts, height),
-    };
-  }, [pts, height]);
-  return (
-    <RigidBody type="fixed" colliders={false}>
-      <BoxColliders list={geo.colliders} />
-      <mesh geometry={geo.walls} material={m.facadeBrick} castShadow receiveShadow />
-      <mesh geometry={geo.cap} material={m.limestone} />
-      <mesh geometry={geo.trim} material={m.limestone} castShadow receiveShadow />
-      <mesh geometry={geo.vents} material={m.iron} />
-    </RigidBody>
   );
 }

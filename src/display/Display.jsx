@@ -32,6 +32,8 @@ const keyMap = [
 
 // Dev only: ?play skips the menu and plays with the keyboard (handy with ?posetest / ?sidecam).
 const SKIP_MENU = import.meta.env.DEV && urlParams.has('play');
+// Dev: ?clean hides every overlay (menus, HUD) so screenshots show only the world.
+const CLEAN = import.meta.env.DEV && urlParams.has('clean');
 
 const LOST_GRACE_MS = 2000; // phone silent this long mid-game -> pause and show "Reconnect phone"
 
@@ -157,6 +159,7 @@ export default function Display() {
             <Effects />
           </Suspense>
         </Canvas>
+        {CLEAN ? null : <>
         {screen === 'play' && <Hud onMenu={toMenu} />}
         {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} />}
         {screen === 'pair' && (
@@ -170,6 +173,7 @@ export default function Display() {
           />
         )}
         {phoneLost && <PhoneLost status={status} onMenu={toMenu} />}
+        </>}
         {/* ODbL attribution for the OpenStreetMap layout (MAP.md §6). Always visible. */}
         <div className="osm-credit">Red Square, UW · Map data © OpenStreetMap contributors</div>
       </div>

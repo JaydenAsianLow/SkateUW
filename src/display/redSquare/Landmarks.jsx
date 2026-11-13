@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CuboidCollider, CylinderCollider, RigidBody } from '@react-three/rapier';
+import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import {
   BoxGeometry,
   Color,
@@ -13,33 +13,6 @@ import {
 import { C, materials, merge, rng } from '../look.js';
 import { LOW, STAIRS, VISTA_DIR } from './layout.js';
 import { POI } from './osm.js';
-
-// Broken Obelisk (Barnett Newman): ~7.8 m of weathering steel, an inverted, snapped-off obelisk balanced
-// point-to-point on a pyramid. Artwork: solid collision only, never a grind spot (MAP.md §8).
-export function BrokenObelisk() {
-  const m = materials();
-  const geo = useMemo(() => {
-    const r = rng(9);
-    const pyramid = new ConeGeometry(2.25, 2.3, 4, 1).rotateY(Math.PI / 4).translate(0, 1.15, 0);
-    const shaft = new CylinderGeometry(0.75, 0.04, 5.5, 4, 6).rotateY(Math.PI / 4);
-    // Jagged, torn top edge.
-    const p = shaft.attributes.position;
-    for (let i = 0; i < p.count; i++) if (p.getY(i) > 2.7) p.setY(i, p.getY(i) + (r() - 0.5) * 0.7);
-    shaft.computeVertexNormals();
-    shaft.translate(0, 2.3 + 2.75, 0);
-    const pad = new BoxGeometry(4.8, 0.12, 4.8).translate(0, 0.06, 0);
-    return { steel: merge([pyramid, shaft]), pad };
-  }, []);
-  const [x, z] = POI.brokenObelisk;
-  return (
-    <RigidBody type="fixed" colliders={false} position={[x, 0, z]} rotation={[0, 0.2, 0]}>
-      <CuboidCollider args={[1.7, 1.2, 1.7]} position={[0, 1.2, 0]} />
-      <CylinderCollider args={[2.6, 0.6]} position={[0, 4.9, 0]} />
-      <mesh geometry={geo.steel} material={m.corten} castShadow receiveShadow />
-      <mesh geometry={geo.pad} material={m.granite} receiveShadow />
-    </RigidBody>
-  );
-}
 
 // George Washington (Lorado Taft, 1909): bronze figure on a granite pedestal, facing west, below the plaza.
 export function GeorgeWashington() {

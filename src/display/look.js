@@ -195,7 +195,8 @@ function groundMaterial() {
           // Lighter stone bands on a rotated 13 m grid (real pattern still to verify, MAP.md §12).
           float ang = 0.42; float ca = cos(ang), sa = sin(ang);
           vec2 q = vec2(ca * p.x - sa * p.y, sa * p.x + ca * p.y);
-          vec2 g = abs(fract(q / 13.0 + 0.5) - 0.5) * 13.0;
+          // Few, long concrete bands like the real paving (photos IMG_4708, 4732, 4734): ~27 m apart one way, ~41 m the other.
+          vec2 g = abs(fract(q / vec2(27.0, 41.0) + 0.5) - 0.5) * vec2(27.0, 41.0);
           float dLine = min(g.x, g.y);
           gBand = (1.0 - smoothstep(0.17, 0.2, dLine)) * gPlaza * 0.8;
           float n = lkNoise(p * 0.12) * 0.6 + lkNoise(p * 0.55) * 0.4;
@@ -296,8 +297,8 @@ function facadeBrickMaterial(stone = false) {
 }
 
 // Limestone with soft weathering variation so trim doesn't look like plastic.
-function stoneMaterial() {
-  const mat = new MeshStandardMaterial({ color: '#B5A38B', roughness: 0.9 });
+function stoneMaterial(color = '#B5A38B', key = 'stone') {
+  const mat = new MeshStandardMaterial({ color, roughness: 0.9 });
   mat.onBeforeCompile = (shader) => {
     addWorldVaryings(shader);
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -311,7 +312,7 @@ function stoneMaterial() {
       }`,
     );
   };
-  mat.customProgramCacheKey = () => 'lk-stone';
+  mat.customProgramCacheKey = () => 'lk-' + key;
   return mat;
 }
 
@@ -347,6 +348,14 @@ export function materials() {
     ground: groundMaterial(),
     wallBrick: wallBrickMaterial(),
     limestone: stoneMaterial(),
+    // Red Square buildings modelled in Blender (redSquare/Glb.jsx maps their material names onto these)
+    castConcrete: stoneMaterial('#a7a39b', 'cast-concrete'), // Kane Hall board-formed concrete
+    aggregate: stoneMaterial('#9d9890', 'aggregate'), // exposed-aggregate planters, steps and copings
+    gothicStone: stoneMaterial('#c4b0a6', 'gothic-stone'), // Suzzallo / Gerberding pinkish cast stone
+    brickTan: std({ color: '#8f7656', roughness: 0.9 }), // Suzzallo's buff brick infill between the windows
+    brickDark: std({ color: '#4a2a20', roughness: 0.9 }), // Meany's dark header-brick dots and bands
+    roofMetal: std({ color: '#6b6a61', roughness: 0.55, metalness: 0.5 }), // Meany's standing-seam roof
+    skylight: std({ color: '#9fc4c8', roughness: 0.15, metalness: 0.3 }),
     glass: std({ color: '#141010', roughness: 0.55, metalness: 0.0, envMapIntensity: 0.3 }),
     glassWarm: std({ color: '#3a2618', roughness: 0.15, metalness: 0.4, emissive: '#ffb066', emissiveIntensity: 0.35 }),
     wood: std({ color: '#3a2418', roughness: 0.7 }),

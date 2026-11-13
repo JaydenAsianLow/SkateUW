@@ -11,6 +11,8 @@ const aim = new Vector3();
 // ?topdown (or ?topdown=300 for the height in meters) shows the level from above.
 const TOP_DOWN = urlParams.has('topdown') ? Number(urlParams.get('topdown')) || 260 : 0;
 const SIDE_CAM = urlParams.has('sidecam');
+// Dev: ?cam=x,y,z,lookX,lookY,lookZ pins the camera (screenshots of the level).
+const FIXED = import.meta.env.DEV ? urlParams.get('cam')?.split(',').map(Number) : null;
 
 // Low over-the-shoulder chase camera (DESIGN.md §3; numbers in tuning.js).
 export default function CameraRig() {
@@ -23,6 +25,11 @@ export default function CameraRig() {
   useFrame(({ camera, scene }, rawDt) => {
     const dt = Math.min(rawDt, 0.1); // real time, like the physics, so the speed lead below stays exact
     const p = board.drawn ?? board; // where the board is drawn this frame (see state.js)
+    if (FIXED?.length === 6) {
+      camera.position.set(FIXED[0], FIXED[1], FIXED[2]);
+      camera.lookAt(FIXED[3], FIXED[4], FIXED[5]);
+      return updateSunView(camera);
+    }
     if (TOP_DOWN) {
       scene.fog = null;
       // Debug map view (MAP.md §10 step 2): straight down over the plaza, north at the top.

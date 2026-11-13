@@ -3,6 +3,7 @@
 // Units: meters. +x = east, +z = south (north is -z). Plaza deck at y = 0.
 import { BUILDINGS, PLAZA, POI } from './osm.js';
 import { urlParams } from '../util.js';
+import FACADES from '../../../public/map/rs-facades.json';
 
 // Red Square is a deck over a parking garage; Rainier Vista and the west lawn sit a stair flight lower.
 export const LOW = -2;
@@ -39,7 +40,7 @@ export const STAIRS = [
     tread: 0.38,
   },
   {
-    key: 'west', // down to the George Washington statue; visual only (outside the playable area)
+    key: 'west', // down to the George Washington statue (skateable)
     top: [-50.5, -5.5],
     dir: [-1, 0],
     width: 15,
@@ -79,7 +80,8 @@ export const HOLES = [
 export const BOUNDS = [
   [[-31.5, -73.5], [-10, -73.5]], // NW: path between Odegaard and Kane toward the Quad
   [[50.2, -42.7], [66.5, -25.5], [70.1, -17.5]], // NE: between Kane and Suzzallo
-  [[-39.2, -34], [-39.2, -20], [-45.8, -13.6], [-50.8, -13.6], [-50.8, 52.2], [-38.5, 53], [-30.5, 55.2]], // W + SW
+  [[-39.2, -34], [-39.2, -20], [-45.8, -13.6], [-50.8, -13.6]], // W: Odegaard's corner, down to the west steps
+  [[-43.9, 58.8], [-30.5, 55.3]], // SW: between Meany and Gerberding (Meany's front and the west steps are open)
   [[35, 84], [78, 63.5]], // end of the playable landing below the Rainier Vista steps
 ];
 
@@ -102,19 +104,23 @@ export const PAVED = {
 };
 
 // --- Building groups
-const named = (name) => BUILDINGS.find((b) => b.name === name);
+// Heights from the photos (rs-facades.json) override the OSM estimates where a facade is modelled.
+const HEIGHT_KEY = { 'Kane Hall': 'kane', 'Odegaard Undergraduate Library': 'odegaard', 'Meany Hall': 'meany', 'Gerberding Hall': 'gerberding', 'Suzzallo Library': 'suzzallo' };
+const named = (name) => {
+  const b = BUILDINGS.find((x) => x.name === name);
+  const h = FACADES[HEIGHT_KEY[name]]?.height;
+  return h ? { ...b, height: h } : b;
+};
 export const MID = [
   { b: named('Kane Hall'), style: 'modern' },
   { b: named('Odegaard Undergraduate Library'), style: 'modern' },
   { b: named('Meany Hall'), style: 'modern' },
   { b: named('Gerberding Hall'), style: 'stone' },
+  { b: named('Suzzallo Library'), style: 'gothic' },
 ];
-export const SUZZALLO = named('Suzzallo Library');
-const midIds = new Set([...MID.map((m) => m.b.id), SUZZALLO.id]);
+const midIds = new Set(MID.map((m) => m.b.id));
 export const BACKDROP = BUILDINGS.filter((b) => !midIds.has(b.id));
 
-// Suzzallo's straight west façade (OSM nodes), the side that faces Red Square.
-export const SUZZALLO_FACADE = { a: [66.08, -17.07], b: [54.7, 47.8] };
 
 // --- Props
 export const LAMPS = [
@@ -124,14 +130,28 @@ export const LAMPS = [
 export const BENCHES = [
   // [x, z, rotY]: seat faces -z (north) at rotY 0
   [-12, 51.5, 0.18], [0, 53.4, 0.18], [12, 55.6, 0.18],
-  [-36.5, -40, -Math.PI / 2], [-36.5, -28, -Math.PI / 2],
+  [-54.3, 22, -Math.PI / 2], [-54.3, 34, -Math.PI / 2], // against Meany's brick plinth (photo IMG_4721)
 ];
 
 const vistaTree = (s, off) => {
   const p = add(add([53, 81], VISTA_DIR, s), [VISTA_DIR[1], -VISTA_DIR[0]], off);
   return p;
 };
+// A point in front of a modelled facade: `t` along its wall (0..1 from a to b), `out` metres toward the plaza.
+function infront(key, t, out) {
+  const { a, b } = FACADES[key];
+  const p = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  let n = [-(b[1] - a[1]) / len, (b[0] - a[0]) / len];
+  if (n[0] * (5 - p[0]) + n[1] * (5 - p[1]) < 0) n = [-n[0], -n[1]];
+  return [p[0] + n[0] * out, p[1] + n[1] * out];
+}
+
 export const TREES = [
+  // The big bare plane trees along Gerberding's front (photos IMG_4715, 4733) and the small ornamental trees
+  // in round grates in front of Meany (IMG_4721, 4735)
+  ...[0.12, 0.3, 0.68, 0.88].map((t, i) => ({ p: infront('gerberding', t, 6.5), y: 0, v: i % 4, s: 0.85 })),
+  ...[0.18, 0.5, 0.82].map((t, i) => ({ p: infront('meany', t, 10), y: 0, v: (i + 1) % 4, s: 0.42 })),
   // Rainier Vista lawn edges, on the lower ground
   ...[45, 75, 105, 135].flatMap((s, i) => [
     { p: vistaTree(s, 21), y: LOW, v: i % 4, s: 1.1 },

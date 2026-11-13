@@ -13,3 +13,6 @@ art/reference/back.png
 art/reference/right.png
 # Personal photos: kept local only
 art/reference/photo_*.jpg
+
+# Python bytecode from the Blender helper module
+__pycache__/
