@@ -10,7 +10,7 @@ clear()
 W = facade_size('kane')
 H = 13.4  # top of the roof slab
 b = Builder()
-FLOOR = 1.5       # walking level of the portico and the space in front, nine risers above the plaza
+FLOOR = 1.2       # walking level of the portico and the space in front, seven risers above the plaza (rs-landmarks.json levels.height)
 N = 11            # fins across the front
 x0 = -W / 2 + 6.0  # the end tower and the wing take the last few metres each side
 x1 = W / 2 - 4.5
@@ -22,11 +22,9 @@ WALK = 10.0
 b.box('M_paverbrick', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
 b.collider('walk', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
 b.box('M_concrete', -W / 2, W / 2, -WALK - 0.02, -WALK + 0.35, FLOOR - 0.05, FLOOR + 0.005)   # top nosing
-b.stairs('M_concrete', 'steps', 0.0, W, -WALK, FLOOR, 9, 0.45)
+b.stairs('M_concrete', 'steps', 0.0, W, -WALK, FLOOR, 7, 0.45)
 b.rail('top_edge', (-W / 2, -WALK, FLOOR), (W / 2, -WALK, FLOOR))
-b.rail('west_edge', (-W / 2, -WALK, FLOOR), (-W / 2, 0.0, FLOOR))
-b.box('M_concrete', -W / 2 - 0.3, -W / 2, -WALK - 9 * 0.45, 0.0, 0.0, FLOOR + 0.05)          # west cheek wall
-b.collider('cheek', -W / 2 - 0.3, -W / 2, -WALK - 9 * 0.45, 0.0, 0.0, FLOOR + 0.05)
+# (the west side joins the raised north level in front of Odegaard, 26_landmarks.py)
 
 # --- Fins: each is a tapered wedge, deep at the base, slimmer near the roof (photo 4730)
 for i in range(N):

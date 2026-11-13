@@ -44,12 +44,13 @@ for key, tex in (('huskies', 'banner_huskies.jpg'), ('uw', 'banner_uw.jpg')):
     b.quad(m, (x, -z0, h0), (x, -z1, h0), (x, -z1, h1), (x, -z0, h1))
     b.box('M_metal', x - 0.02, x + 0.02, -z0 + 0.05, -z1 - 0.05, h1, h1 + 0.06)  # top batten
 
-# --- Raised walking level by Kane with the sloped granite bank down to the plaza; Broken Obelisk stands on it
-up = L['upper']
-H, RUN, CURB = up['height'], up['bankRun'], up['curb']
-poly = up['polygon']
-b.slab('M_paverbrick', [P(*p) for p in poly], 0.0, H)
-b.slab('COLMESH_upper', [P(*p) for p in poly], H - 0.05, H)
+# --- Raised levels at the top of Kane's staircase (one height, rs-landmarks.json "levels"):
+#  north: the big space in front of Odegaard joining Kane's walking space, stairs down past the monoliths;
+#  kane_east: east of Kane's stairs, where Broken Obelisk stands: a granite bank to the plaza on the south-west and
+#  a small hill (ramp) on the east side up to it (photos 4709, aerial, tour photo, videos).
+LV = L['levels']
+H, RUN, CURB, RAMP = LV['height'], LV['bankRun'], LV['curb'], LV['rampRun']
+SR, ST = LV['stairRisers'], LV['stairTread']
 
 
 def inside(pt, pg):
@@ -61,46 +62,116 @@ def inside(pt, pg):
     return c
 
 
-def out_normal(p, q):
+def out_normal(p, q, pg):
     dx, dz = q[0] - p[0], q[1] - p[1]
     ln = math.hypot(dx, dz)
     n = (dz / ln, -dx / ln)
     mid = ((p[0] + q[0]) / 2 + n[0] * 0.2, (p[1] + q[1]) / 2 + n[1] * 0.2)
-    return (-n[0], -n[1]) if inside(mid, poly) else n
+    return (-n[0], -n[1]) if inside(mid, pg) else n
 
 
-toes = []
-for i in range(up['bankEdges']):
-    p, q = poly[i], poly[i + 1]
-    n = out_normal(p, q)
-    tp, tq = (p[0] + n[0] * RUN, p[1] + n[1] * RUN), (q[0] + n[0] * RUN, q[1] + n[1] * RUN)
-    b.solid_down('M_granite', [(*P(*p), H), (*P(*q), H), (*P(*tq), CURB), (*P(*tp), CURB)])
-    b.mesh('COLMESH_upper', [(*P(*p), H), (*P(*q), H), (*P(*tq), CURB), (*P(*tp), CURB)], [(0, 1, 2, 3)])
-    # aggregate curb at the toe of the bank (photo 4709)
-    cp, cq = (tp[0] + n[0] * 0.06, tp[1] + n[1] * 0.06), (tq[0] + n[0] * 0.06, tq[1] + n[1] * 0.06)
-    b.solid_down('M_aggregate', [(*P(*tp), CURB), (*P(*tq), CURB), (*P(*cq), 0.01), (*P(*cp), 0.01)])
-    b.mesh('COLMESH_upper', [(*P(*tp), CURB), (*P(*tq), CURB), (*P(*cq), 0.0), (*P(*cp), 0.0)], [(0, 1, 2, 3)])
-    b.rail(f'bank_top{i}', (*P(*p), H), (*P(*q), H))
-    b.rail(f'bank_curb{i}', (*P(*tp), CURB), (*P(*tq), CURB))
-    toes.append((tp, tq, cp, cq))
-for i in range(1, len(toes)):  # fill the wedge between neighbouring bank faces at each corner
-    v = poly[i]
-    a_, b_ = toes[i - 1][1], toes[i][0]
-    ca, cb = toes[i - 1][3], toes[i][2]
-    b.solid_down('M_granite', [(*P(*v), H), (*P(*a_), CURB), (*P(*b_), CURB)])
-    b.mesh('COLMESH_upper', [(*P(*v), H), (*P(*a_), CURB), (*P(*b_), CURB)], [(0, 1, 2)])
-    b.solid_down('M_aggregate', [(*P(*a_), CURB), (*P(*ca), 0.01), (*P(*cb), 0.01), (*P(*b_), CURB)])
-    b.mesh('COLMESH_upper', [(*P(*a_), CURB), (*P(*ca), 0.0), (*P(*cb), 0.0), (*P(*b_), CURB)], [(0, 1, 2, 3)])
+def V(pt, h):
+    return (*P(*pt), h)
 
+
+def off(pt, n, d):
+    return (pt[0] + n[0] * d, pt[1] + n[1] * d)
+
+
+for lv in LV['list']:
+    poly, kinds = lv['polygon'], {int(k): v for k, v in lv['edges'].items()}
+    nm = lv['name']
+    b.slab('M_paverbrick', [P(*p) for p in poly], 0.0, H)
+    b.slab('COLMESH_' + nm, [P(*p) for p in poly], H - 0.05, H)
+    toes = {}
+    for i, kind in sorted(kinds.items()):
+        p, q = poly[i], poly[(i + 1) % len(poly)]
+        n = out_normal(p, q, poly)
+        if kind in ('bank', 'ramp'):
+            run, low = (RUN, CURB) if kind == 'bank' else (RAMP, 0.0)
+            tp, tq = off(p, n, run), off(q, n, run)
+            top = [V(p, H), V(q, H), V(tq, low), V(tp, low)]
+            b.solid_down('M_granite' if kind == 'bank' else 'M_paverbrick', top)
+            b.mesh('COLMESH_' + nm, top, [(0, 1, 2, 3)])
+            b.rail(f'{nm}_{kind}{i}_top', V(p, H), V(q, H))
+            if kind == 'bank':  # aggregate curb at the toe (photo 4709)
+                cp, cq = off(tp, n, 0.06), off(tq, n, 0.06)
+                b.solid_down('M_aggregate', [V(tp, CURB), V(tq, CURB), V(cq, 0.01), V(cp, 0.01)])
+                b.mesh('COLMESH_' + nm, [V(tp, CURB), V(tq, CURB), V(cq, 0.0), V(cp, 0.0)], [(0, 1, 2, 3)])
+                b.rail(f'{nm}_bank{i}_curb', V(tp, CURB), V(tq, CURB))
+            toes[i] = (n, run, low)
+        elif kind == 'stairs':
+            rise = H / SR
+            for k in range(SR - 1):  # bands outward from the top edge, one riser lower each
+                h = H - (k + 1) * rise
+                o0, o1 = k * ST, (k + 1) * ST
+                band = [V(off(p, n, o0), h), V(off(q, n, o0), h), V(off(q, n, o1), h), V(off(p, n, o1), h)]
+                b.solid_down('M_concrete', band)
+                b.mesh('COLMESH_' + nm, band, [(0, 1, 2, 3)])
+                riser = [V(off(p, n, o0), h), V(off(q, n, o0), h), V(off(q, n, o0), h + rise), V(off(p, n, o0), h + rise)]
+                b.mesh('COLMESH_' + nm, riser, [(0, 1, 2, 3)])
+            last = (SR - 1) * ST
+            b.mesh('COLMESH_' + nm, [V(off(p, n, last), 0), V(off(q, n, last), 0), V(off(q, n, last), rise), V(off(p, n, last), rise)], [(0, 1, 2, 3)])
+            b.rail(f'{nm}_stairs{i}_top', V(p, H), V(q, H))
+    # fill the wedge at each corner between two neighbouring sloped edges
+    for i in toes:
+        j = (i + 1) % len(poly)
+        if j not in toes:
+            continue
+        v = poly[j]
+        (n1, r1, l1), (n2, r2, l2) = toes[i], toes[j]
+        a_, b_ = off(v, n1, r1), off(v, n2, r2)
+        mat = 'M_granite' if l1 > 0 and l2 > 0 else 'M_paverbrick'
+        b.solid_down(mat, [V(v, H), V(a_, l1), V(b_, l2)])
+        b.mesh('COLMESH_' + nm, [V(v, H), V(a_, l1), V(b_, l2)], [(0, 1, 2)])
+
+# --- The two short flights next to the monolith up to the north level, brick wall + handrail on the Odegaard side
+OS = L['odegaardStairs']
+x0, x1 = OS['x']
+rise = H / (OS['lower'] + OS['upper'])
+y = -OS['footZ']                       # Blender y = -z; the stairs climb toward +y (north)
+z = 0.0
+rail_pts = []
+for fi, (fname, nr) in enumerate((('lower', OS['lower']), ('upper', OS['upper']))):
+    y_start, z_start = y, z
+    for k in range(nr):
+        z += rise
+        b.box('M_aggregate', x0, x1, y, y + OS['tread'], 0.0, z)
+        b.collider(f'od_{fname}{k}', x0, x1, y, y + OS['tread'], 0.0, z)
+        y += OS['tread']
+    rail_pts.append(((x0 + 0.22, y_start - 0.3, z_start + 0.85), (x0 + 0.22, y + 0.3, z + 0.85)))
+    if fi == 0:  # landing
+        b.box('M_paverbrick', x0, x1, y, y + OS['landing'], 0.0, z)
+        b.collider('od_landing', x0, x1, y, y + OS['landing'], 0.0, z)
+        b.rail('od_landing_edge', (x0, y, z), (x1, y, z))
+        y += OS['landing']
+y_foot = -OS['footZ']
+b.prism_x('M_brick', [(y_foot, 0.0), (y + 0.4, 0.0), (y + 0.4, H + 0.95), (y_foot + 1.0, rise * OS['lower'] + 0.95), (y_foot, 0.95)], x0 - 0.45, x0)
+b.collider('od_wall', x0 - 0.45, x0, y_foot, y + 0.4, 0.0, H + 0.95)
+for i, (ra, rb) in enumerate(rail_pts):
+    b.tube('M_metal', ra, rb, 0.022)
+    b.rail(f'od_handrail{i}', ra, rb)
+
+# --- Broken Obelisk on its own low sloped granite plinth with a curb (tour photo), up on the kane_east level
 ob = L['obelisk']
 cx, cy = P(*ob['center'])
 yaw = -ob['yaw']  # game yaw about +Y -> Blender yaw about +Z (z flips)
 c, s = math.cos(yaw), math.sin(yaw)
-b.frustum('M_granite', cx, cy, H, H + 0.12, 2.6, 2.6, 2.5, 2.5, yaw)                   # low granite pad
-b.collider('obelisk_pad', cx - 2.6, cx + 2.6, cy - 2.6, cy + 2.6, H, H + 0.12, rotz=yaw)
-# steel: pyramid, then the inverted, snapped-off obelisk balanced point to point
+PT, PBS, PHT = 2.4, 4.0, 0.55        # plinth half-size top / bottom, height
+b.frustum('M_aggregate', cx, cy, H, H + 0.14, PBS + 0.3, PBS + 0.3, PBS + 0.28, PBS + 0.28, yaw)   # curb frame
+b.frustum('M_granite', cx, cy, H, H + PHT, PBS, PBS, PT, PT, yaw)
+b.collider('obelisk_plinth_top', cx - PT, cx + PT, cy - PT, cy + PT, H, H + PHT, rotz=yaw)
+ang = math.atan2(PHT, PBS - PT)
+for side in range(4):  # each sloped side is a little bank
+    a = yaw + side * math.pi / 2
+    nx, ny = math.cos(a), math.sin(a)
+    d = (PT + PBS) / 2
+    L_ = math.hypot(PBS - PT, PHT)
+    tc = (cx + nx * d - 0.08 * nx * math.sin(ang), cy + ny * d - 0.08 * ny * math.sin(ang), H + PHT / 2 - 0.08 * math.cos(ang))
+    b.col_center(f'obelisk_bank{side}', tc, (2 * PBS, L_, 0.16), (-ang, 0, a - math.pi / 2))
+    b.rail(f'obelisk_edge{side}', (cx + nx * PT - ny * PT, cy + ny * PT + nx * PT, H + PHT), (cx + nx * PT + ny * PT, cy + ny * PT - nx * PT, H + PHT))
 PB, PY = 1.75, 2.7                 # pyramid half base, height
-base = H + 0.12
+base = H + PHT
 b.frustum('M_corten', cx, cy, base, base + PY, PB, PB, 0, 0, yaw)
 SW = 0.5                           # shaft half width
 tip = base + PY

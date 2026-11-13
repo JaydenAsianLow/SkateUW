@@ -50,7 +50,7 @@ Red Square sits at the heart of campus, on top of an underground parking garage 
 |---|---|---|---|
 | **East** | **Suzzallo Library** | Collegiate Gothic, stone and brick, tall arched windows | **Hero building.** Highest detail. Matches DESIGN.md's Gothic look |
 | Northeast | **Kane Hall** | Modern brick (1970s) | Mid detail, solid wall to skate past |
-| Northeast corner | ***Broken Obelisk*** (Barnett Newman sculpture) | Steel sculpture | Stands up on the raised walking level by Kane; that level's sloped granite edge is a long bank down to the plaza |
+| Northeast corner | ***Broken Obelisk*** (Barnett Newman sculpture) | Steel sculpture | On its own low sloped granite plinth, up on the raised level at the top of Kane's staircase |
 | Northwest | **Odegaard Undergraduate Library** | Modern brick (1970s) | Mid detail |
 | Northwest area | **Three brick monoliths** (one is a garage vent, two are decorative) | Tall brick towers | Landmark + skate obstacle around their bases |
 | North | **The Quad** | Gothic quadrangle, trees | Backdrop only (future level) |
@@ -135,8 +135,9 @@ Only use features that **actually exist**; confirm each one on site.
 2. **Monolith bases (NW):** carve around the three towers; any real ledges/curbs at their bases become grind spots.
 3. **Open brick plaza:** long flat runs for pushing, carving and flat-ground tricks (ollie, kickflip).
 4. **Building-edge ledges, planters, benches:** only where they exist in photos.
-5. ***Broken Obelisk:*** stands on the raised walking level east of Kane's stairs; the level's sloped granite edge (with a curb at its foot) is a long bank down to the plaza. The steel itself is solid.
-6. **Everything is skateable:** planter slabs, building plinths and ledges, terraces, balustrades, every stair set and
+5. ***Broken Obelisk:*** on a low sloped granite plinth (four little banks) up on the raised level east of Kane's stairs. That level drops to the plaza as a long granite bank with a curb on the south-west, and a small brick hill on the east side rolls up onto it and round to the front of Kane, above the staircase. The steel itself is solid.
+6. **Upper level:** Kane's walking space, the obelisk area and the big open space in front of Odegaard are one raised level (1.2 m). Ways down: Kane's 7-riser staircase, the steps past the monoliths, the two short flights (4 + 3) between Odegaard's corner and the monolith, the granite bank and the hill.
+7. **Everything is skateable:** planter slabs, building plinths and ledges, terraces, balustrades, every stair set and
    handrail. The real planters have metal skate stoppers; the game leaves them off.
 
 ---
@@ -208,12 +209,12 @@ Each step is its own script in `art/scripts/` and writes a GLB to `public/models
 | Script | What | Photos |
 |---|---|---|
 | `19_banners.py` (plain Python) | Cuts the two monolith banners out of IMG_4722, flattened | 4722 |
-| `21_kane.py` | Kane Hall: concrete fins, balcony slabs, glazing, 10 m walking space, 9-riser staircase, carillon tower | 4708, 4714, 4727, 4730, 4735 |
+| `21_kane.py` | Kane Hall: concrete fins, balcony slabs, glazing, 10 m walking space, 7-riser staircase, carillon tower | 4708, 4714, 4727, 4730, 4735 |
 | `22_meany.py` | Meany Hall: banded brick, sawtooth skylight roof, concrete portal, plinth ledge | 4711, 4719, 4721, 4736 |
-| `23_odegaard.py` | Odegaard: brick masses, balcony grid, two 3-step flights with a landing, wing wall + handrails | 4723, 4724, 4725, 4731 |
+| `23_odegaard.py` | Odegaard: brick masses, balcony grid, entrance onto the raised north level | 4723, 4724, 4725, 4731 |
 | `24_suzzallo.py` | Suzzallo: arcade, 3 gabled portals, 11 traceried windows, pinnacles, terrace + balustrade, steps | 4726, 4732 |
 | `25_gerberding.py` | Gerberding: Gothic windows, oriel, gable, tower, fanned steps with 2 handrails, front ledge | 4715–4719, 4733 |
-| `26_landmarks.py` | Monoliths + banners, raised level by Kane with its granite bank and the obelisk, planter slabs round the brass drain in front of Meany | 4709, 4711, 4713, 4714, 4722, webcam screenshot, videos |
+| `26_landmarks.py` | Monoliths + banners; the raised levels (north space in front of Odegaard, the obelisk area) with their bank, hill and stairs; the two flights by the monolith; Broken Obelisk on its plinth; planter slabs round the brass drain in front of Meany | 4709, 4711, 4713, 4714, 4722, 4723, 4724, webcam screenshot, aerial, tour photo, videos |
 
 - Rerun: `blender.exe -b --python art/scripts/2x_name.py` (previews go to `art/renders/`).
 - Placement: `public/map/rs-facades.json` (which OSM wall each front sits on, building heights) and

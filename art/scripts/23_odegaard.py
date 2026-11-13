@@ -1,7 +1,6 @@
 # Odegaard Undergraduate Library, north-west side of Red Square (photos IMG_4731, 4723, 4724, 4725).
 # Brown brick towers and piers, a grid of deep concrete balcony bands with recessed windows, a colonnade of brick
-# piers at the entrance, the low terrace in front reached by three-riser steps, and the brick wing wall with
-# its wall-mounted handrail at the south end.
+# piers at the entrance. The entrance opens onto the raised north level (built in 26_landmarks.py).
 # Run: blender.exe -b --python art/scripts/23_odegaard.py
 import os
 import sys
@@ -16,7 +15,7 @@ H = 14.2
 g0, g1 = -W / 2 + 6.0, W / 2 - 5.0          # the balcony grid between the two brick masses
 BAYS = 4
 dx = (g1 - g0) / BAYS
-T = 1.0                                      # entrance terrace height (two flights up from the plaza)
+T = 1.2                                      # floor of the north level in front (rs-landmarks.json levels.height)
 
 # brick masses either side (photo 4731: tall plain brick towers with a fine vertical joint)
 b.box('M_brick', -W / 2, g0, -1.6, 0.0, 0.0, H + 0.6)
@@ -43,33 +42,8 @@ for i in range(BAYS):
     b.box('M_glass' if i % 2 else 'M_glass_warm', cx - dx / 2 + 0.35, cx + dx / 2 - 0.35, -0.2, -0.15, T, 4.15)
 b.box('M_concrete', -W / 2 - 0.1, W / 2 + 0.1, -1.7, 0.05, H, H + 0.6)             # roof fascia
 
-# Two flights of three aggregate steps from the plaza (photos 4723, 4724): plaza -> brick landing -> entrance terrace,
-# with the brick wing wall and its wall-mounted handrail along the south side (photo 4725).
-T1, T2 = 0.5, 1.0            # landing / terrace heights
-D2 = 5.5                     # terrace depth in front of the building
-D1 = 6.0                     # landing depth
-R = 3 * 0.42                 # run of one flight
-y_t = -D2                    # front edge of the terrace
-y_l = y_t - R - D1           # front edge of the landing
-b.box('M_paverbrick', -W / 2, W / 2, y_t, 0.0, 0.0, T2)
-b.collider('terrace', -W / 2, W / 2, y_t, 0.0, 0.0, T2)
-b.stairs('M_aggregate', 'upper', 0.0, W, y_t, T2, 3, 0.42)
-b.box('M_paverbrick', -W / 2, W / 2, y_l, y_t - R, 0.0, T1)
-b.collider('landing', -W / 2, W / 2, y_l, y_t - R, 0.0, T1)
-b.stairs('M_aggregate', 'lower', 0.0, W, y_l, T1, 3, 0.42)
-for nm, y, z in (('terrace_edge', y_t, T2), ('landing_edge', y_l, T1)):
-    b.box('M_aggregate', -W / 2, W / 2, y - 0.02, y + 0.3, z - 0.04, z + 0.005)
-    b.rail(nm, (-W / 2, y, z), (W / 2, y, z))
-y_bot = y_l - R
-wx = -W / 2 - 0.45
-b.box('M_brick', wx - 0.2, wx + 0.2, y_bot, -1.6, 0.0, T2 + 0.9)
-b.box('M_brick', wx - 0.24, wx + 0.24, y_bot, -1.6, T2 + 0.9, T2 + 1.0)
-b.collider('wingwall', wx - 0.24, wx + 0.24, y_bot, -1.6, 0.0, T2 + 1.0)
-b.rail('wingwall_top', (wx, y_bot, T2 + 1.0), (wx, -1.6, T2 + 1.0))
-for nm, (ya, za), (yb, zb) in (('handrail_lower', (y_bot, 0.0), (y_l, T1)), ('handrail_upper', (y_t - R, T1), (y_t, T2))):
-    ra, rb = (wx + 0.3, ya - 0.3, za + 0.85), (wx + 0.3, yb + 0.3, zb + 0.85)
-    b.tube('M_metal', ra, rb, 0.022)
-    b.rail(nm, ra, rb)
+# The big open space in front (the north level) and the stairs down to the plaza next to the monolith are in
+# 26_landmarks.py (photos 4723, 4724 and the aerial photo).
 
 b.finish('odegaard')
 export('odegaard')

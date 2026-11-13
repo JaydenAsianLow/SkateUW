@@ -121,77 +121,154 @@
    ]
   ]
  },
- "upper": {
-  "_note": "Raised walking level in front of Kane, east to Suzzallo's north end (photo 4709, videos). Edges 0..bankEdges-1 are the sloped granite bank down to the plaza; vertex 0 is the foot of Kane's east stair end, the last vertex is Kane's east corner.",
-  "height": 1.5,
+ "levels": {
+  "_note": "Raised levels (photos 4709, 4723, 4724, aerial, tour photo, videos). Each edge i (from point i to i+1) is 'bank' (sloped granite + curb), 'ramp' (gentle brick slope), 'stairs' (concrete risers) or omitted (a plain edge against a building or the other level).",
+  "height": 1.2,
   "bankRun": 2.6,
   "curb": 0.3,
-  "bankEdges": 6,
-  "polygon": [
-   [
-    23.3,
-    -12.29
-   ],
-   [
-    31,
-    -4.5
-   ],
-   [
-    41,
-    -3.0
-   ],
-   [
-    55,
-    -7.5
-   ],
-   [
-    58.5,
-    -10.5
-   ],
-   [
-    60.5,
-    -14
-   ],
-   [
-    65.5,
-    -17.5
-   ],
-   [
-    70.1,
-    -17.5
-   ],
-   [
-    66.5,
-    -25.5
-   ],
-   [
-    50.2,
-    -42.7
-   ],
-   [
-    47.13,
-    -39.8
-   ],
-   [
-    45.04,
-    -27.55
-   ],
-   [
-    37.76,
-    -29
-   ],
-   [
-    39.22,
-    -36.79
-   ],
-   [
-    36.12,
-    -37.2
-   ],
-   [
-    29.76,
-    -24.77
-   ]
+  "rampRun": 9.0,
+  "stairRisers": 7,
+  "stairTread": 0.45,
+  "list": [
+   {
+    "name": "kane_east",
+    "_note": "east of Kane's staircase: the obelisk stands on it; small hill up to it from the east",
+    "polygon": [
+     [
+      23.3,
+      -12.29
+     ],
+     [
+      31,
+      -4.5
+     ],
+     [
+      41,
+      -3.0
+     ],
+     [
+      55,
+      -7.5
+     ],
+     [
+      58.5,
+      -10.5
+     ],
+     [
+      60.5,
+      -14
+     ],
+     [
+      65.5,
+      -17.5
+     ],
+     [
+      70.1,
+      -17.5
+     ],
+     [
+      66.5,
+      -25.5
+     ],
+     [
+      50.2,
+      -42.7
+     ],
+     [
+      47.13,
+      -39.8
+     ],
+     [
+      45.04,
+      -27.55
+     ],
+     [
+      37.76,
+      -29
+     ],
+     [
+      39.22,
+      -36.79
+     ],
+     [
+      36.12,
+      -37.2
+     ],
+     [
+      29.76,
+      -24.77
+     ]
+    ],
+    "edges": {
+     "0": "bank",
+     "1": "bank",
+     "2": "ramp",
+     "3": "ramp",
+     "4": "bank",
+     "5": "bank"
+    }
+   },
+   {
+    "name": "north",
+    "_note": "the big space in front of Odegaard, joining Kane's walking space; stairs down past the monoliths",
+    "polygon": [
+     [
+      -30.0,
+      -29.76
+     ],
+     [
+      -39.4,
+      -29.76
+     ],
+     [
+      -39.21,
+      -56.69
+     ],
+     [
+      -31.02,
+      -56.58
+     ],
+     [
+      -30.78,
+      -73.65
+     ],
+     [
+      -10.39,
+      -73.57
+     ],
+     [
+      -10.51,
+      -62.86
+     ],
+     [
+      -5.51,
+      -60.23
+     ],
+     [
+      -12.65,
+      -46.73
+     ],
+     [
+      -17.25,
+      -37.85
+     ]
+    ],
+    "edges": {
+     "9": "stairs"
+    }
+   }
   ]
+ },
+ "odegaardStairs": {
+  "_note": "two flights next to the monolith (photos 4723, 4724, aerial): x range, foot of the lower flight (z), risers per flight, landing depth",
+  "x": [
+   -39.4,
+   -30.0
+  ],
+  "footZ": -21.0,
+  "lower": 4,
+  "upper": 3,
+  "tread": 0.42,
+  "landing": 5.82
  }
 }
