@@ -355,6 +355,7 @@ export function materials() {
     brickTan: std({ color: '#8f7656', roughness: 0.9 }), // Suzzallo's buff brick infill between the windows
     brickDark: std({ color: '#4a2a20', roughness: 0.9 }), // Meany's dark header-brick dots and bands
     roofMetal: std({ color: '#6b6a61', roughness: 0.55, metalness: 0.5 }), // Meany's standing-seam roof
+    brass: std({ color: '#b8923f', roughness: 0.35, metalness: 0.85 }), // the gold drain cover in the planter circle
     skylight: std({ color: '#9fc4c8', roughness: 0.15, metalness: 0.3 }),
     glass: std({ color: '#141010', roughness: 0.55, metalness: 0.0, envMapIntensity: 0.3 }),
     glassWarm: std({ color: '#3a2618', roughness: 0.15, metalness: 0.4, emissive: '#ffb066', emissiveIntensity: 0.35 }),

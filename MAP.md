@@ -50,7 +50,7 @@ Red Square sits at the heart of campus, on top of an underground parking garage 
 |---|---|---|---|
 | **East** | **Suzzallo Library** | Collegiate Gothic, stone and brick, tall arched windows | **Hero building.** Highest detail. Matches DESIGN.md's Gothic look |
 | Northeast | **Kane Hall** | Modern brick (1970s) | Mid detail, solid wall to skate past |
-| Northeast corner | ***Broken Obelisk*** (Barnett Newman sculpture) | Steel sculpture | Landmark on a low granite platform with sloped sides: the platform is a bank on all four sides |
+| Northeast corner | ***Broken Obelisk*** (Barnett Newman sculpture) | Steel sculpture | Stands up on the raised walking level by Kane; that level's sloped granite edge is a long bank down to the plaza |
 | Northwest | **Odegaard Undergraduate Library** | Modern brick (1970s) | Mid detail |
 | Northwest area | **Three brick monoliths** (one is a garage vent, two are decorative) | Tall brick towers | Landmark + skate obstacle around their bases |
 | North | **The Quad** | Gothic quadrangle, trees | Backdrop only (future level) |
@@ -135,7 +135,7 @@ Only use features that **actually exist**; confirm each one on site.
 2. **Monolith bases (NW):** carve around the three towers; any real ledges/curbs at their bases become grind spots.
 3. **Open brick plaza:** long flat runs for pushing, carving and flat-ground tricks (ollie, kickflip).
 4. **Building-edge ledges, planters, benches:** only where they exist in photos.
-5. ***Broken Obelisk:*** the granite platform is a four-sided bank; the steel itself is solid.
+5. ***Broken Obelisk:*** stands on the raised walking level east of Kane's stairs; the level's sloped granite edge (with a curb at its foot) is a long bank down to the plaza. The steel itself is solid.
 6. **Everything is skateable:** planter slabs, building plinths and ledges, terraces, balustrades, every stair set and
    handrail. The real planters have metal skate stoppers; the game leaves them off.
 
@@ -208,18 +208,18 @@ Each step is its own script in `art/scripts/` and writes a GLB to `public/models
 | Script | What | Photos |
 |---|---|---|
 | `19_banners.py` (plain Python) | Cuts the two monolith banners out of IMG_4722, flattened | 4722 |
-| `21_kane.py` | Kane Hall: concrete fins, balcony slabs, glazing, Kane steps, carillon tower | 4708, 4714, 4727, 4730, 4735 |
+| `21_kane.py` | Kane Hall: concrete fins, balcony slabs, glazing, 10 m walking space, 9-riser staircase, carillon tower | 4708, 4714, 4727, 4730, 4735 |
 | `22_meany.py` | Meany Hall: banded brick, sawtooth skylight roof, concrete portal, plinth ledge | 4711, 4719, 4721, 4736 |
-| `23_odegaard.py` | Odegaard: brick masses, balcony grid, terrace + 3 steps, wing wall + handrail | 4723, 4724, 4725, 4731 |
+| `23_odegaard.py` | Odegaard: brick masses, balcony grid, two 3-step flights with a landing, wing wall + handrails | 4723, 4724, 4725, 4731 |
 | `24_suzzallo.py` | Suzzallo: arcade, 3 gabled portals, 11 traceried windows, pinnacles, terrace + balustrade, steps | 4726, 4732 |
 | `25_gerberding.py` | Gerberding: Gothic windows, oriel, gable, tower, fanned steps with 2 handrails, front ledge | 4715–4719, 4733 |
-| `26_landmarks.py` | Monoliths + banners, Broken Obelisk + granite bank, planter slabs | 4709, 4711, 4713, 4714, 4722 |
+| `26_landmarks.py` | Monoliths + banners, raised level by Kane with its granite bank and the obelisk, planter slabs round the brass drain in front of Meany | 4709, 4711, 4713, 4714, 4722, webcam screenshot, videos |
 
 - Rerun: `blender.exe -b --python art/scripts/2x_name.py` (previews go to `art/renders/`).
 - Placement: `public/map/rs-facades.json` (which OSM wall each front sits on, building heights) and
   `public/map/rs-landmarks.json` (monolith height, banners, obelisk, planter slabs). Move things there and rerun.
 - In the GLBs: materials are named (`M_brick`, `M_stone`, ...) and swapped for the game's shaders in
-  `src/display/redSquare/Glb.jsx`; `COL_*` boxes become colliders; `RAIL_*` lines are grind lines
+  `src/display/redSquare/Glb.jsx`; `COL_*` boxes become colliders, `COLMESH_*` meshes become trimesh colliders (raised level, bank); `RAIL_*` lines are grind lines
   (collected in `grindLines` in Glb.jsx, for the grind moves later).
 - Estimated from photos, not measured: the monolith height (19 m; OSM says 13), the planter slab positions,
   step counts and building heights. Correct them in the JSON files.

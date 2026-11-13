@@ -124,8 +124,8 @@ export const BACKDROP = BUILDINGS.filter((b) => !midIds.has(b.id));
 
 // --- Props
 export const LAMPS = [
-  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10], [58, -15],
-  [28, -22], [2, -36], [-22, -46], [-33, -12],
+  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10], [55, -4],
+  [20, -10], [-4, -24], [-22, -46], [-33, -12], // clear of Kane's walking level and stairs and the raised obelisk level
 ];
 export const BENCHES = [
   // [x, z, rotY]: seat faces -z (north) at rotY 0

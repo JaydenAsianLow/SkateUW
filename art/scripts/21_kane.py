@@ -10,21 +10,23 @@ clear()
 W = facade_size('kane')
 H = 13.4  # top of the roof slab
 b = Builder()
-FLOOR = 1.0       # portico floor, above the plaza
+FLOOR = 1.5       # walking level of the portico and the space in front, nine risers above the plaza
 N = 11            # fins across the front
 x0 = -W / 2 + 6.0  # the end tower and the wing take the last few metres each side
 x1 = W / 2 - 4.5
 dx = (x1 - x0) / (N - 1)
 
-# --- Kane steps: 6 low concrete risers rising to the portico floor, full width (photo 4735)
-RISERS, TREAD = 6, 0.42
-for k in range(RISERS):
-    top = FLOOR - (RISERS - 1 - k) * (FLOOR / RISERS) if False else (k + 1) * FLOOR / RISERS
-    y_front = -4.2 - (RISERS - k) * TREAD
-    b.box('M_concrete', -W / 2 + 0.2, W / 2 - 0.2, y_front, -4.2, 0.0, top)
-    b.collider(f'step{k}', -W / 2 + 0.2, W / 2 - 0.2, y_front, -4.2, 0.0, top)
-b.box('M_concrete', -W / 2 + 0.2, W / 2 - 0.2, -4.2, 0.0, 0.0, FLOOR)           # portico floor
-b.collider('terrace', -W / 2 + 0.2, W / 2 - 0.2, -4.2, 0.0, 0.0, FLOOR)
+# --- Walking space in front of the colonnade, then the big Kane staircase down to the plaza (photos 4727, 4735,
+# and the videos): the obelisk sits up on this same level to the east (26_landmarks.py, rs-landmarks.json).
+WALK = 10.0
+b.box('M_paverbrick', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
+b.collider('walk', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
+b.box('M_concrete', -W / 2, W / 2, -WALK - 0.02, -WALK + 0.35, FLOOR - 0.05, FLOOR + 0.005)   # top nosing
+b.stairs('M_concrete', 'steps', 0.0, W, -WALK, FLOOR, 9, 0.45)
+b.rail('top_edge', (-W / 2, -WALK, FLOOR), (W / 2, -WALK, FLOOR))
+b.rail('west_edge', (-W / 2, -WALK, FLOOR), (-W / 2, 0.0, FLOOR))
+b.box('M_concrete', -W / 2 - 0.3, -W / 2, -WALK - 9 * 0.45, 0.0, 0.0, FLOOR + 0.05)          # west cheek wall
+b.collider('cheek', -W / 2 - 0.3, -W / 2, -WALK - 9 * 0.45, 0.0, 0.0, FLOOR + 0.05)
 
 # --- Fins: each is a tapered wedge, deep at the base, slimmer near the roof (photo 4730)
 for i in range(N):

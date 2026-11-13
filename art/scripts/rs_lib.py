@@ -23,7 +23,7 @@ os.makedirs(OUT, exist_ok=True)
 os.makedirs(RENDERS, exist_ok=True)
 
 COLORS = {
-    'M_aggregate': (0.48, 0.46, 0.43), 'M_glass_warm': (0.5, 0.35, 0.15),
+    'M_aggregate': (0.48, 0.46, 0.43), 'M_brass': (0.69, 0.55, 0.24), 'M_glass_warm': (0.5, 0.35, 0.15),
     'M_brick': (0.50, 0.24, 0.16), 'M_brick_dark': (0.30, 0.13, 0.09), 'M_brick_tan': (0.52, 0.40, 0.26),
     'M_concrete': (0.42, 0.41, 0.38), 'M_stone': (0.62, 0.55, 0.51), 'M_granite': (0.45, 0.44, 0.42),
     'M_glass': (0.05, 0.06, 0.07), 'M_corten': (0.30, 0.13, 0.06), 'M_metal': (0.16, 0.16, 0.16),
@@ -206,6 +206,14 @@ class Builder:
         for f in faces:
             bm.faces.new([vs[i] for i in f])
 
+    def solid_down(self, m, top):
+        """Closed solid from a top polygon of 3 or 4 points (x, y, z) straight down to z = 0 (banks, wedges)."""
+        n = len(top)
+        v = list(top) + [(x, y, 0.0) for x, y, _ in top]
+        faces = [tuple(range(n)), tuple(range(2 * n - 1, n - 1, -1))]
+        faces += [(i, i + n, (i + 1) % n + n, (i + 1) % n) for i in range(n)]
+        self.mesh(m, v, faces)
+
     def frustum(self, m, cx, cy, z0, z1, hx0, hy0, hx1, hy1, yaw=0.0):
         """Box whose bottom half-size (hx0, hy0) tapers to (hx1, hy1) at the top, turned by yaw (pyramids: hx1 = 0)."""
         c, s = math.cos(yaw), math.sin(yaw)
@@ -237,6 +245,11 @@ class Builder:
             mesh = bpy.data.meshes.new(f'{name}_{m}')
             bm.to_mesh(mesh)
             bm.free()
+            if isinstance(m, str) and m.startswith('COLMESH_'):
+                o = bpy.data.objects.new(m, mesh)  # shaped collider (the game makes a trimesh of it), not drawn
+                coll.objects.link(o)
+                made.append(o)
+                continue
             mesh.materials.append(get_mat(m) if not isinstance(m, tuple) else get_mat(*m))
             o = bpy.data.objects.new(f'{name}_{m if isinstance(m, str) else m[0]}', mesh)
             coll.objects.link(o)
@@ -274,7 +287,7 @@ def export(name):
     bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=False, export_yup=True,
                               export_apply=True, export_image_format='JPEG', export_jpeg_quality=88,
                               export_cameras=False, export_lights=False)
-    tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == 'MESH' and not o.name.startswith(('COL_', 'RAIL_')))
+    tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == 'MESH' and not o.name.startswith(('COL_', 'RAIL_', 'COLMESH_')))
     print(f'EXPORT {path}  ({os.path.getsize(path) // 1024} KB, ~{tris} tris)')
 
 
@@ -290,7 +303,7 @@ def preview(name, views, size=768):
     sc.world = bpy.data.worlds.new('w')
     sc.world.color = (0.62, 0.68, 0.74)
     for o in bpy.data.objects:
-        if o.name.startswith(('COL_', 'RAIL_')):
+        if o.name.startswith(('COL_', 'RAIL_', 'COLMESH_')):
             o.hide_render = True
     cam_d = bpy.data.cameras.new('cam')
     cam = bpy.data.objects.new('cam', cam_d)

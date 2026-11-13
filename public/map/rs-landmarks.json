@@ -1,5 +1,5 @@
 {
- "_note": "Landmarks for art/scripts/26_landmarks.py. Game coordinates (x east, z south), metres. Monolith footprints from OpenStreetMap; heights, banners and planter slabs from the photos in 'Red Square/'.",
+ "_note": "Landmarks for art/scripts/26_landmarks.py. Game coordinates (x east, z south), metres. Monolith footprints from OpenStreetMap; heights, banners and planter slabs and the raised level from the photos and videos in 'Red Square/'.",
  "monolithHeight": 19,
  "monoliths": [
   [
@@ -90,8 +90,8 @@
  },
  "planters": {
   "center": [
-   -8,
-   -22
+   -24,
+   22
   ],
   "height": 0.45,
   "slabs": [
@@ -118,6 +118,79 @@
     8,
     3.2,
     0.8
+   ]
+  ]
+ },
+ "upper": {
+  "_note": "Raised walking level in front of Kane, east to Suzzallo's north end (photo 4709, videos). Edges 0..bankEdges-1 are the sloped granite bank down to the plaza; vertex 0 is the foot of Kane's east stair end, the last vertex is Kane's east corner.",
+  "height": 1.5,
+  "bankRun": 2.6,
+  "curb": 0.3,
+  "bankEdges": 6,
+  "polygon": [
+   [
+    23.3,
+    -12.29
+   ],
+   [
+    31,
+    -4.5
+   ],
+   [
+    41,
+    -3.0
+   ],
+   [
+    55,
+    -7.5
+   ],
+   [
+    58.5,
+    -10.5
+   ],
+   [
+    60.5,
+    -14
+   ],
+   [
+    65.5,
+    -17.5
+   ],
+   [
+    70.1,
+    -17.5
+   ],
+   [
+    66.5,
+    -25.5
+   ],
+   [
+    50.2,
+    -42.7
+   ],
+   [
+    47.13,
+    -39.8
+   ],
+   [
+    45.04,
+    -27.55
+   ],
+   [
+    37.76,
+    -29
+   ],
+   [
+    39.22,
+    -36.79
+   ],
+   [
+    36.12,
+    -37.2
+   ],
+   [
+    29.76,
+    -24.77
    ]
   ]
  }

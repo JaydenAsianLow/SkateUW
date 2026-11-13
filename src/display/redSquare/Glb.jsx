@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { CuboidCollider, RigidBody } from '@react-three/rapier';
+import { CuboidCollider, RigidBody, TrimeshCollider } from '@react-three/rapier';
 import { DoubleSide, Euler, Matrix4, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
 import { materials, merge } from '../look.js';
 import FACADES from '../../../public/map/rs-facades.json';
@@ -26,6 +26,7 @@ const MATERIAL_FOR = {
   M_corten: 'corten',
   M_metal: 'iron',
   M_bronze: 'bronze',
+  M_brass: 'brass',
   M_wood: 'benchWood',
   M_slate: 'suzzRoof',
   M_roofmetal: 'roofMetal',
@@ -50,6 +51,7 @@ function prepare(scene) {
   const byMat = new Map();
   const colliders = [];
   const rails = [];
+  const trimeshes = [];
   scene.traverse((o) => {
     if (o.isLine && o.name.startsWith('RAIL_')) {
       const p = o.geometry.attributes.position;
@@ -59,6 +61,14 @@ function prepare(scene) {
       return;
     }
     if (!o.isMesh) return;
+    if (o.name.startsWith('COLMESH_')) {
+      // Shaped collider (raised levels, banks): a trimesh of the node's triangles.
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      g.applyMatrix4(o.matrixWorld);
+      const verts = Float32Array.from(g.attributes.position.array);
+      trimeshes.push({ verts, idx: Uint32Array.from({ length: verts.length / 3 }, (_, i) => i) });
+      return;
+    }
     if (o.name.startsWith('COL_')) {
       o.matrixWorld.decompose(_p, _q, _s);
       colliders.push({ args: [_s.x / 2, _s.y / 2, _s.z / 2], position: _p.toArray(), rotation: _e.setFromQuaternion(_q).toArray().slice(0, 3) });
@@ -74,13 +84,13 @@ function prepare(scene) {
     byMat.get(name).geos.push(o.geometry.clone().applyMatrix4(_m.copy(o.matrixWorld)));
   });
   const meshes = [...byMat.values()].map(({ mat, geos }) => ({ mat, geo: merge(geos) }));
-  return { meshes, colliders, rails };
+  return { meshes, colliders, rails, trimeshes };
 }
 
 // One Blender piece, placed with its plaza face (+Z after export) turned to `rotY`.
 export function GlbPiece({ name, position = [0, 0, 0], rotY = 0 }) {
   const { scene } = useGLTF(DIR + name + '.glb');
-  const { meshes, colliders, rails } = useMemo(() => prepare(scene), [scene]);
+  const { meshes, colliders, rails, trimeshes } = useMemo(() => prepare(scene), [scene]);
   useMemo(() => {
     const place = _m.compose(_p.fromArray(position), _q.setFromEuler(_e.set(0, rotY, 0)), _s.set(1, 1, 1));
     grindLines.set(name, rails.map((r) => ({ name: r.name, a: r.a.clone().applyMatrix4(place).toArray(), b: r.b.clone().applyMatrix4(place).toArray() })));
@@ -89,6 +99,10 @@ export function GlbPiece({ name, position = [0, 0, 0], rotY = 0 }) {
     <RigidBody type="fixed" colliders={false} position={position} rotation={[0, rotY, 0]} friction={0}>
       {colliders.map((c, i) => (
         <CuboidCollider key={i} args={c.args} position={c.position} rotation={c.rotation} />
+      ))}
+      {trimeshes.map((t, i) => (
+        // 144 = FIX_INTERNAL_EDGES: no snagging on the edges between triangles (as for the plaza deck)
+        <TrimeshCollider key={'t' + i} args={[t.verts, t.idx, 144]} />
       ))}
       {meshes.map(({ mat, geo }, i) => (
         <mesh key={i} geometry={geo} material={mat} castShadow receiveShadow />
