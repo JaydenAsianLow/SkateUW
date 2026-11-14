@@ -59,7 +59,7 @@ L = json.load(open('public/map/rs-landmarks.json'))
 cent = [(sum(p[0] for p in m) / len(m), sum(p[1] for p in m) / len(m)) for m in L['monoliths']]
 shift = [(c[0] * (f - 1), c[1] * (f - 1)) for c in cent]
 L['monoliths'] = [[[r2(p[0] + d[0]), r2(p[1] + d[1])] for p in m] for m, d in zip(L['monoliths'], shift)]
-for bn in L['banners'].values():  # banners hang on a pillar: move with it
+for bn in [v for v in L['banners'].values() if isinstance(v, dict) and 'x' in v]:  # old-style banners: move with their pillar
     zc = sum(bn['z']) / 2
     i = min(range(len(cent)), key=lambda k: math.hypot(cent[k][0] - bn['x'], cent[k][1] - zc))
     bn['x'] = r2(bn['x'] + shift[i][0])

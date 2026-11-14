@@ -35,14 +35,36 @@ for i, pts in enumerate(L['monoliths']):
         b.box('M_metal', min(xs) + 0.5, max(xs) - 0.5, min(ys) - 0.04, max(ys) + 0.04, z, z + 0.12)
     b.collider(f'monolith{i}', min(xs), max(xs), min(ys), max(ys), 0.0, MH)
 
-# Banners (cut from IMG_4722): on the plaza (east) faces of two towers
+# Banners (cut from IMG_4722): centred on the face of a tower that looks the given way (south: toward the plaza, as
+# seen walking north with Odegaard on the left and Kane on the right)
+FACE_DIR = {'south': (0, 1), 'north': (0, -1), 'east': (1, 0), 'west': (-1, 0)}
 for key, tex in (('huskies', 'banner_huskies.jpg'), ('uw', 'banner_uw.jpg')):
     bn = L['banners'][key]
-    x, z0, z1 = bn['x'] + 0.04, bn['z'][0], bn['z'][1]   # z0 = south edge (viewer's left), z1 = north edge
+    pts = L['monoliths'][bn['mono']]
+    cx_ = sum(q[0] for q in pts) / len(pts)
+    cz_ = sum(q[1] for q in pts) / len(pts)
+    want = FACE_DIR[bn['face']]
+    best = None
+    for i in range(len(pts)):
+        p0, p1 = pts[i], pts[(i + 1) % len(pts)]
+        ln = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
+        nx, nz = -(p1[1] - p0[1]) / ln, (p1[0] - p0[0]) / ln
+        mx, mz = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+        if (mx - cx_) * nx + (mz - cz_) * nz < 0:
+            nx, nz = -nx, -nz
+        score = nx * want[0] + nz * want[1]
+        if best is None or score > best[0]:
+            best = (score, (mx, mz), (nx, nz))
+    _, (mx, mz), (nx, nz) = best
+    lx, lz = -nz, nx                                   # the viewer's left, looking at the face
+    w2 = bn['width'] / 2
+    off = 0.04
+    L0 = (mx + lx * w2 + nx * off, mz + lz * w2 + nz * off)
+    R0 = (mx - lx * w2 + nx * off, mz - lz * w2 + nz * off)
     h0, h1 = bn['y']
     m = ('M_banner_' + key, os.path.join(TEX, tex))
-    b.quad(m, (x, -z0, h0), (x, -z1, h0), (x, -z1, h1), (x, -z0, h1))
-    b.box('M_metal', x - 0.02, x + 0.02, -z0 + 0.05, -z1 - 0.05, h1, h1 + 0.06)  # top batten
+    b.quad(m, (*P(*L0), h0), (*P(*R0), h0), (*P(*R0), h1), (*P(*L0), h1))
+    b.tube('M_metal', (*P(*L0), h1 + 0.03), (*P(*R0), h1 + 0.03), 0.025)  # top batten
 
 # --- Raised levels at the top of Kane's staircase (one height, rs-landmarks.json "levels"):
 #  north: the big space in front of Odegaard joining Kane's walking space, stairs down past the monoliths;
