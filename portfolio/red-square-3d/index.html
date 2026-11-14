@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Red Square Diorama</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: the model fills the window; a title block top-left, controls bottom-left, credits bottom-right.
+     One committed look: a warm dusk over the plaza (the game's golden hour), the same in both themes. */
+  :root {
+    --sky-top: #2a1c1a;      /* dusk overhead */
+    --sky-low: #7a4a32;      /* glow at the horizon */
+    --ink: #f6e9d6;          /* text on the dusk */
+    --ink-dim: #c9b49b;
+    --brick: #b4553a;        /* Red Square brick, the accent */
+    --chip: rgba(30, 20, 18, 0.62);
+    --chip-line: rgba(246, 233, 214, 0.16);
+    --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+    --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(120% 90% at 60% 100%, var(--sky-low) 0%, #4a2e24 38%, var(--sky-top) 75%);
+    color: var(--ink);
+    font: 14px/1.45 var(--body);
+  }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  #stage canvas:active { cursor: grabbing; }
+
+  .hud {
+    position: fixed; inset: 0; pointer-events: none;
+    padding-block: calc(20px + env(safe-area-inset-top, 0px)) calc(18px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); gap: 12px;
+  }
+  .title { max-width: 30rem; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); margin: 0 0 4px; }
+  h1 {
+    font: 800 clamp(44px, 8vw, 84px)/0.86 var(--display);
+    letter-spacing: 0.01em; text-transform: uppercase; margin: 0; text-wrap: balance;
+  }
+  h1 span { color: var(--brick); }
+  .lede { margin: 10px 0 0; color: var(--ink-dim); max-width: 34ch; }
+
+  .bottom { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .controls { min-width: 0; max-width: min(34rem, 100%); display: flex; flex-wrap: wrap; gap: 8px; pointer-events: auto; }
+  button {
+    font: 500 13px var(--body); color: var(--ink); background: var(--chip); border: 1px solid var(--chip-line);
+    border-radius: 999px; padding: 8px 14px; cursor: pointer; backdrop-filter: blur(6px);
+  }
+  button:hover { border-color: var(--ink-dim); }
+  button:focus-visible { outline: 2px solid var(--brick); outline-offset: 2px; }
+  button[aria-pressed="true"] { background: var(--brick); border-color: var(--brick); }
+  .hint { color: var(--ink-dim); font-size: 12px; width: 100%; }
+  .credits { min-width: 0; font-size: 11px; color: var(--ink-dim); text-align: right; max-width: min(30rem, 100%); font-variant-numeric: tabular-nums; }
+
+  #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .pin {
+    position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); pointer-events: auto;
+    display: flex; flex-direction: column; align-items: center; gap: 0; background: none; border: 0; padding: 0;
+    border-radius: 0; backdrop-filter: none; color: var(--ink); cursor: pointer;
+  }
+  .pin b {
+    font: 600 12px var(--body); white-space: nowrap; background: var(--chip); border: 1px solid var(--chip-line);
+    padding: 4px 9px; border-radius: 999px; backdrop-filter: blur(6px);
+  }
+  .pin:hover b, .pin.on b { background: var(--brick); border-color: var(--brick); }
+  .pin i { width: 1px; height: 18px; background: var(--ink-dim); }
+  .pin:focus-visible { outline: none; }
+  .pin:focus-visible b { outline: 2px solid var(--brick); outline-offset: 2px; }
+
+  .card {
+    position: fixed; pointer-events: auto; max-width: min(300px, calc(100vw - 32px));
+    right: max(16px, env(safe-area-inset-right, 0px)); top: calc(20px + env(safe-area-inset-top, 0px));
+    background: var(--chip); border: 1px solid var(--chip-line); border-radius: 14px; padding: 14px 16px;
+    backdrop-filter: blur(8px);
+  }
+  .card h2 { font: 800 26px/1 var(--display); text-transform: uppercase; margin: 0 0 6px; letter-spacing: 0.02em; }
+  .card p { margin: 0; color: var(--ink-dim); }
+  #loading {
+    position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none;
+    font: 800 28px var(--display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 560px) {
+    .card { top: auto; bottom: calc(118px + env(safe-area-inset-bottom, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); }
+    .credits { text-align: left; }
+    .pin b { font-size: 11px; padding: 3px 7px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+<div id="labels" aria-label="Places on the map"></div>
+<div id="loading"><span>Loading the plaza… <span id="pct">0%</span></span></div>
+
+<div class="hud">
+  <header class="title">
+    <p class="eyebrow">University of Washington · skate game level</p>
+    <h1>Red <span>Square</span></h1>
+    <p class="lede">The level from my phone-controlled skate game, built from photos and OpenStreetMap. Every ledge, bank and stair set is skateable.</p>
+  </header>
+  <div></div>
+  <div class="bottom">
+    <div class="controls">
+      <button id="spin" type="button" aria-pressed="true">Auto-rotate</button>
+      <button id="tags" type="button" aria-pressed="true">Labels</button>
+      <button id="reset" type="button">Reset view</button>
+      <p class="hint">Drag to orbit · scroll or pinch to zoom · right-drag to pan · tap a label to fly there</p>
+    </div>
+    <p class="credits">Modelled in Blender, rendered with three.js · plaza drawn at 1.25× · steps 17.5 cm, as built<br>Map data © OpenStreetMap contributors</p>
+  </div>
+</div>
+<div class="card" id="card" hidden><h2 id="card-name"></h2><p id="card-text"></p></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// Model coordinates are the game's (metres, +x east, +z south); the diorama is centred on (8, -6).
+const CENTRE = new THREE.Vector3(8, 0, -6);
+const PLACES = [
+  { name: 'Kane Hall', at: [10.7, 17, -44.7], text: 'Concrete colonnade above a wide open strip. Six 17.5 cm steps run down to the plaza and end flush on a pillar.' },
+  { name: 'Suzzallo Library', at: [75.5, 26, 19.2], text: 'Collegiate Gothic front: gabled portals, traceried windows, a terrace with a balustrade and steps.' },
+  { name: 'Odegaard Library', at: [-49.2, 18, -56.6], text: 'Brick masses and a balcony grid. Two short flights of three steps lead down past the pillars.' },
+  { name: 'Meany Hall', at: [-70.3, 15, 38.6], text: 'Banded brick with a concrete portal and a skylit metal roof. Its brick plinth is a ledge.' },
+  { name: 'Gerberding Hall', at: [-0.5, 22, 74.4], text: 'Gothic windows, an oriel and a tower, with fanned entrance steps and two handrails.' },
+  { name: 'Broken Obelisk', at: [43.75, 13, -9.25], text: 'The steel sculpture on the raised level. A gentle brick hill (3.9° at most) rolls up beside it.' },
+  { name: 'The pillars', at: [-30, 22, -31], text: 'Three brick garage vents, 19 m tall, with the Huskies and UW banners facing the plaza.' },
+  { name: 'Planter pads', at: [-15, 4, 30], text: 'Four aggregate pads around a brass drain: 50 cm ledges with brick tops.' },
+];
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.82;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 3000);
+const HOME = { pos: new THREE.Vector3(250, 190, 300), target: new THREE.Vector3(0, 4, 0) };
+camera.position.copy(HOME.pos);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.target);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 25;
+controls.maxDistance = 700;
+controls.maxPolarAngle = Math.PI * 0.47;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+controls.autoRotate = !reduced;
+controls.autoRotateSpeed = 0.55;
+
+// Golden hour, as in the game: warm low sun from the south-west, warm sky, brick-red bounce.
+scene.add(new THREE.HemisphereLight('#f3e3cc', '#4a2a24', 0.95));
+const sun = new THREE.DirectionalLight('#ffc48a', 2.3);
+const az = (31 * Math.PI) / 180, el = (30 * Math.PI) / 180;
+sun.position.set(-Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(400);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -160, right: 160, top: 160, bottom: -160, near: 50, far: 900 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.05;
+scene.add(sun);
+
+const model = new THREE.Group();
+model.position.set(-CENTRE.x, 0, -CENTRE.z);
+scene.add(model);
+
+const pct = document.getElementById('pct');
+new GLTFLoader().load('red-square.glb', (gltf) => {
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    o.castShadow = true;
+    o.receiveShadow = true;
+    const m = o.material;
+    if (m.name === 'D_globe') { m.emissive = new THREE.Color('#ffd9a0'); m.emissiveIntensity = 1.6; }
+    if (m.name.startsWith('M_banner')) m.side = THREE.DoubleSide;
+  });
+  model.add(gltf.scene);
+  document.getElementById('loading').hidden = true;
+}, (e) => {
+  if (e.total) pct.textContent = Math.round((e.loaded / e.total) * 100) + '%';
+}, () => {
+  document.getElementById('loading').textContent = 'The model could not load. Open this page from a web server, not as a local file.';
+});
+
+// --- Labels: HTML pins that follow their 3D point; tapping one flies the camera there
+const layer = document.getElementById('labels');
+const card = document.getElementById('card');
+const pins = PLACES.map((p) => {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'pin';
+  el.innerHTML = `<b></b><i></i>`;
+  el.querySelector('b').textContent = p.name;
+  el.addEventListener('click', () => focus(p, el));
+  layer.appendChild(el);
+  return { p, el, v: new THREE.Vector3(p.at[0] - CENTRE.x, p.at[1], p.at[2] - CENTRE.z) };
+});
+
+let flight = null;
+function flyTo(pos, target) {
+  flight = { t: 0, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), pos, target };
+}
+function setSpin(on) {
+  controls.autoRotate = on;
+  spin.setAttribute('aria-pressed', String(on));
+}
+function focus(p, el) {
+  pins.forEach((q) => q.el.classList.toggle('on', q.el === el));
+  const target = new THREE.Vector3(p.at[0] - CENTRE.x, Math.max(2, p.at[1] * 0.45), p.at[2] - CENTRE.z);
+  const dir = camera.position.clone().sub(controls.target).setY(0).normalize();
+  flyTo(target.clone().add(dir.multiplyScalar(70)).setY(target.y + 42), target);
+  setSpin(false);
+  document.getElementById('card-name').textContent = p.name;
+  document.getElementById('card-text').textContent = p.text;
+  card.hidden = false;
+}
+
+const spin = document.getElementById('spin');
+spin.addEventListener('click', () => setSpin(!controls.autoRotate));
+controls.addEventListener('start', () => { flight = null; setSpin(false); });
+const tags = document.getElementById('tags');
+tags.addEventListener('click', () => {
+  const on = layer.hidden;
+  layer.hidden = !on;
+  tags.setAttribute('aria-pressed', String(on));
+});
+document.getElementById('reset').addEventListener('click', () => {
+  pins.forEach((q) => q.el.classList.remove('on'));
+  card.hidden = true;
+  flyTo(HOME.pos.clone(), HOME.target.clone());
+  setSpin(!reduced);
+});
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // Narrow screens: pull back so the whole square fits
+  camera.fov = w < h ? 74 : 32;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+resize();
+
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const clock = new THREE.Clock();
+const tmp = new THREE.Vector3();
+renderer.setAnimationLoop(() => {
+  const dt = clock.getDelta();
+  if (flight) {
+    flight.t = Math.min(1, flight.t + dt / 1.2);
+    const k = ease(flight.t);
+    camera.position.lerpVectors(flight.fromPos, flight.pos, k);
+    controls.target.lerpVectors(flight.fromTarget, flight.target, k);
+    if (flight.t >= 1) flight = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  if (!layer.hidden) {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    for (const { v, el } of pins) {
+      tmp.copy(v).project(camera);
+      const show = tmp.z < 1 && Math.abs(tmp.x) < 1.05 && Math.abs(tmp.y) < 1.05;
+      el.style.visibility = show ? 'visible' : 'hidden';
+      el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -100%)`;
+    }
+  }
+});
+</script>
+</body>
+</html>
