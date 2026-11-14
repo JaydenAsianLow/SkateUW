@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { CuboidCollider, RigidBody, TrimeshCollider } from '@react-three/rapier';
-import { DoubleSide, Euler, Matrix4, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
+import { DoubleSide, Euler, Float32BufferAttribute, Matrix4, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
 import { materials, merge } from '../look.js';
 import FACADES from '../../../public/map/rs-facades.json';
 import { PLAZA } from './osm.js';
@@ -39,6 +39,7 @@ const _p = new Vector3();
 const _q = new Quaternion();
 const _s = new Vector3();
 const _e = new Euler();
+const _v3 = new Vector3();
 
 // Grind lines (handrails, ledge and coping edges) from every piece, in world space: { name, a: [x,y,z], b: [x,y,z] }.
 // Nothing reads them yet; they are here for the grind/slide moves (each RAIL_* line in the Blender scripts).
@@ -103,7 +104,21 @@ export function GlbPiece({ name, position = [0, 0, 0], rotY = 0 }) {
   useMemo(() => {
     const place = _m.compose(_p.fromArray(position), _q.setFromEuler(_e.set(0, rotY, 0)), _s.set(1, 1, 1));
     grindLines.set(name, rails.map((r) => ({ name: r.name, a: r.a.clone().applyMatrix4(place).toArray(), b: r.b.clone().applyMatrix4(place).toArray() })));
-  }, [rails, name, position[0], position[2], rotY]);
+    // Paving (raised levels, the hill, terraces) uses the plaza's own brick shader, which reads uv = world xz / 2
+    // (geo.js worldUv): give those meshes the same uvs so their bricks line up with the plaza's.
+    const ground = materials().ground;
+    for (const { mat, geo } of meshes) {
+      if (mat !== ground) continue;
+      const p = geo.attributes.position;
+      const uv = new Float32Array(p.count * 2);
+      for (let i = 0; i < p.count; i++) {
+        _v3.fromBufferAttribute(p, i).applyMatrix4(place);
+        uv[i * 2] = _v3.x / 2;
+        uv[i * 2 + 1] = _v3.z / 2;
+      }
+      geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+    }
+  }, [rails, meshes, name, position[0], position[2], rotY]);
   return (
     <RigidBody type="fixed" colliders={false} position={position} rotation={[0, rotY, 0]} friction={0}>
       {colliders.map((c, i) => (

@@ -82,11 +82,12 @@
   }
  },
  "obelisk": {
+  "_note": "pyramid on a thin steel plate, on the flat aggregate top right at the sloped edge (photo); yaw lines it up with that edge",
   "center": [
-   36,
-   -12.5
+   35.0,
+   -7.4
   ],
-  "yaw": 0.2
+  "yaw": 0.156
  },
  "planters": {
   "_note": "[rotation deg, length, width, gap from the drain] per slab; centre placed from the webcam view and photos 4711/4736",
@@ -144,8 +145,8 @@
       -4.5
      ],
      [
-      38,
-      -3.4
+      37.5,
+      -3.5
      ],
      [
       55,
@@ -257,11 +258,11 @@
    }
   ],
   "hill": {
-   "_note": "smooth ramp up onto edge 2 of kane_east, right of the obelisk: cosine profile (eased top and bottom), max slope = atan(pi/2 * height / run), side wings so it has no hard sides",
+   "_note": "long gentle ramp up onto edge 2 of kane_east, right of the obelisk: cosine profile (eased top and bottom), max slope = atan(pi/2 * height / run) ~ 3.9 deg; paved with the plaza brick",
    "top": [
     [
-     38,
-     -3.4
+     37.5,
+     -3.5
     ],
     [
      55,
@@ -272,8 +273,8 @@
     -0.25,
     0.97
    ],
-   "run": 15.0,
-   "wing": 5.0
+   "run": 24.0,
+   "wing": 4.0
   }
  },
  "odegaardStairs": {

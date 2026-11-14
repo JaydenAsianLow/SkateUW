@@ -124,7 +124,7 @@ export const BACKDROP = BUILDINGS.filter((b) => !midIds.has(b.id));
 
 // --- Props
 export const LAMPS = [
-  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10], [53, 10],
+  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10],
   [-0.4, -10], [-12.9, -16.4], [-33, -12], // in front of Kane's stairs, clear of the open strip, the hill and the levels
 ];
 export const BENCHES = [

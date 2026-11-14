@@ -2,7 +2,7 @@
 # Tapered concrete fins, deep balcony slabs, tall dark glazing between slim fins, the Kane steps along the front,
 # a brick tower with the carillon frame at one end and a low brick wing at the other.
 # Run: blender.exe -b --python art/scripts/21_kane.py
-import sys, os
+import json, math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rs_lib import *
 
@@ -26,7 +26,36 @@ RISERS, TREAD = 6, 0.42  # 17.5 cm risers, 42 cm treads
 b.box('M_paverbrick', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
 b.collider('walk', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
 b.box('M_concrete', SX0, SX1, -WALK - 0.02, -WALK + 0.35, FLOOR - 0.05, FLOOR + 0.005)   # top nosing
-b.stairs('M_concrete', 'steps', (SX0 + SX1) / 2, RUN_W, -WALK, FLOOR, RISERS, TREAD)
+# The pillar (east face of the easternmost monolith, rs-landmarks.json) is not square to Kane's front, so every step
+# is cut to its own length to end flush against the pillar's face, like the real stairs.
+LM = json.load(open(os.path.join(PROJECT, 'public', 'map', 'rs-landmarks.json')))
+F = LAYOUT['kane']
+ka, kb = F['a'], F['b']
+kl = math.hypot(kb[0] - ka[0], kb[1] - ka[1])
+ke = ((kb[0] - ka[0]) / kl, (kb[1] - ka[1]) / kl)
+kn = (-ke[1], ke[0]) if ke[0] < 0 else (ke[1], -ke[0])
+if kn[1] < 0:
+    kn = (-kn[0], -kn[1])
+mono = LM['monoliths'][2]
+face = sorted(mono, key=lambda q: -q[0])[:2]          # its two most easterly corners = the face toward the stairs
+
+
+def to_local(q):  # world (x, z) -> this facade's (x along, y out): +x is Kane's east end
+    d = (q[0] - ka[0], q[1] - ka[1])
+    t = d[0] * ke[0] + d[1] * ke[1]
+    o = d[0] * kn[0] + d[1] * kn[1]
+    return (W / 2 - t, -o)
+
+
+(fx0, fy0), (fx1, fy1) = to_local(face[0]), to_local(face[1])
+rise = FLOOR / RISERS
+for k in range(RISERS):
+    y_front = -WALK - (RISERS - k) * TREAD
+    y_back = y_front + TREAD
+    ym = (y_front + y_back) / 2
+    x_end = fx0 + (fx1 - fx0) * (ym - fy0) / (fy1 - fy0)  # where this step's middle meets the pillar face
+    b.box('M_concrete', x_end, SX1, y_front, y_back if k < RISERS - 1 else -WALK, 0, (k + 1) * rise)
+    b.collider(f'step{k}', x_end, SX1, y_front, -WALK, 0, (k + 1) * rise)
 b.rail('top_edge', (SX0, -WALK, FLOOR), (SX1, -WALK, FLOOR))
 # (the west side joins the raised north level in front of Odegaard, 26_landmarks.py)
 

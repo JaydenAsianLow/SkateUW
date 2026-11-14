@@ -135,10 +135,10 @@ Only use features that **actually exist**; confirm each one on site.
 2. **Monolith bases (NW):** carve around the three towers; any real ledges/curbs at their bases become grind spots.
 3. **Open brick plaza:** long flat runs for pushing, carving and flat-ground tricks (ollie, kickflip).
 4. **Building-edge ledges, planters, benches:** only where they exist in photos.
-5. ***Broken Obelisk:*** on a low sloped granite plinth (four little banks) up on the raised level east of Kane's stairs. That level drops to the plaza as a long granite bank with a curb on the south-west, and a long smooth hill on the east side (15 m run, 6.3° max, eased top and bottom, 27 m wide) rolls up onto it and round to the front of Kane, above the staircase. The steel itself is solid.
+5. ***Broken Obelisk:*** the pyramid stands on a thin steel plate on a flat exposed-aggregate top, right at the top of the raised level's sloped aggregate edge, which runs down to a jointed precast curb and the plaza brick. A long gentle hill on the east side (24 m run, 3.9° max, eased top and bottom, 26 m wide, plaza brick) rolls up onto it and round to the front of Kane, above the staircase. The steel itself is solid.
 6. **Upper level (1.05 m):** Kane's portico, a 22 m open strip in front of it, the obelisk area and the big space in
    front of Odegaard. Ways down: the main stair run (6 × 17.5 cm risers, 42 cm treads) parallel to Kane's front,
-   ending at the pillars; the two 3-step flights left of the pillars; the granite bank; the hill. No stairs behind
+   ending flush against the easternmost pillar, which carries a wall-mounted handrail; the two 3-step flights left of the pillars; the granite bank; the hill. No stairs behind
    the pillars.
 7. **Everything is skateable:** planter slabs, building plinths and ledges, terraces, balustrades, every stair set and
    handrail. The real planters have metal skate stoppers; the game leaves them off.
