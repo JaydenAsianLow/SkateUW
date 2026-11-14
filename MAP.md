@@ -135,8 +135,11 @@ Only use features that **actually exist**; confirm each one on site.
 2. **Monolith bases (NW):** carve around the three towers; any real ledges/curbs at their bases become grind spots.
 3. **Open brick plaza:** long flat runs for pushing, carving and flat-ground tricks (ollie, kickflip).
 4. **Building-edge ledges, planters, benches:** only where they exist in photos.
-5. ***Broken Obelisk:*** on a low sloped granite plinth (four little banks) up on the raised level east of Kane's stairs. That level drops to the plaza as a long granite bank with a curb on the south-west, and a small brick hill on the east side rolls up onto it and round to the front of Kane, above the staircase. The steel itself is solid.
-6. **Upper level:** Kane's walking space, the obelisk area and the big open space in front of Odegaard are one raised level (1.2 m). Ways down: Kane's 7-riser staircase, the steps past the monoliths, the two short flights (4 + 3) between Odegaard's corner and the monolith, the granite bank and the hill.
+5. ***Broken Obelisk:*** on a low sloped granite plinth (four little banks) up on the raised level east of Kane's stairs. That level drops to the plaza as a long granite bank with a curb on the south-west, and a long smooth hill on the east side (15 m run, 6.3° max, eased top and bottom, 27 m wide) rolls up onto it and round to the front of Kane, above the staircase. The steel itself is solid.
+6. **Upper level (1.05 m):** Kane's portico, a 22 m open strip in front of it, the obelisk area and the big space in
+   front of Odegaard. Ways down: the main stair run (6 × 17.5 cm risers, 42 cm treads) parallel to Kane's front,
+   ending at the pillars; the two 3-step flights left of the pillars; the granite bank; the hill. No stairs behind
+   the pillars.
 7. **Everything is skateable:** planter slabs, building plinths and ledges, terraces, balustrades, every stair set and
    handrail. The real planters have metal skate stoppers; the game leaves them off.
 
@@ -230,4 +233,6 @@ Each step is its own script in `art/scripts/` and writes a GLB to `public/models
 - Raised levels: `COLMESH_*` surfaces (level tops, the granite bank, the curved hill) are trimeshes whose triangles
   Glb.jsx turns to face up; stair bands, pads, plinths are boxes.
 - Dev views: `?clean` hides menus, `?cam=x,y,z,lookX,lookY,lookZ` pins the camera, `?topdown` shows the map,
-  `?raycheck` (or `?raycheck=x,z;x,z`) writes the ground height under test spots into the page (`--dump-dom`).
+  `?raycheck` (or `?raycheck=x,z;x,z`) writes the ground height under test spots into the page (`--dump-dom`),
+  `?labels=Name,x,z;...` labels points (with `?topdown`), `?ridetest=n,gap` pushes n times from the spawn and logs the
+  ride (needs a browser that runs the frame loop; headless Chrome does not).

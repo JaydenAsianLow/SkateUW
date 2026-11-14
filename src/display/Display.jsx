@@ -8,6 +8,7 @@ import { commands, onSettings, settings } from '../settings.js';
 import World from './World.jsx';
 import Skateboard from './Skateboard.jsx';
 import RayCheck from './RayCheck.jsx';
+import { Labels, RideTest } from './DevTools.jsx';
 import { GRAVITY } from './tuning.js';
 import CameraRig from './CameraRig.jsx';
 import Effects from './Effects.jsx';
@@ -156,7 +157,9 @@ export default function Display() {
               <World />
               <Skateboard />
               {import.meta.env.DEV && urlParams.has('raycheck') && <RayCheck />}
+              {import.meta.env.DEV && urlParams.has('ridetest') && <RideTest />}
             </Physics>
+            {import.meta.env.DEV && urlParams.has('labels') && <Labels />}
             <CameraRig />
             <Effects />
           </Suspense>

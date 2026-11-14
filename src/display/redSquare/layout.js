@@ -16,7 +16,7 @@ const add = (a, b, k = 1) => [a[0] + b[0] * k, a[1] + b[1] * k];
 
 // --- Spawn (MAP.md §5): north part of the plaza near the monoliths/Kane side, facing south.
 // Facing south: Suzzallo on the left, the low sun ahead-right, Gerberding + Rainier Vista steps ahead-left.
-export const SPAWN = { position: [4, -14], heading: Math.PI };
+export const SPAWN = { position: [6, -6], heading: Math.PI }; // just in front of Kane's stairs (the old spot is now on the raised strip)
 // Debug: ?spawn=x,z,headingDeg starts somewhere else (heading 0 = north, 90 = west, 180 = south).
 {
   const v = urlParams.get('spawn')?.split(',').map(Number);
@@ -124,8 +124,8 @@ export const BACKDROP = BUILDINGS.filter((b) => !midIds.has(b.id));
 
 // --- Props
 export const LAMPS = [
-  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10], [55, -4],
-  [20, -10], [-4, -24], [-33, -12], // clear of Kane's walking level and stairs and the raised obelisk level
+  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10], [53, 10],
+  [-0.4, -10], [-12.9, -16.4], [-33, -12], // in front of Kane's stairs, clear of the open strip, the hill and the levels
 ];
 export const BENCHES = [
   // [x, z, rotY]: seat faces -z (north) at rotY 0

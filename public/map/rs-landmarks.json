@@ -123,29 +123,29 @@
   ]
  },
  "levels": {
-  "_note": "Raised levels (photos 4709, 4723, 4724, aerial, tour photo, videos). Each edge i (from point i to i+1) is 'bank' (sloped granite + curb), 'ramp' (gentle brick slope), 'stairs' (concrete risers) or omitted (a plain edge against a building or the other level).",
-  "height": 1.2,
+  "_note": "Raised levels. Each edge i (point i to i+1) is 'bank' (sloped granite + curb), 'stairs', or omitted (a plain edge against a building, the other level or the pillars). The hill is separate (hill).",
+  "height": 1.05,
   "bankRun": 2.6,
   "curb": 0.3,
   "rampRun": 9.0,
-  "stairRisers": 7,
-  "stairTread": 0.45,
+  "stairRisers": 6,
+  "stairTread": 0.42,
   "list": [
    {
     "name": "kane_east",
-    "_note": "east of Kane's staircase: the obelisk stands on it; small hill up to it from the east",
+    "_note": "east of Kane's stairs: Broken Obelisk stands on it; the hill (below) rises onto edge 2",
     "polygon": [
      [
-      23.3,
-      -12.29
+      18.49,
+      -3.0
      ],
      [
       31,
       -4.5
      ],
      [
-      41,
-      -3.0
+      38,
+      -3.4
      ],
      [
       55,
@@ -203,15 +203,14 @@
     "edges": {
      "0": "bank",
      "1": "bank",
-     "2": "ramp",
-     "3": "ramp",
+     "3": "bank",
      "4": "bank",
      "5": "bank"
     }
    },
    {
     "name": "north",
-    "_note": "the big space in front of Odegaard, joining Kane's walking space; stairs down past the monoliths",
+    "_note": "the big space in front of Odegaard joining Kane's open strip; its south edge runs behind the pillars (no stairs there); the way down on this side is the two flights by the pillars",
     "polygon": [
      [
       -30.0,
@@ -250,26 +249,43 @@
       -46.73
      ],
      [
-      -17.25,
-      -37.85
+      -22.77,
+      -27.19
      ]
     ],
-    "edges": {
-     "9": "stairs"
-    }
+    "edges": {}
    }
-  ]
+  ],
+  "hill": {
+   "_note": "smooth ramp up onto edge 2 of kane_east, right of the obelisk: cosine profile (eased top and bottom), max slope = atan(pi/2 * height / run), side wings so it has no hard sides",
+   "top": [
+    [
+     38,
+     -3.4
+    ],
+    [
+     55,
+     -7.5
+    ]
+   ],
+   "dir": [
+    -0.25,
+    0.97
+   ],
+   "run": 15.0,
+   "wing": 5.0
+  }
  },
  "odegaardStairs": {
-  "_note": "two flights next to the monolith (photos 4723, 4724, aerial): x range, foot of the lower flight (z), risers per flight, landing depth",
+  "_note": "two flights of 3 steps (17.5 cm) with a landing, between Odegaard's corner and the pillars (photos 4723, 4724)",
   "x": [
    -39.4,
    -30.0
   ],
   "footZ": -21.0,
-  "lower": 4,
+  "lower": 3,
   "upper": 3,
   "tread": 0.42,
-  "landing": 5.82
+  "landing": 6.24
  }
 }

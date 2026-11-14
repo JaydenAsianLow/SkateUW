@@ -15,7 +15,7 @@ H = 14.2
 g0, g1 = -W / 2 + 6.0, W / 2 - 5.0          # the balcony grid between the two brick masses
 BAYS = 4
 dx = (g1 - g0) / BAYS
-T = 1.2                                      # floor of the north level in front (rs-landmarks.json levels.height)
+T = 1.05                                     # floor of the north level in front (rs-landmarks.json levels.height)
 
 # brick masses either side (photo 4731: tall plain brick towers with a fine vertical joint)
 b.box('M_brick', -W / 2, g0, -1.6, 0.0, 0.0, H + 0.6)

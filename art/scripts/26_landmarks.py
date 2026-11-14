@@ -111,57 +111,6 @@ for lv in LV['list']:
                 ln = math.hypot(q[0] - p[0], q[1] - p[1])
                 b.col_center(f'{nm}_stair{i}_{k}', (*P(*mid), h / 2), (ln, ST, h), (0, 0, math.atan2(-(q[1] - p[1]), q[0] - p[0])))
             b.rail(f'{nm}_stairs{i}_top', V(p, H), V(q, H))
-    # Smooth hill over each run of consecutive 'ramp' edges: the toe line bulges out in a curve and the slope eases
-    # in at the top and out at the bottom (a cosine profile), so it rolls like the real one (videos).
-    ramps = sorted(i for i, k in kinds.items() if k == 'ramp')
-    chains = []
-    for i in ramps:
-        if chains and chains[-1][-1] == i - 1:
-            chains[-1].append(i)
-        else:
-            chains.append([i])
-    for ch in chains:
-        pts = [poly[i] for i in ch] + [poly[(ch[-1] + 1) % len(poly)]]
-        samples = []  # (point on the top edge, outward normal)
-        for a_i in range(len(pts) - 1):
-            p, q = pts[a_i], pts[a_i + 1]
-            n = out_normal(p, q, poly)
-            seg = math.hypot(q[0] - p[0], q[1] - p[1])
-            steps = max(2, int(seg / 0.8))
-            for k in range(steps + (1 if a_i == len(pts) - 2 else 0)):
-                t = k / steps
-                samples.append(((p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t), n))
-        # smooth the normals along the chain so the hill has no creases at the corners
-        nrm = []
-        for k in range(len(samples)):
-            sx = sum(samples[j][1][0] for j in range(max(0, k - 4), min(len(samples), k + 5)))
-            sz = sum(samples[j][1][1] for j in range(max(0, k - 4), min(len(samples), k + 5)))
-            l_ = math.hypot(sx, sz)
-            nrm.append((sx / l_, sz / l_))
-        ROWS = 12
-        grid = []
-        for k, ((px, pz), (nx, nz)) in enumerate(samples):
-            u = k / (len(samples) - 1)
-            reach = 2.5 + (RAMP - 2.5) * math.sin(math.pi * u) ** 0.8   # curved toe line, tapering at both ends
-            row = []
-            for r in range(ROWS + 1):
-                t = r / ROWS
-                h = H * 0.5 * (1 + math.cos(math.pi * t))
-                row.append(V((px + nx * reach * t, pz + nz * reach * t), h))
-            grid.append(row)
-        verts = [v for row in grid for v in row]
-        faces = []
-        for k in range(len(grid) - 1):
-            for r in range(ROWS):
-                a0 = k * (ROWS + 1) + r
-                quad = (a0, a0 + 1, a0 + ROWS + 2, a0 + ROWS + 1)
-                (x0_, y0_, _), (x1_, y1_, _), (x2_, y2_, _) = verts[quad[0]], verts[quad[1]], verts[quad[2]]
-                up = (x1_ - x0_) * (y2_ - y0_) - (y1_ - y0_) * (x2_ - x0_)
-                faces.append(quad if up > 0 else quad[::-1])
-        b.mesh('M_paverbrick', verts, faces)
-        b.mesh('COLMESH_' + nm, verts, faces)
-        b.rail(f'{nm}_hill{ch[0]}_crest', V(pts[0], H), V(pts[-1], H))
-
     # fill the wedge at each corner between two neighbouring sloped edges
     for i in toes:
         j = (i + 1) % len(poly)
@@ -173,6 +122,40 @@ for lv in LV['list']:
         mat = 'M_granite' if l1 > 0 and l2 > 0 else 'M_paverbrick'
         b.solid_down(mat, [V(v, H), V(a_, l1), V(b_, l2)])
         b.mesh('COLMESH_' + nm, [V(v, H), V(a_, l1), V(b_, l2)], [(0, 1, 2)])
+
+# --- The hill right of the obelisk: one long, wide, smooth ramp up onto the level. Cosine profile along the run, so
+# the slope eases in at the bottom and out at the top (max slope = atan(pi/2 * H / run), about 6 degrees), and side
+# wings that roll down the same way so it has no hard sides. One smooth surface for both the mesh and the collider.
+HL = LV['hill']
+(hx0, hz0), (hx1, hz1) = HL['top']
+hlen = math.hypot(hx1 - hx0, hz1 - hz0)
+he = ((hx1 - hx0) / hlen, (hz1 - hz0) / hlen)
+dl = math.hypot(*HL['dir'])
+hd = (HL['dir'][0] / dl, HL['dir'][1] / dl)
+HRUN, WING = HL['run'], HL['wing']
+us = [-WING + k * 0.75 for k in range(int((hlen + 2 * WING) / 0.75) + 1)] + [hlen + WING]
+ROWS = 30
+grid = []
+for u in us:
+    side = 1.0 if 0 <= u <= hlen else 0.5 * (1 + math.cos(math.pi * min(1.0, (-u if u < 0 else u - hlen) / WING)))
+    row = []
+    for r in range(ROWS + 1):
+        t = r / ROWS
+        h = H * 0.5 * (1 + math.cos(math.pi * t)) * side
+        row.append(V((hx0 + he[0] * u + hd[0] * HRUN * t, hz0 + he[1] * u + hd[1] * HRUN * t), max(h, 0.0) + 0.002))
+    grid.append(row)
+verts = [v for row in grid for v in row]
+faces = []
+for k in range(len(grid) - 1):
+    for r in range(ROWS):
+        a0 = k * (ROWS + 1) + r
+        quad = (a0, a0 + 1, a0 + ROWS + 2, a0 + ROWS + 1)
+        (x0_, y0_, _), (x1_, y1_, _), (x2_, y2_, _) = verts[quad[0]], verts[quad[1]], verts[quad[2]]
+        faces.append(quad if (x1_ - x0_) * (y2_ - y0_) - (y1_ - y0_) * (x2_ - x0_) > 0 else quad[::-1])
+b.mesh('M_paverbrick', verts, faces)
+b.mesh('COLMESH_hill', verts, faces)
+b.rail('hill_crest', V((hx0, hz0), H), V((hx1, hz1), H))
+print('HILL max slope deg', math.degrees(math.atan(math.pi / 2 * H / HRUN)), 'width', hlen + 2 * WING)
 
 # --- The two short flights next to the monolith up to the north level, brick wall + handrail on the Odegaard side
 OS = L['odegaardStairs']
