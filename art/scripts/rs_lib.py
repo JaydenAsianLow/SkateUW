@@ -119,6 +119,8 @@ class Builder:
     def slab(self, m, pts, z0, z1):
         """Polygon given as (x, y) points, extruded up from z0 to z1."""
         bm = self.bm(m)
+        if sum(pts[i - 1][0] * p[1] - p[0] * pts[i - 1][1] for i, p in enumerate(pts)) < 0:
+            pts = pts[::-1]  # counter-clockwise from above, so the top faces up and the sides face out
         f = bm.faces.new([bm.verts.new((x, y, z0)) for x, y in pts])
         r = bmesh.ops.extrude_face_region(bm, geom=[f])
         bmesh.ops.translate(bm, vec=(0, 0, z1 - z0), verts=[e for e in r['geom'] if isinstance(e, bmesh.types.BMVert)])

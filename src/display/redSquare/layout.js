@@ -16,7 +16,7 @@ const add = (a, b, k = 1) => [a[0] + b[0] * k, a[1] + b[1] * k];
 
 // --- Spawn (MAP.md §5): north part of the plaza near the monoliths/Kane side, facing south.
 // Facing south: Suzzallo on the left, the low sun ahead-right, Gerberding + Rainier Vista steps ahead-left.
-export const SPAWN = { position: [6, -6], heading: Math.PI }; // just in front of Kane's stairs (the old spot is now on the raised strip)
+export const SPAWN = { position: [7.5, -7.5], heading: Math.PI }; // just in front of Kane's stairs (the old spot is now on the raised strip)
 // Debug: ?spawn=x,z,headingDeg starts somewhere else (heading 0 = north, 90 = west, 180 = south).
 {
   const v = urlParams.get('spawn')?.split(',').map(Number);
@@ -33,17 +33,17 @@ const RISERS = 12;
 export const STAIRS = [
   {
     key: 'rainierVista', // main skate spot (MAP.md §8). Step count/handrails: verify on site.
-    top: [43.5, 57.5],
+    top: [54.38, 71.88],
     dir: VISTA_DIR,
-    width: 16,
+    width: 20,
     risers: RISERS,
     tread: 0.38,
   },
   {
     key: 'west', // down to the George Washington statue (skateable)
-    top: [-50.5, -5.5],
+    top: [-63.12, -6.88],
     dir: [-1, 0],
-    width: 15,
+    width: 18.75,
     risers: RISERS,
     tread: 0.4,
   },
@@ -69,35 +69,35 @@ export const HOLES = [
   // Rainier Vista: between Gerberding and Suzzallo, then everything south-east to the horizon.
   [
     se.tl, se.tr, se.br,
-    [27, 67], [34, 83.5], [6, 96], [-70, 100], [-70, 650], [650, 650], [650, 90],
-    [151, 51], [99, 52], [64, 68.5], [58, 58], se.bl,
+    [33.75, 83.75], [42.5, 104.38], [7.5, 120], [-87.5, 125], [-87.5, 812.5], [812.5, 812.5], [812.5, 112.5],
+    [188.75, 63.75], [123.75, 65], [80, 85.62], [72.5, 72.5], se.bl,
   ],
   // West: the lawn and paving around the George Washington statue, between Odegaard and Meany.
-  [w.tr, w.tl, [-59.5, 2], [-59.5, 6], [-148, 6], [-148, -20.5], [-56, -20.5], [-56, -13]],
+  [w.tr, w.tl, [-74.38, 2.5], [-74.38, 7.5], [-185, 7.5], [-185, -25.62], [-70, -25.62], [-70, -16.25]],
 ];
 
 // --- Invisible boundaries (MAP.md §3) across the gaps between buildings. Buildings have their own colliders.
 export const BOUNDS = [
-  [[-31.5, -73.5], [-10, -73.5]], // NW: path between Odegaard and Kane toward the Quad
-  [[50.2, -42.7], [66.5, -25.5], [70.1, -17.5]], // NE: between Kane and Suzzallo
-  [[-39.2, -34], [-39.2, -20], [-45.8, -13.6], [-50.8, -13.6]], // W: Odegaard's corner, down to the west steps
-  [[-43.9, 58.8], [-30.5, 55.3]], // SW: between Meany and Gerberding (Meany's front and the west steps are open)
-  [[35, 84], [78, 63.5]], // end of the playable landing below the Rainier Vista steps
+  [[-39.38, -91.88], [-12.5, -91.88]], // NW: path between Odegaard and Kane toward the Quad
+  [[62.75, -53.38], [83.12, -31.88], [87.62, -21.88]], // NE: between Kane and Suzzallo
+  [[-49, -42.5], [-49, -25], [-57.25, -17], [-63.5, -17]], // W: Odegaard's corner, down to the west steps
+  [[-54.88, 73.5], [-38.12, 69.12]], // SW: between Meany and Gerberding (Meany's front and the west steps are open)
+  [[43.75, 105], [97.5, 79.38]], // end of the playable landing below the Rainier Vista steps
 ];
 
 // --- Paved areas for the ground mask (brick); everything else is lawn.
 export const PAVED = {
   polygons: [
     PLAZA,
-    [[46, -25], [66.1, -17.1], [54.7, 47.8], [57.4, 58.2], [46.5, 52.9]], // forecourt up to Suzzallo's facade
-    [[45, -27.4], [50.2, -42.7], [66.5, -25.5], [70.1, -17.5], [66, -17], [61, -9]], // Broken Obelisk corner
-    [se.tl, se.tr, se.br, [27, 67], [35, 84], [78, 63.5], [64, 68.5], [58, 58], se.bl], // landing below the steps
-    [[-148, -20.5], [-50, -20.5], [-50, 6], [-148, 6]], // west paving (OSM: paving_stones)
+    [[57.5, -31.25], [82.62, -21.38], [68.38, 59.75], [71.75, 72.75], [58.12, 66.12]], // forecourt up to Suzzallo's facade
+    [[56.25, -34.25], [62.75, -53.38], [83.12, -31.88], [87.62, -21.88], [82.5, -21.25], [76.25, -11.25]], // Broken Obelisk corner
+    [se.tl, se.tr, se.br, [33.75, 83.75], [43.75, 105], [97.5, 79.38], [80, 85.62], [72.5, 72.5], se.bl], // landing below the steps
+    [[-185, -25.62], [-62.5, -25.62], [-62.5, 7.5], [-185, 7.5]], // west paving (OSM: paving_stones)
   ],
   // [width, ...points] polylines
   paths: [
-    [11, [46, 66], [53, 81], [113, 213], [126, 243], [142, 319], [193, 427]], // Rainier Vista path
-    [6, [-124, -7], [-170, -7]],
+    [11, [57.5, 82.5], [66.25, 101.25], [141.25, 266.25], [157.5, 303.75], [177.5, 398.75], [241.25, 533.75]], // Rainier Vista path
+    [6, [-155, -8.75], [-212.5, -8.75]],
   ],
   dilate: 10, // stroke width around the plaza polygon so brick reaches the building walls
   rings: [[...POI.drumheller.center, POI.drumheller.radius + 4, 7]],
@@ -124,17 +124,17 @@ export const BACKDROP = BUILDINGS.filter((b) => !midIds.has(b.id));
 
 // --- Props
 export const LAMPS = [
-  [-45, -5], [-45, 22], [-45, 45], [-20, 50], [8, 54.5], [50, 40], [55, 10],
-  [-0.4, -10], [-12.9, -16.4], [-33, -12], // in front of Kane's stairs, clear of the open strip, the hill and the levels
+  [-56.25, -6.25], [-56.25, 27.5], [-56.25, 56.25], [-25, 62.5], [10, 68.12], [62.5, 50], [68.75, 12.5],
+  [-0.5, -12.5], [-16.12, -20.5], [-41.25, -15], // in front of Kane's stairs, clear of the open strip, the hill and the levels
 ];
 export const BENCHES = [
   // [x, z, rotY]: seat faces -z (north) at rotY 0
-  [-12, 51.5, 0.18], [0, 53.4, 0.18], [12, 55.6, 0.18],
-  [-54.3, 22, -Math.PI / 2], [-54.3, 34, -Math.PI / 2], // against Meany's brick plinth (photo IMG_4721)
+  [-15, 64.38, 0.18], [0, 66.75, 0.18], [15, 69.5, 0.18],
+  [-67.88, 27.5, -Math.PI / 2], [-67.88, 42.5, -Math.PI / 2], // against Meany's brick plinth (photo IMG_4721)
 ];
 
 const vistaTree = (s, off) => {
-  const p = add(add([53, 81], VISTA_DIR, s), [VISTA_DIR[1], -VISTA_DIR[0]], off);
+  const p = add(add([66.25, 101.25], VISTA_DIR, s), [VISTA_DIR[1], -VISTA_DIR[0]], off);
   return p;
 };
 // A point in front of a modelled facade: `t` along its wall (0..1 from a to b), `out` metres toward the plaza.
@@ -153,18 +153,18 @@ export const TREES = [
   ...[0.12, 0.3, 0.68, 0.88].map((t, i) => ({ p: infront('gerberding', t, 6.5), y: 0, v: i % 4, s: 0.85 })),
   ...[0.18, 0.5, 0.82].map((t, i) => ({ p: infront('meany', t, 10), y: 0, v: (i + 1) % 4, s: 0.42 })),
   // Rainier Vista lawn edges, on the lower ground
-  ...[45, 75, 105, 135].flatMap((s, i) => [
-    { p: vistaTree(s, 21), y: LOW, v: i % 4, s: 1.1 },
-    { p: vistaTree(s, -21), y: LOW, v: (i + 2) % 4, s: 1.05 },
+  ...[56.25, 93.75, 131.25, 168.75].flatMap((s, i) => [
+    { p: vistaTree(s, 26.25), y: LOW, v: i % 4, s: 1.1 },
+    { p: vistaTree(s, -26.25), y: LOW, v: (i + 2) % 4, s: 1.05 },
   ]),
   // South-west, toward the low sun (DESIGN.md: sun shining through bare branches)
-  { p: [-40, 108], y: LOW, v: 1, s: 1.15 }, { p: [-22, 112], y: LOW, v: 2, s: 1.1 }, { p: [-62, 116], y: LOW, v: 3, s: 1.2 },
-  { p: [-8, 106], y: LOW, v: 0, s: 1.05 }, { p: [-80, 104], y: LOW, v: 2, s: 1.1 },
+  { p: [-50, 135], y: LOW, v: 1, s: 1.15 }, { p: [-27.5, 140], y: LOW, v: 2, s: 1.1 }, { p: [-77.5, 145], y: LOW, v: 3, s: 1.2 },
+  { p: [-10, 132.5], y: LOW, v: 0, s: 1.05 }, { p: [-100, 130], y: LOW, v: 2, s: 1.1 },
   // The Quad (backdrop, north-east beyond Kane)
-  { p: [150, -125], y: LOW, v: 0, s: 1.2 }, { p: [168, -140], y: LOW, v: 1, s: 1.15 }, { p: [182, -122], y: LOW, v: 2, s: 1.2 },
-  { p: [158, -160], y: LOW, v: 3, s: 1.1 }, { p: [184, -156], y: LOW, v: 0, s: 1.2 }, { p: [140, -148], y: LOW, v: 1, s: 1.1 },
+  { p: [187.5, -156.25], y: LOW, v: 0, s: 1.2 }, { p: [210, -175], y: LOW, v: 1, s: 1.15 }, { p: [227.5, -152.5], y: LOW, v: 2, s: 1.2 },
+  { p: [197.5, -200], y: LOW, v: 3, s: 1.1 }, { p: [230, -195], y: LOW, v: 0, s: 1.2 }, { p: [175, -185], y: LOW, v: 1, s: 1.1 },
   // Between Kane and Suzzallo, toward the Quad
-  { p: [78, -36], y: 0, v: 2, s: 1.0 }, { p: [88, -26], y: 0, v: 3, s: 1.05 },
+  { p: [97.5, -45], y: 0, v: 2, s: 1.0 }, { p: [110, -32.5], y: 0, v: 3, s: 1.05 },
   // West lawn around George Washington
-  { p: [-104, -16], y: LOW, v: 1, s: 1.0 }, { p: [-140, 2], y: LOW, v: 3, s: 1.1 },
+  { p: [-130, -20], y: LOW, v: 1, s: 1.0 }, { p: [-175, 2.5], y: LOW, v: 3, s: 1.1 },
 ];

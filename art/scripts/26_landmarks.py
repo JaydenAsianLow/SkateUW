@@ -234,10 +234,12 @@ for k, (ox, oy, hh) in enumerate(((-0.3, -0.3, 0.55), (0.25, -0.2, 0.3), (0.2, 0
 b.collider('pyramid', cx - 1.45, cx + 1.45, cy - 1.45, cy + 1.45, base, base + 2.1, rotz=yaw)
 b.collider('shaft', cx - SW, cx + SW, cy - SW, cy + SW, tip, tip + 7.2, rotz=yaw)
 
-# --- Planter slabs (photos 4711, 4713, 4714, webcam): long low exposed-aggregate pads in a pinwheel round the brass
-# drain, each with an aggregate coping along the plaza edge, a recessed brick top, a gutter channel on the inside,
-# angled end caps and a brick soldier course along the sides. All of it is ledge.
-pc = P(*L['planters']['center'])
+# --- Planter pads (photos 4711, 4713, 4714 and the user's sketch): four long, low exposed-aggregate trapezoids framing
+# the brass drain, corners cut on the diagonal so there is a gap at each corner. The pair parallel to Kane is longer.
+# Each has an aggregate coping along its outer edge (the grind edge), a thinner one along the inner edge, angled end
+# caps, a recessed brick top with a gutter channel, and a brick soldier course along both long sides. All of it is ledge.
+PL = L['planters']
+pc = P(*PL['center'])
 b.cyl('M_brass', pc[0], pc[1], -0.02, 0.015, 0.9, 0.9, 32)                      # brass drain cover (photo 4711)
 b.cyl('M_aggregate', pc[0], pc[1], -0.02, 0.01, 1.05, 1.05, 32)                  # its aggregate collar
 for k in range(36):                                                                # radial brick around it (4736)
@@ -249,42 +251,78 @@ for k in range(36):                                                             
                                 (x1_ - math.sin(a_) * 0.012, y1_ + math.cos(a_) * 0.012, 0.004),
                                 (x1_ + math.sin(a_) * 0.012, y1_ - math.cos(a_) * 0.012, 0.004),
                                 (x0_ + math.sin(a_) * 0.012, y0_ - math.cos(a_) * 0.012, 0.004)], [(0, 3, 2, 1)])
-SH = L['planters']['height']
-for i, (rot, length, width, gap) in enumerate(L['planters']['slabs']):
-    a = math.radians(rot)
-    ca, sa = math.cos(a), math.sin(a)
-    T = lambda u, v: (pc[0] + u * ca - v * sa, pc[1] + u * sa + v * ca)
-    u0, u1 = gap, gap + length
-    v0, v1 = 1.3, 1.3 + width
-    cut = 0.35 * width                                   # the far end is cut at an angle (photo 4713)
-    outer = [T(u0, v0), T(u1, v0), T(u1 - cut, v1), T(u0 + 0.5, v1)]
-    b.slab('M_aggregate', outer, 0.0, SH - 0.1)
-    # coping along the plaza edge (the grind edge), a thinner one along the back, end caps
-    b.slab('M_aggregate', [T(u0, v0), T(u1, v0), T(u1 - 0.08, v0 + 0.6), T(u0 + 0.06, v0 + 0.6)], SH - 0.1, SH)
-    b.slab('M_aggregate', [T(u0 + 0.5 - 0.05, v1 - 0.35), T(u1 - cut - 0.05, v1 - 0.35), T(u1 - cut, v1), T(u0 + 0.5, v1)], SH - 0.1, SH - 0.02)
-    b.slab('M_aggregate', [T(u1 - 0.55, v0 + 0.6), T(u1, v0), T(u1 - cut, v1), T(u1 - cut - 0.5, v1 - 0.35)], SH - 0.1, SH - 0.01)
-    b.slab('M_aggregate', [T(u0, v0), T(u0 + 0.45, v0 + 0.6), T(u0 + 0.85, v1 - 0.35), T(u0 + 0.5, v1)], SH - 0.1, SH - 0.01)
-    # recessed brick top and the gutter channel inside the coping
-    b.slab('M_paverbrick', [T(u0 + 0.45, v0 + 0.85), T(u1 - 0.6, v0 + 0.85), T(u1 - cut - 0.45, v1 - 0.35), T(u0 + 0.85, v1 - 0.35)], SH - 0.1, SH - 0.06)
-    b.slab('M_brick_dark', [T(u0 + 0.45, v0 + 0.6), T(u1 - 0.55, v0 + 0.6), T(u1 - 0.6, v0 + 0.85), T(u0 + 0.45, v0 + 0.85)], SH - 0.1, SH - 0.085)
-    # brick soldier course along both long sides
-    for (pa, pb, nv) in ((T(u0, v0), T(u1, v0), -1), (T(u0 + 0.5, v1), T(u1 - cut, v1), 1)):
+# sketch -> world: sketch +x points away from Kane (Kane's plaza normal), sketch +y along Kane (same handedness)
+KF = LAYOUT['kane']
+kdx, kdz = KF['b'][0] - KF['a'][0], KF['b'][1] - KF['a'][1]
+kln = math.hypot(kdx, kdz)
+kn = (-kdz / kln, kdx / kln)
+if kn[1] < 0:
+    kn = (-kn[0], -kn[1])
+km = (-kn[1], kn[0])
+SK = PL['sketch']
+mpp, (scx, scy) = SK['metresPerPx'], SK['center']
+
+
+def sk(q):  # sketch pixel -> Blender (x, y)
+    u, v = (q[0] - scx) * mpp, (q[1] - scy) * mpp
+    return P(PL['center'][0] + u * kn[0] + v * km[0], PL['center'][1] + u * kn[1] + v * km[1])
+
+
+SH = PL['height']
+for i, quad in enumerate(SK['pads']):
+    O0, O1, I1, I0 = [sk(q) for q in quad]
+    lerp = lambda p, q, t: (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+    thick = math.hypot(*[(lerp(I0, I1, 0.5)[k] - lerp(O0, O1, 0.5)[k]) for k in (0, 1)])
+
+    def Q(a, t):  # a: 0..1 along the pad, t: 0 (outer edge) .. 1 (inner edge)
+        return lerp(lerp(O0, O1, a), lerp(I0, I1, a), t)
+
+    def Qm(e0, e1, t):  # same, but e0/e1 metres in from each end (the ends are angled)
+        lt = math.hypot(*[(Q(1, t)[k] - Q(0, t)[k]) for k in (0, 1)])
+        return Q(e0 / lt, t), Q(1 - e1 / lt, t)
+
+    tc, tb, tg = 0.6 / thick, 0.35 / thick, 0.85 / thick      # coping, back coping, gutter widths
+    b.slab('M_aggregate', [O0, O1, I1, I0], 0.0, SH - 0.1)                                   # body
+    b.slab('M_aggregate', [O0, O1, Q(1, tc), Q(0, tc)], SH - 0.1, SH)                        # outer coping
+    b.slab('M_aggregate', [Q(0, 1 - tb), Q(1, 1 - tb), I1, I0], SH - 0.1, SH - 0.02)         # inner coping
+    for (ea, eb) in ((0.0, 1.0), (1.0, 0.0)):                                                # end caps
+        a0, _ = Qm(0.45, 0.45, tc)
+        _, a1 = Qm(0.45, 0.45, tc)
+        b0, _ = Qm(0.45, 0.45, 1 - tb)
+        _, b1 = Qm(0.45, 0.45, 1 - tb)
+        cap = [Q(0, tc), a0, b0, Q(0, 1 - tb)] if ea == 0.0 else [a1, Q(1, tc), Q(1, 1 - tb), b1]
+        b.slab('M_aggregate', cap, SH - 0.1, SH - 0.01)
+    g0 = Qm(0.45, 0.45, tc)
+    g1 = Qm(0.45, 0.45, tg)
+    b.slab('M_brick_dark', [g0[0], g0[1], g1[1], g1[0]], SH - 0.1, SH - 0.085)                # gutter channel
+    t0 = Qm(0.45, 0.45, tg)
+    t1 = Qm(0.45, 0.45, 1 - tb)
+    b.slab('M_brick', [t0[0], t0[1], t1[1], t1[0]], SH - 0.1, SH - 0.06)                      # recessed brick top
+    # brick soldier course on both long faces, just proud of the aggregate
+    for (pa, pb, inward) in ((O0, O1, Q(0.5, 0.5)), (I1, I0, Q(0.5, 0.5))):
         dx, dy = pb[0] - pa[0], pb[1] - pa[1]
         ln = math.hypot(dx, dy)
-        nx, ny = -dy / ln * -nv, dx / ln * -nv
-        q0 = (pa[0] + nx * 0.012, pa[1] + ny * 0.012)
-        q1 = (pb[0] + nx * 0.012, pb[1] + ny * 0.012)
-        b.mesh('M_brick', [(*pa, 0.04), (*pb, 0.04), (*pb, 0.26), (*pa, 0.26)], [(0, 1, 2, 3)])
+        nx, ny = -dy / ln, dx / ln
+        mid = ((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)
+        if (inward[0] - mid[0]) * nx + (inward[1] - mid[1]) * ny > 0:
+            nx, ny = -nx, -ny
+        q0, q1 = (pa[0] + nx * 0.012, pa[1] + ny * 0.012), (pb[0] + nx * 0.012, pb[1] + ny * 0.012)
+        b.mesh('M_brick', [(*q0, 0.04), (*q1, 0.04), (*q1, 0.26), (*q0, 0.26)], [(0, 1, 2, 3)])
         b.mesh('M_brick', [(*q0, 0.04), (*q1, 0.04), (*q1, 0.26), (*q0, 0.26)], [(3, 2, 1, 0)])
-    cu, cv = (u0 + u1 - cut / 2) / 2, (v0 + v1) / 2
-    ccx, ccy = T(cu, cv)
-    b.col_center(f'slab{i}', (ccx, ccy, SH / 2), (length - cut / 2, width, SH), (0, 0, a))
-    b.rail(f'slab{i}_edge', (*T(u0, v0), SH), (*T(u1, v0), SH))
-    b.rail(f'slab{i}_back', (*T(u0 + 0.5, v1), SH - 0.02), (*T(u1 - cut, v1), SH - 0.02))
+    # collider: the trapezoid as 8 boxes, one per strip from the outer edge to the inner edge (follows the angled ends)
+    NS = 8
+    for k in range(NS):
+        ta, tz = k / NS, (k + 1) / NS
+        e0, e1 = lerp(Q(0, ta), Q(0, tz), 0.5), lerp(Q(1, ta), Q(1, tz), 0.5)
+        ln = math.hypot(e1[0] - e0[0], e1[1] - e0[1])
+        ang = math.atan2(e1[1] - e0[1], e1[0] - e0[0])
+        b.col_center(f'pad{i}_{k}', ((e0[0] + e1[0]) / 2, (e0[1] + e1[1]) / 2, SH / 2), (ln, thick / NS, SH), (0, 0, ang))
+    b.rail(f'pad{i}_edge', (*O0, SH), (*O1, SH))
+    b.rail(f'pad{i}_back', (*I1, SH - 0.02), (*I0, SH - 0.02))
 
 b.finish('landmarks')
 export('landmarks')
 mx, my = P(-22, -12)
 preview('landmarks', [('monoliths', (mx + 18, my - 18, 6), (-25, 24, 8), 24), ('hill', (cx + 26, cy - 20, 4), (cx + 10, cy, 1), 30),
                       ('obelisk', (cx - 12, cy - 9, 3), (cx, cy, 2.5), 30),
-                      ('planters', (pc[0] + 14, pc[1] - 14, 7), (pc[0], pc[1], 0), 30)])
+                      ('planters', (pc[0] + 16, pc[1] - 16, 9), (pc[0], pc[1], 0), 30)])

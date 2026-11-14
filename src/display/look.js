@@ -197,7 +197,7 @@ function groundMaterial() {
           float ang = 0.42; float ca = cos(ang), sa = sin(ang);
           vec2 q = vec2(ca * p.x - sa * p.y, sa * p.x + ca * p.y);
           // Few, long concrete bands like the real paving (photos IMG_4708, 4732, 4734): ~27 m apart one way, ~41 m the other.
-          vec2 g = abs(fract(q / vec2(27.0, 41.0) + 0.5) - 0.5) * vec2(27.0, 41.0);
+          vec2 g = abs(fract(q / vec2(33.8, 51.2) + 0.5) - 0.5) * vec2(33.8, 51.2);
           float dLine = min(g.x, g.y);
           gBand = (1.0 - smoothstep(0.17, 0.2, dLine)) * gPlaza * 0.8;
           float n = lkNoise(p * 0.12) * 0.6 + lkNoise(p * 0.55) * 0.4;

@@ -19,13 +19,11 @@ dx = (x1 - x0) / (N - 1)
 
 # --- Walking space in front of the colonnade, then the big Kane staircase down to the plaza (photos 4727, 4735,
 # and the videos): the obelisk sits up on this same level to the east (26_landmarks.py, rs-landmarks.json).
-WALK = 22.0       # wide open strip between the front wall and the top of the stairs
-RUN_W = 43.4      # the stair run starts at Kane's east corner (+x) and runs west until it meets the pillars
-SX0, SX1 = W / 2 - RUN_W, W / 2
+WALK = 27.5      # wide open strip between the front wall and the top of the stairs (scales with the map: scripts/scale-map.py)
+SX1 = W / 2       # the stair run starts at Kane's east corner (+x) and runs west until it meets the pillar
 RISERS, TREAD = 6, 0.42  # 17.5 cm risers, 42 cm treads
 b.box('M_paverbrick', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
 b.collider('walk', -W / 2, W / 2, -WALK, 0.0, 0.0, FLOOR)
-b.box('M_concrete', SX0, SX1, -WALK - 0.02, -WALK + 0.35, FLOOR - 0.05, FLOOR + 0.005)   # top nosing
 # The pillar (east face of the easternmost monolith, rs-landmarks.json) is not square to Kane's front, so every step
 # is cut to its own length to end flush against the pillar's face, like the real stairs.
 LM = json.load(open(os.path.join(PROJECT, 'public', 'map', 'rs-landmarks.json')))
@@ -48,6 +46,8 @@ def to_local(q):  # world (x, z) -> this facade's (x along, y out): +x is Kane's
 
 
 (fx0, fy0), (fx1, fy1) = to_local(face[0]), to_local(face[1])
+SX0 = fx0 + (fx1 - fx0) * (-WALK - fy0) / (fy1 - fy0)  # the pillar face at the top of the stairs
+b.box('M_concrete', SX0, SX1, -WALK - 0.02, -WALK + 0.35, FLOOR - 0.05, FLOOR + 0.005)   # top nosing
 rise = FLOOR / RISERS
 for k in range(RISERS):
     y_front = -WALK - (RISERS - k) * TREAD

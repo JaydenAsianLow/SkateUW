@@ -225,6 +225,13 @@ Each step is its own script in `art/scripts/` and writes a GLB to `public/models
 - In the GLBs: materials are named (`M_brick`, `M_stone`, ...) and swapped for the game's shaders in
   `src/display/redSquare/Glb.jsx`; `COL_*` boxes become colliders, `COLMESH_*` meshes become trimesh colliders (raised level, bank); `RAIL_*` lines are grind lines
   (collected in `grindLines` in Glb.jsx, for the grind moves later).
+- **Map scale:** the campus is drawn 1.25× its real size (plaza, building footprints and walls, levels, every
+  hand-placed point), so the plaza feels as roomy as in person. Things you touch keep their real size: steps, the
+  pillars, the obelisk, the planter pads, props, building heights. `python scripts/scale-map.py 1.1` scales it
+  again by that factor (it multiplies the current scale, `MAP_SCALE` in `scripts/osm-to-level.mjs`); then rerun
+  every `2x_*.py` script.
+- Planter pads: four trapezoids traced from the user's sketch (`planters.sketch` in rs-landmarks.json, in sketch
+  pixels); the longer pair runs parallel to Kane.
 - Estimated from photos, not measured: the monolith height (19 m; OSM says 13), the planter slab positions,
   step counts and building heights. Correct them in the JSON files.
 - Every model is bevelled (rounded edges, smoothed shading) at export (`rs_lib.soften`).
