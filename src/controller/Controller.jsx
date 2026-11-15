@@ -37,7 +37,7 @@ export default function Controller() {
   const [rtt, setRtt] = useState(null);
   const [started, setStarted] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState({ steer: 0, lean: 0, beta: 0, gamma: 0 });
+  const tilt = useRef({ steer: 0, lean: 0 }); // latest shaped tilt, read every frame by the on-screen board
   const [sens, setSens] = useState(0); // sensitivity preset, set from the laptop's Settings
   const tiltRange = useRef(SENSITIVITY[sens].tilt);
   tiltRange.current = SENSITIVITY[sens].tilt;
@@ -83,7 +83,6 @@ export default function Controller() {
   // Once started: stream tilt at SEND_HZ and refresh the on-screen readout.
   useEffect(() => {
     if (!started) return;
-    let tick = 0;
     const sm = { steer: 0, lean: 0 };
     const id = setInterval(() => {
       const r = raw.current;
@@ -114,7 +113,7 @@ export default function Controller() {
       const lean = clamp(Math.abs(sm.lean) < 0.01 ? 0 : sm.lean);
       const packet = { steer, lean, beta: r.beta, gamma: r.gamma, jx: stick.current.x, jy: stick.current.y };
       socketRef.current?.volatile.emit('tilt', packet);
-      if (++tick % 5 === 0) setView(packet);
+      tilt.current = { steer, lean };
     }, 1000 / SEND_HZ);
     return () => clearInterval(id);
   }, [started]);
@@ -272,7 +271,7 @@ export default function Controller() {
         <Deck
           socketRef={socketRef}
           stickRef={stick}
-          steer={view.steer}
+          tiltRef={tilt}
           calibrating={calState === 'measuring'}
           onCalibrate={calibrate}
           sens={sens}
@@ -303,21 +302,25 @@ const TRICK_LABEL = {
   fs180: 'FRONTSIDE 180',
   bs180: 'BACKSIDE 180',
 };
+// How much the phone's own tilt shows on the on-screen board (radians at full tilt), and how fast it follows.
+const LOCAL_ROLL = 0.32; // onto the edge in a turn
+const LOCAL_YAW = 0.14; // nose swings into the turn
+const LOCAL_MANUAL = 0.42; // nose up on the tail
+const LOCAL_NOSE_MANUAL = 0.25; // nose down
+const LOCAL_FOLLOW = 0.2; // per frame
 const STAGE_PIPS = { idle: 0, down: 1, pop: 2, trick: 3 };
 const TRAIL_MS = 350;
 const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
-function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDisconnect, error }) {
+function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, onDisconnect, error }) {
   const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
   const shadowRef = useRef(null);
   // Latest deck rotation from the laptop (radians / metres), and what's currently drawn (smoothed).
-  const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 } });
-  const steerRef = useRef(steer);
-  steerRef.current = steer;
+  const mirror = useRef({ target: null, at: 0, shown: { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 }, local: { roll: 0, pitch: 0, yaw: 0 } });
   // From the laptop: 'ride' (on the board) | 'carry' (on foot, board in hand) | 'find' (on foot, board on the ground)
   // | 'off' (down after a fall). The phone only follows the laptop, and only once two packets in a row agree.
   const [mode, setMode] = useState('ride');
@@ -437,29 +440,46 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
     // The 3D board: same rotation as the deck on the laptop (or just the local tilt with no laptop data).
     // Deck axes -> screen: deck +X (toe side) = right, deck -Z (nose) = up, deck +Y (grip side) = toward you,
     // a mirror swap, so every rotation flips sign.
+    // On top of that, the phone's own tilt plays out bigger on screen (the laptop's few degrees barely show from
+    // above): turning rolls the board onto its edge and swings the nose into the turn; a manual tips the nose up
+    // on the tail (a nose manual tips it down on the nose).
     const drawBoard = (r) => {
       const b = boardRef.current;
       if (!b) return;
       const m = mirror.current;
       const live = m.target && performance.now() - m.at < 600;
-      const t = live ? m.target : { roll: -steerRef.current * 0.12, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 };
+      const tl = tiltRef.current;
+      const t = live ? m.target : { roll: -tl.steer * 0.12, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0 };
       const sh = m.shown;
       for (const k of Object.keys(sh)) {
         const d = t[k] - sh[k];
         // Follow closely; snap on big jumps (a finished flip resets from 2π to 0 and must not spin back).
         sh[k] = Math.abs(d) > 1.5 ? t[k] : sh[k] + d * 0.45;
       }
-      const pxPerM = b.offsetHeight / 0.8; // the deck is 0.8 m long
+      const lo = m.local;
+      const want = {
+        roll: -tl.steer * LOCAL_ROLL,
+        yaw: tl.steer * LOCAL_YAW,
+        pitch: tl.lean < 0 ? -tl.lean * LOCAL_MANUAL : -tl.lean * LOCAL_NOSE_MANUAL,
+      };
+      for (const k of Object.keys(lo)) lo[k] += (want[k] - lo[k]) * LOCAL_FOLLOW;
+      const h = b.offsetHeight;
+      const pxPerM = h / 0.8; // the deck is 0.8 m long
       const up = (sh.lift + Math.min(sh.height, 1.2)) * pxPerM * 0.25; // rises toward you in the air
+      const pivot = Math.sign(lo.pitch) * h * 0.4; // nose up pivots on the tail (bottom), nose down on the nose
+      const yaw = -(sh.spin + sh.yaw) + lo.yaw;
+      const roll = sh.roll + lo.roll;
       b.style.transform =
-        `translate(-50%, -50%) rotateZ(${-(sh.spin + sh.yaw)}rad) translateZ(${up}px) ` +
-        `rotateX(${-sh.pitch}rad) rotateY(${-sh.roll}rad)`;
+        `translate(-50%, -50%) rotateZ(${yaw}rad) translateZ(${up}px) ` +
+        `translateY(${pivot}px) rotateX(${-lo.pitch}rad) translateY(${-pivot}px) ` +
+        `rotateX(${-sh.pitch}rad) rotateY(${-roll}rad)`;
       const sd = shadowRef.current;
       if (sd) {
         const k = 1 / (1 + up / 400);
+        const slide = pivot * (1 - Math.cos(lo.pitch)); // a tipped board's footprint shrinks toward its pivot
         sd.style.transform =
-          `translate(-50%, -50%) translate(${up * 0.25}px, ${up * 0.35}px) rotateZ(${-(sh.spin + sh.yaw)}rad) ` +
-          `scale(${k * Math.max(0.15, Math.abs(Math.cos(sh.roll)))}, ${k * Math.max(0.3, Math.abs(Math.cos(sh.pitch)))})`;
+          `translate(-50%, -50%) translate(${up * 0.25 - roll * 30}px, ${up * 0.35 + slide}px) rotateZ(${yaw}rad) ` +
+          `scale(${k * Math.max(0.15, Math.abs(Math.cos(roll)))}, ${k * Math.max(0.3, Math.abs(Math.cos(sh.pitch + lo.pitch)))})`;
         sd.style.opacity = String(0.55 * k);
       }
     };
@@ -527,7 +547,6 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
         >
           <div className="deck-floor" />
           <span className="deck-label nose">▲ Nose</span>
-          <span className="deck-label tail">Tail</span>
           <div ref={shadowRef} className="board-shadow" />
           <Board3D ref={boardRef} />
           <div className="combo">
@@ -547,13 +566,6 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
       )}
       {/* Fires on touch-down, not click: phones don't send a click for a tap while another finger is on the screen
           (your thumb on the joystick), so a click-only button ignored Get on while running. */}
-      <div className="steer-meter" aria-label={`Steer ${steer.toFixed(2)}`}>
-        <span>L</span>
-        <div className="steer-track">
-          <i style={{ left: `${50 + steer * 50}%` }} />
-        </div>
-        <span>R</span>
-      </div>
       <button
         className={`onoff-btn ${mode}`}
         onPointerDown={(e) => {
