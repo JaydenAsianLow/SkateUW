@@ -42,6 +42,11 @@ export default function Controller() {
   const tiltRange = useRef(SENSITIVITY[sens].tilt);
   tiltRange.current = SENSITIVITY[sens].tilt;
 
+  // Tint the phone's browser bar to match the controller background.
+  useEffect(() => {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#2a1218');
+  }, []);
+
   // Socket connection + latency ping.
   useEffect(() => {
     const s = connect('controller');
@@ -209,9 +214,11 @@ export default function Controller() {
   return (
     <div className="ctrl">
       <header className="ctrl-head">
-        <span className={`dot ${conn === 'connected' ? 'ok' : 'bad'}`} />
-        <span>{connLabel}</span>
-        <span className="muted">
+        <span className="pill">
+          <span className={`dot ${conn === 'connected' ? 'ok' : 'bad'}`} />
+          {connLabel}
+        </span>
+        <span className="pill muted">
           {displays > 0 ? `${displays} screen${displays > 1 ? 's' : ''}` : 'no screen open'}
         </span>
       </header>
@@ -226,7 +233,13 @@ export default function Controller() {
         </div>
       ) : !started ? (
         <div className="ctrl-start">
-          <h1>Skate Controller</h1>
+          <div className="brand">
+            <span className="brand-kicker">Red Square</span>
+            <h1 className="brand-title">
+              SKATE<span>.</span>
+            </h1>
+            <span className="brand-sub">phone controller</span>
+          </div>
           <p>Hold the phone flat in portrait. Your screen is the deck: nose at the top, tail at the bottom.</p>
           <ul className="moves">
             {MOVES.map(([name, how]) => (
@@ -236,14 +249,14 @@ export default function Controller() {
             ))}
           </ul>
           <button className="big" onClick={start}>
-            Tap to start
+            Drop in
           </button>
           {error && <p className="error">{error}</p>}
         </div>
       ) : calState !== 'done' && !offset.current ? (
         <div className="ctrl-start cal">
           <h1>Calibrate</h1>
-          <div className="cal-phone" aria-hidden="true">
+          <div className={`cal-phone ${calState === 'measuring' ? 'measuring' : ''}`} aria-hidden="true">
             <div className="cal-deck" />
           </div>
           <p>
@@ -400,17 +413,21 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
         prev.set(p.id, p);
         if (!q) continue;
         const a = 1 - (now - p.t) / TRAIL_MS;
-        ctx.strokeStyle = `rgba(45, 246, 255, ${a * 0.9})`;
-        ctx.lineWidth = 4 + a * 10;
+        // Warm glow with a bright core, like a light trail at golden hour.
         ctx.beginPath();
         ctx.moveTo(q.x - r.left, q.y - r.top);
         ctx.lineTo(p.x - r.left, p.y - r.top);
+        ctx.strokeStyle = `rgba(255, 106, 61, ${a * 0.45})`;
+        ctx.lineWidth = 10 + a * 16;
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255, 226, 170, ${a * 0.95})`;
+        ctx.lineWidth = 3 + a * 5;
         ctx.stroke();
       }
       for (const p of pointers()) {
         if (!p.holding) continue;
         const t = touches.current.get(p.id);
-        ctx.strokeStyle = 'rgba(255, 61, 242, 0.9)'; // a resting finger: hold for the tre flip
+        ctx.strokeStyle = 'rgba(255, 61, 127, 0.95)'; // a resting finger: hold for the tre flip
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(t.x - r.left, t.y - r.top, 30 + Math.sin(now / 120) * 3, 0, Math.PI * 2);
@@ -508,6 +525,9 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
           onPointerUp={onUp}
           onPointerCancel={onUp}
         >
+          <div className="deck-floor" />
+          <span className="deck-label nose">▲ Nose</span>
+          <span className="deck-label tail">Tail</span>
           <div ref={shadowRef} className="board-shadow" />
           <Board3D ref={boardRef} />
           <div className="combo">
@@ -527,8 +547,15 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
       )}
       {/* Fires on touch-down, not click: phones don't send a click for a tap while another finger is on the screen
           (your thumb on the joystick), so a click-only button ignored Get on while running. */}
+      <div className="steer-meter" aria-label={`Steer ${steer.toFixed(2)}`}>
+        <span>L</span>
+        <div className="steer-track">
+          <i style={{ left: `${50 + steer * 50}%` }} />
+        </div>
+        <span>R</span>
+      </div>
       <button
-        className="onoff-btn"
+        className={`onoff-btn ${mode}`}
         onPointerDown={(e) => {
           e.preventDefault();
           getOnOff();
@@ -545,10 +572,6 @@ function Deck({ socketRef, stickRef, steer, calibrating, onCalibrate, sens, onDi
         <button className="secondary small-btn" onClick={onDisconnect}>
           Disconnect
         </button>
-        <span className="muted small">
-          {steer >= 0 ? '+' : ''}
-          {steer.toFixed(2)}
-        </span>
         <button className="reset-btn" onClick={reset}>
           Reset
         </button>
