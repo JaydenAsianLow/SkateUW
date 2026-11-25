@@ -165,13 +165,14 @@ const KEYBOARD = [
   ['Ollie', 'Shift'],
   ['Nollie', 'N (then a trick key for a nollie flip)'],
   ['Kickflip', 'F'],
-  ['Varial flip', 'G'],
+  ['Varial flip', 'R'],
   ['Tre flip', 'T'],
   ['Pop shove-it', 'V'],
   ['Frontside 180', 'E'],
   ['Revert', 'Q'],
   ['Get off / on', 'B (on foot: WASD, Shift to run)'],
   ['Jump / caveman', 'Space on foot with the board, then B in the air'],
+  ['Show grind lines', 'G (blue rails, orange ledges, pink curbs; thick = long)'],
 ];
 
 export function ControlsList() {

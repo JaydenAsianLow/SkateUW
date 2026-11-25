@@ -193,3 +193,4 @@ export const GRIND_CORNER = 0.5;
 export const GRIND_CORNER_TURN = 110;
 export const GRIND_CORNER_KEEP = 0.92;
 export const GRIND_STUCK = 1.0; // s: a board that can't follow its line this long is let go (never trapped)
+export const GRIND_NEAR = 5; // m: lines further than this from the skater aren't checked (grid lookup, grid cell = this)

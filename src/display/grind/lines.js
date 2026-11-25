@@ -9,6 +9,7 @@ import { POI } from '../redSquare/osm.js';
 import LANDMARKS from '../../../public/map/rs-landmarks.json';
 import { pointInPolygon } from '../redSquare/geo.js';
 import { dropBeside, scanBoxEdges, snapshot } from './scan.js';
+import { buildGrid } from './grinding.js';
 import { GRIND_CURB_MAX, GRIND_LONG, GRIND_MAX_DROP, GRIND_MIN_DROP, GRIND_MIN_LEN } from '../tuning.js';
 
 export const RAIL = 'rail';
@@ -136,6 +137,7 @@ export function buildGrindLines(world, rapier) {
   const count = { R: 0, L: 0, C: 0 };
   for (const l of lines) l.id = tag[l.type] + ++count[tag[l.type]];
   grind.lines = lines;
+  grind.grid = buildGrid(lines);
   grind.ready = true;
   grind.buildMs = performance.now() - t0;
   grind.stats = { boxes: snap.boxes.length, tris: snap.tris.length };

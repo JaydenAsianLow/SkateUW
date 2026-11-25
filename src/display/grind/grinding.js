@@ -13,7 +13,7 @@ import { clamp01 } from '../util.js';
 import {
   GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
   GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_ANGLE, GRIND_MAX_SPEED, GRIND_MIN_ENTRY,
-  GRIND_MIN_SPEED, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
+  GRIND_MIN_SPEED, GRIND_NEAR, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
 } from '../tuning.js';
 
 // Point and unit tangent at distance s along a line's path.
@@ -241,4 +241,41 @@ export function addScuff(line, s0, s1) {
   }
   while (scuffs.list.length > scuffs.max) scuffs.list.shift();
   scuffs.version++;
+}
+
+// --- Spatial lookup: each line goes into the grid cells (GRIND_NEAR wide) its segments pass through, once at load.
+// During play only the lines in the cells around the skater are checked.
+export function buildGrid(lines, cell = GRIND_NEAR) {
+  const grid = new Map();
+  for (const line of lines) {
+    for (let i = 0; i < line.pts.length - 1; i++) {
+      const a = line.pts[i], b = line.pts[i + 1];
+      const x0 = Math.floor(Math.min(a[0], b[0]) / cell), x1 = Math.floor(Math.max(a[0], b[0]) / cell);
+      const z0 = Math.floor(Math.min(a[2], b[2]) / cell), z1 = Math.floor(Math.max(a[2], b[2]) / cell);
+      for (let x = x0; x <= x1; x++)
+        for (let z = z0; z <= z1; z++) {
+          const k = x * 65536 + z;
+          if (!grid.has(k)) grid.set(k, []);
+          const list = grid.get(k);
+          if (list[list.length - 1] !== line) list.push(line);
+        }
+    }
+  }
+  return { cell, map: grid };
+}
+// The lines with a segment in the 3 x 3 cells around (x, z): everything within GRIND_NEAR (and a bit more).
+const _near = [];
+let _stamp = 0;
+export function nearby(g, x, z) {
+  const { cell, map } = g.grid;
+  const cx = Math.floor(x / cell), cz = Math.floor(z / cell);
+  _near.length = 0;
+  _stamp++;
+  for (let i = cx - 1; i <= cx + 1; i++)
+    for (let k = cz - 1; k <= cz + 1; k++) {
+      const list = map.get(i * 65536 + k);
+      if (!list) continue;
+      for (const line of list) if (line._seen !== _stamp) (line._seen = _stamp), _near.push(line);
+    }
+  return _near;
 }

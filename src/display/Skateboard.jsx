@@ -20,7 +20,7 @@ import {
   TURN_RATE, GRIND_EXIT_LIFT,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
-import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, startGrind, stepGrind } from './grind/grinding.js';
+import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, startGrind, stepGrind } from './grind/grinding.js';
 import { bailTrack, cavemanTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, jumpPose, walkPose, walkRate } from './choreo.js';
 
 // Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
@@ -728,7 +728,7 @@ export default function Skateboard() {
       }
       if (r.end === 'off') {
         // Round a corner onto the next line (a pad's next edge): a combo, no landing in between.
-        const next = findCorner(grind.lines, g);
+        const next = findCorner(nearby(grind, p.x, p.z), g);
         if (next) {
           addScuff(g.line, g.s0, g.s);
           st.grindChain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t }];
@@ -793,7 +793,8 @@ export default function Skateboard() {
       const skip = st.grindSkip && nowMs < st.grindSkip.until ? st.grindSkip.line : null;
       const b = { x: p.x, z: p.z, bottom: p.y - HALF.y, vx: v.x, vy: v.y, vz: v.z, popped: st.popT >= 0 };
       const skipFn = skip && ((l) => l === skip);
-      const hit = grounded ? findCurbEntry(grind.lines, b, skipFn) : findEntry(grind.lines, b, skipFn);
+      const near = nearby(grind, p.x, p.z); // only the lines within ~5 m (grid lookup)
+      const hit = grounded ? findCurbEntry(near, b, skipFn) : findEntry(near, b, skipFn);
       if (hit) {
         st.grind = startGrind(hit, [p.x, p.y, p.z], HALF.y, nowMs);
         st.grind.s0 = hit.s;

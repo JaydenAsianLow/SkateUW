@@ -28,7 +28,7 @@ const keyMap = [
   { name: 'nollie', keys: ['KeyN'] },
   { name: 'jump', keys: ['Space'] }, // on foot with the board in hand (caveman: then B in the air)
   { name: 'kickflip', keys: ['KeyF'] },
-  { name: 'varial', keys: ['KeyG'] },
+  { name: 'varial', keys: ['KeyR'] }, // (G shows the grind lines: grind/GrindLines.jsx)
   { name: 'tre', keys: ['KeyT'] },
   { name: 'shove', keys: ['KeyV'] },
   { name: 'fs180', keys: ['KeyE'] },

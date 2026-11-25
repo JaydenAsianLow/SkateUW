@@ -8,8 +8,9 @@ import { urlParams } from '../util.js';
 import { CURB, LEDGE, RAIL, buildGrindLines, grind } from './lines.js';
 import { scuffs } from './grinding.js';
 
-// Builds the grind lines once the level is in the physics world, and draws them in the debug view (?grinddebug).
-// Mount inside <Physics>, after <World />.
+// Builds the grind lines once the level is in the physics world, and draws them when asked: key G toggles them in
+// game, ?grinddebug shows them from the start (and clears the fog for top-down shots). Mount inside <Physics>.
+// Colours: blue rail, orange ledge, pink curb; long lines (balance + side camera) are drawn thicker.
 
 const DEBUG = import.meta.env.DEV && urlParams.has('grinddebug');
 export const GRIND_COLORS = { [RAIL]: '#2ad4ff', [LEDGE]: '#ff9a1f', [CURB]: '#ff3fd2' };
@@ -17,6 +18,15 @@ export const GRIND_COLORS = { [RAIL]: '#2ad4ff', [LEDGE]: '#ff9a1f', [CURB]: '#f
 export default function GrindLines() {
   const { world, rapier } = useRapier();
   const [version, setVersion] = useState(0);
+  const [show, setShow] = useState(DEBUG);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.code !== 'KeyG' || e.repeat || e.target?.closest?.('input, textarea, select')) return;
+      setShow((v) => !v);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   useEffect(() => {
     // The level's pieces load at different times (each Blender model adds its colliders when it arrives), so build
     // once the number of colliders has stopped changing, and again if a late piece adds more. A cheap count check
@@ -46,7 +56,7 @@ export default function GrindLines() {
   return (
     <>
       <Scuffs />
-      {DEBUG && version > 0 && <GrindDebug key={version} />}
+      {show && version > 0 && <GrindDebug key={version} />}
     </>
   );
 }
@@ -83,7 +93,10 @@ const W = Number(urlParams.get('grindwidth')) || 0.35; // ribbon width in the de
 function GrindDebug() {
   const scene = useThree((s) => s.scene);
   useEffect(() => {
-    scene.fog = null; // see the whole plaza from above
+    if (!DEBUG) return undefined;
+    const fog = scene.fog;
+    scene.fog = null; // ?grinddebug: see the whole plaza from above
+    return () => void (scene.fog = fog);
   }, [scene]);
   const meshes = useMemo(() => {
     const byType = { [RAIL]: [], [LEDGE]: [], [CURB]: [] };
@@ -127,7 +140,7 @@ function GrindDebug() {
           return (
             <Html key={l.id} position={[(a[0] + b[0]) / 2, a[1] + 0.3, (a[2] + b[2]) / 2]} center zIndexRange={[10, 0]}>
               <div style={{ background: GRIND_COLORS[l.type], color: '#111', font: 'bold 10px sans-serif', padding: '0 3px', borderRadius: 3, whiteSpace: 'nowrap', opacity: 0.92 }}>
-                {l.id}
+                {l.id} {l.long ? 'long' : 'short'}
               </div>
             </Html>
           );
