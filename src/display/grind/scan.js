@@ -131,10 +131,11 @@ function triY(t, x, z) {
   return u * ay + v * by + w * cy;
 }
 
-// Drop beside a point: how far the ground falls from height y at (x, z) offset by (nx, nz) * off.
+// Drop beside a point: how far the ground falls from height y at (x, z) offset by (nx, nz) * off. The probe starts
+// `from` above y (higher finds a surface that rises above the edge, like a bank behind its toe curb).
 // null when blocked (that spot is inside something) or there's no ground within 4 m.
-export function dropBeside(snap, x, y, z, nx, nz, off = 0.3) {
-  const h = vray(snap, x + nx * off, y + 0.04, z + nz * off, -1, 4);
+export function dropBeside(snap, x, y, z, nx, nz, off = 0.3, from = 0.04) {
+  const h = vray(snap, x + nx * off, y + from, z + nz * off, -1, 4 + from);
   if (!h || h.inside) return null;
   return y - h.y;
 }

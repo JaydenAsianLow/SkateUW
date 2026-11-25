@@ -11,8 +11,9 @@
 //  - At the end you pop off and land rolling; an ollie gets you out early.
 import { clamp01 } from '../util.js';
 import {
-  GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_ANGLE, GRIND_MAX_SPEED,
-  GRIND_MIN_ENTRY, GRIND_MIN_SPEED, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_WINDOW,
+  GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
+  GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_ANGLE, GRIND_MAX_SPEED, GRIND_MIN_ENTRY,
+  GRIND_MIN_SPEED, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
 } from '../tuning.js';
 
 // Point and unit tangent at distance s along a line's path.
@@ -79,6 +80,68 @@ export function findEntry(lines, b, skip) {
   return best;
 }
 
+// Riding up to a curb's edge on the ground, at a shallow angle and heading into it: lock on without an ollie.
+// b = { x, z, bottom, vx, vz }.
+export function findCurbEntry(lines, b, skip) {
+  const sp = Math.hypot(b.vx, b.vz);
+  if (sp < GRIND_MIN_ENTRY) return null;
+  const ux = b.vx / sp, uz = b.vz / sp;
+  const cosMax = Math.cos((GRIND_CURB_ANGLE * Math.PI) / 180);
+  let best = null;
+  for (const line of lines) {
+    if (!line.inner || line.height > GRIND_CURB_MAX + 0.02 || (skip && skip(line))) continue;
+    const n = nearest(line, b.x, b.z);
+    if (n.d > GRIND_SNAP) continue;
+    const dy = b.bottom - n.y;
+    if (dy > -0.05 || dy < -(line.height + 0.08)) continue; // on the low side, beside it
+    const { p, t } = at(line, n.s);
+    // on the open side of the edge (not on top of it), moving toward it
+    const ox = b.x - p[0], oz = b.z - p[2];
+    if (ox * line.inner[0] + oz * line.inner[1] > 0) continue;
+    const toward = -(ux * sp * ox + uz * sp * oz) / (Math.hypot(ox, oz) || 1);
+    if (toward < GRIND_CURB_TOWARD) continue;
+    const th = Math.hypot(t[0], t[2]) || 1;
+    const c = (ux * t[0] + uz * t[2]) / th;
+    if (Math.abs(c) < cosMax) continue;
+    const dir = c > 0 ? 1 : -1;
+    if ((dir > 0 ? line.length - n.s : n.s) < 0.6) continue;
+    if (!best || n.d < best.d) best = { line, s: n.s, dir, along: sp * Math.abs(c), d: n.d };
+  }
+  return best;
+}
+
+// At the end of a line: another line starting right there (a pad's next edge), turning at most GRIND_CORNER_TURN.
+export function findCorner(lines, g) {
+  const { p, t } = at(g.line, g.s);
+  const th = Math.hypot(t[0], t[2]) || 1;
+  const fx = (t[0] * g.dir) / th, fz = (t[2] * g.dir) / th;
+  const cosTurn = Math.cos((GRIND_CORNER_TURN * Math.PI) / 180);
+  let best = null;
+  for (const line of lines) {
+    if (line === g.line) continue;
+    for (const end of [0, 1]) {
+      const q = end ? line.pts[line.pts.length - 1] : line.pts[0];
+      const d = Math.hypot(q[0] - p[0], q[2] - p[2]);
+      if (d > GRIND_CORNER || Math.abs(q[1] - p[1]) > 0.15) continue;
+      const s = end ? line.length : 0;
+      const dir = end ? -1 : 1;
+      const t2 = at(line, s).t;
+      const h2 = Math.hypot(t2[0], t2[2]) || 1;
+      if ((fx * t2[0] * dir + fz * t2[2] * dir) / h2 < cosTurn) continue;
+      if (!best || d < best.d) best = { line, s, dir, d };
+    }
+  }
+  return best;
+}
+
+// Carry a grind round a corner onto the next line: same trick, a little slower, already decided.
+export function continueGrind(g, next, center, half, now) {
+  const g2 = { ...g, line: next.line, s: next.s, s0: next.s, dir: next.dir, speed: g.speed * GRIND_CORNER_KEEP, t: 0, decided: true, lockAt: now, snapT: 0, bal: next.line.long ? g.bal : null, far: 0 };
+  const { c } = seat(g2, half);
+  g2.offset = [center[0] - c[0], center[1] - c[1], center[2] - c[2]];
+  return g2;
+}
+
 // Where the board's centre goes on the line. half = the board collider's half height.
 export function seat(g, half) {
   const { p, t } = at(g.line, g.s);
@@ -97,12 +160,16 @@ export function startGrind(hit, center, half, now) {
   return g;
 }
 
-// One frame of grinding. inp = { now, arcAt, arcDir, partialAt, steer, live, ollie }.
+// One frame of grinding. inp = { now, arcAt, arcDir, partialAt, steer, live, ollie, gap (m between the board and
+// where it should be) }.
 // Returns { end } (null while it carries on: 'off' end of the line, 'ollie' popped out, 'stall' too slow, 'bail'),
 // plus the board centre { c } and travel tangent { t } (unit, including the slope) to put it on.
 export function stepGrind(g, dt, inp, half) {
   g.t += dt;
   const line = g.line;
+  // Never trapped: if the board can't follow the line (something in the way) for GRIND_STUCK seconds, let go.
+  g.far = inp.gap > 0.5 ? (g.far ?? 0) + dt : 0;
+  if (g.far > GRIND_STUCK) return { end: 'stall' };
   // Trick choice in the window.
   if (!g.decided) {
     const since = g.lockAt - GRIND_PRE * 1000;

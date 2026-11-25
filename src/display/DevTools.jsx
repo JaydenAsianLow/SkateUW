@@ -67,15 +67,17 @@ export function RideTest() {
   return null;
 }
 
-// ?grindtest=<line id>,<gesture>,<freeze s>[,<speed>][,<from end>]: drops the board in the air just before a grind
-// line (?grinddebug lists the ids), moving along it, as if ollied onto it. gesture = none | arc | partial is sent the
-// moment it locks on. freeze = stop everything that long after locking on (for a screenshot; 0 = never). Writes what
+// ?grindtest=<line id>,<gesture>,<freeze s>[,<speed>][,<from end>][,<mode>][,<side offset m>][,<angle deg>][,<pop s>]:
+// mode air (default): drops the board in the air just before a grind line (?grinddebug lists the ids), moving along
+// it, as if ollied onto it. mode ollie: rolls up on the ground 2.5 m before it (side offset, angle) and ollies after
+// <pop s>. mode curb: rolls toward a curb's edge from its low side at <angle> (no ollie).
+// gesture = none | arc | partial is sent the moment it locks on; ollieout pops 1 s into the grind. freeze = stop everything that long after locking on (for a screenshot; 0 = never). Writes what
 // happened into <pre id="grindtest"> (read it with a headless browser's --dump-dom).
 const GTEST = import.meta.env.DEV && urlParams.get('grindtest')?.split(',');
 export function GrindTest() {
   useEffect(() => {
     if (!GTEST) return undefined;
-    const [id, gesture = 'none', freeze = '0', spd = '4', fromEnd = '0'] = GTEST;
+    const [id, gesture = 'none', freeze = '0', spd = '4', fromEnd = '0', mode = 'air', offs = '0', ang = '0', popAt = '0.3'] = GTEST;
     const log = [];
     const pre = document.createElement('pre');
     pre.id = 'grindtest';
@@ -99,10 +101,24 @@ export function GrindTest() {
         const u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L, (b[2] - a[2]) / L];
         const h = Math.hypot(u[0], u[2]);
         const v = Number(spd);
-        // 0.5 m along the line, 0.3 m above it, moving along it and slightly down
-        const x = a[0] + u[0] * 0.5, z = a[2] + u[2] * 0.5, y = a[1] + u[1] * 0.5 + 0.3 + 0.06;
-        window.__skate.place({ x, y, z, heading: Math.atan2(-u[0] / h, -u[2] / h), vx: (u[0] / h) * v, vy: -0.3, vz: (u[2] / h) * v, popped: true });
-        log.push(`line ${id} ${line.type} ${line.long ? 'long' : 'short'} ${line.length.toFixed(1)}m, gesture ${gesture}, entry ${v} m/s`);
+        const hx = u[0] / h, hz = u[2] / h; // along the line, in plan
+        let sx = -hz, sz = hx; // sideways
+        if (line.inner) (sx = -line.inner[0]), (sz = -line.inner[1]); // the open (low) side of an edge
+        if (mode === 'air') {
+          // 0.5 m along the line, 0.3 m above it, moving along it and slightly down
+          const x = a[0] + u[0] * 0.5, z = a[2] + u[2] * 0.5, y = a[1] + u[1] * 0.5 + 0.3 + 0.06;
+          window.__skate.place({ x, y, z, heading: Math.atan2(-hx, -hz), vx: hx * v, vy: -0.3, vz: hz * v, popped: true });
+        } else {
+          // on the ground beside the start, `offs` m out to the side, `back` m before it, heading in at `ang` degrees
+          const back = mode === 'curb' ? 1.0 : 2.5;
+          const o = Number(offs), an = (Number(ang) * Math.PI) / 180;
+          const dx = hx * Math.cos(an) - sx * Math.sin(an), dz = hz * Math.cos(an) - sz * Math.sin(an);
+          const x = a[0] + hx * (0.6 - back) + sx * o, z = a[2] + hz * (0.6 - back) + sz * o;
+          const y = a[1] - line.height + 0.1;
+          window.__skate.place({ x, y, z, heading: Math.atan2(-dx, -dz), vx: dx * v, vy: 0, vz: dz * v, popped: false });
+          if (mode === 'ollie') setTimeout(() => (phone.popQueued = 1), Number(popAt) * 1000);
+        }
+        log.push(`line ${id} ${line.type} ${line.long ? 'long' : 'short'} ${line.length.toFixed(1)}m h${line.height.toFixed(2)}, gesture ${gesture}, ${mode} at ${v} m/s`);
         phase = 'fly';
         out();
         return;
@@ -115,6 +131,7 @@ export function GrindTest() {
         log.push(`locked on ${b.grind.id} (${b.grind.type}) at (${b.x.toFixed(2)}, ${b.y.toFixed(2)}, ${b.z.toFixed(2)})`);
         if (gesture === 'arc') phone.revertQueued = 1;
         if (gesture === 'partial') phone.partialQueued = true;
+        if (gesture === 'ollieout') setTimeout(() => (phone.popQueued = 1), 1000);
         out();
       }
       if (phase === 'grind') {

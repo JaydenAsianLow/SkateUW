@@ -183,3 +183,13 @@ export const GRIND_BALANCE = {
 // Side camera on long grinds: out to the side of the line (the side with more room), a bit behind, looking ahead.
 // It blends in and back out at `blend` (1/s); the usual wall check keeps it out of buildings.
 export const GRIND_CAM = { distance: 4.2, height: 1.3, back: 1.0, ahead: 1.6, blend: 3 };
+// Riding up to a curb's edge (no ollie): locks on when the board is this close (m), within this angle of the curb
+// (degrees, a shallow approach) and moving toward it. Only for edges up to GRIND_CURB_MAX high; taller needs an ollie.
+export const GRIND_CURB_ANGLE = 25;
+export const GRIND_CURB_TOWARD = 0.25; // m/s toward the edge needed (so riding alongside a curb doesn't lock on)
+// End of a line: carry on onto another line starting within this distance (m) — round a pad's corner — if the
+// turn is at most GRIND_CORNER_TURN degrees. Keeps GRIND_CORNER_KEEP of the speed. Counts as a combo.
+export const GRIND_CORNER = 0.5;
+export const GRIND_CORNER_TURN = 110;
+export const GRIND_CORNER_KEEP = 0.92;
+export const GRIND_STUCK = 1.0; // s: a board that can't follow its line this long is let go (never trapped)

@@ -61,13 +61,14 @@ function measure(snap, pts) {
   const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
   const l = Math.hypot(b[0] - a[0], b[2] - a[2]) || 1;
   const nx = -(b[2] - a[2]) / l, nz = (b[0] - a[0]) / l;
-  const d1 = dropBeside(snap, m[0], m[1], m[2], nx, nz, 0.3);
-  const d2 = dropBeside(snap, m[0], m[1], m[2], -nx, -nz, 0.3);
-  const height = Math.max(d1 ?? 0, d2 ?? 0, 0);
-  const flat = (d) => d !== null && Math.abs(d) < 0.08;
+  const height = Math.max(dropBeside(snap, m[0], m[1], m[2], nx, nz, 0.3) ?? 0, dropBeside(snap, m[0], m[1], m[2], -nx, -nz, 0.3) ?? 0, 0);
+  const d1 = dropBeside(snap, m[0], m[1], m[2], nx, nz, 0.3, 0.5);
+  const d2 = dropBeside(snap, m[0], m[1], m[2], -nx, -nz, 0.3, 0.5);
+  // The top is the side whose ground is clearly higher (a solid beside the line counts as high: a wall, the bank).
+  const h1 = d1 ?? -1, h2 = d2 ?? -1;
   let inner = null;
-  if (flat(d1) && !flat(d2)) inner = [nx, nz];
-  else if (flat(d2) && !flat(d1)) inner = [-nx, -nz];
+  if (h1 < h2 - 0.08) inner = [nx, nz];
+  else if (h2 < h1 - 0.08) inner = [-nx, -nz];
   return { height, inner };
 }
 
