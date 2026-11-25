@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { connect, controllerRoom } from '../socket.js';
 import { createComboReader, createStrokeTracker } from './gestures.js';
 import PhoneSettings from './PhoneSettings.jsx';
+import { CHOICES, CHOICE_UI } from '../shared.js';
 import { MOVES } from '../moves.js';
 import { SENSITIVITY, clampSensitivity } from '../sensitivity.js';
 
@@ -290,6 +291,7 @@ export default function Controller() {
           calibrating={calState === 'measuring'}
           onCalibrate={calibrate}
           sens={sens}
+          shared={shared}
           onDisconnect={disconnect}
           error={error}
         />
@@ -329,7 +331,7 @@ const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
-function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, onDisconnect, error }) {
+function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, shared, onDisconnect, error }) {
   const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
@@ -537,6 +539,16 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, on
     if (mode === 'find') setFlash({ label: 'WALK TO YOUR BOARD', key: performance.now() });
   };
 
+  // Camera view (Behind -> Shoulder -> Side): a shared setting, so the laptop saves it.
+  const views = CHOICES.camera;
+  const viewName = CHOICE_UI.find(([k]) => k === 'camera')[2];
+  const cycleView = () => {
+    const next = views[(views.indexOf(shared?.camera) + 1) % views.length];
+    socketRef.current?.emit('setting', { key: 'camera', value: next });
+    navigator.vibrate?.(10);
+    setFlash({ label: `VIEW: ${viewName[next].toUpperCase()}`, key: performance.now() });
+  };
+
   const reset = () => {
     socketRef.current?.emit('reset');
     navigator.vibrate?.([40, 40, 40]);
@@ -598,6 +610,9 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, on
         </button>
         <button className="secondary small-btn" onClick={onDisconnect}>
           Disconnect
+        </button>
+        <button className="secondary small-btn" onClick={cycleView} disabled={!shared}>
+          View
         </button>
         <button className="reset-btn" onClick={reset}>
           Reset

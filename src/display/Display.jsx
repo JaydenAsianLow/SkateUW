@@ -164,9 +164,9 @@ export default function Display() {
               <Skateboard />
               {import.meta.env.DEV && urlParams.has('raycheck') && <RayCheck />}
               {import.meta.env.DEV && urlParams.has('ridetest') && <RideTest />}
+              <CameraRig /> {/* inside Physics: it ray casts so it never ends up inside a wall */}
             </Physics>
             {import.meta.env.DEV && urlParams.has('labels') && <Labels />}
-            <CameraRig />
             <Effects />
           </Suspense>
         </Canvas>

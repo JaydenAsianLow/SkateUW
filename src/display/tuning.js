@@ -69,3 +69,21 @@ export const CAM_LOOK_RIGHT = 0.35;
 export const CAM_LOOK_Y = 0.7; // ~3.5° down-tilt
 export const CAM_MAX_ROLL = (3 * Math.PI) / 180;
 export const CAM_FOLLOW = 6; // camera position easing rate (1/s)
+
+// Camera views (Settings → Camera, or the View button on the phone). Behind uses the numbers above.
+export const CAM_SWITCH_TIME = 0.4; // s, blend between views
+// Over the shoulder: close, at shoulder height, off to the rider's back (heel) side, looking well ahead past them.
+export const SHOULDER_DISTANCE = 1.7;
+export const SHOULDER_HEIGHT = 1.55;
+export const SHOULDER_SIDE = 0.5;
+export const SHOULDER_LOOK_AHEAD = 7;
+export const SHOULDER_LOOK_Y = 1.1;
+// Side view: out on the rider's toe side (where they face), level with the knees, so the feet and board show.
+export const SIDE_DISTANCE = 3.2;
+export const SIDE_HEIGHT = 0.9;
+export const SIDE_LOOK_Y = 0.55;
+export const SIDE_LOOK_AHEAD = 0.6; // look a little ahead of the rider so there's room in front
+// Walls / stairs between the rider and the camera: pull the camera in to this far in front of the hit.
+export const CAM_CLIP_PAD = 0.2;
+export const CAM_CLEAR_FROM = [1.2, 0.4]; // m above the board: rays to the camera from the head and the knees
+export const CAM_MIN_DISTANCE = 0.6;

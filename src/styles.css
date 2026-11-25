@@ -205,7 +205,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ctrl .onoff-btn.carry:active { box-shadow: 0 1px 0 #a4481c, inset 0 2px 0 rgba(255, 255, 255, 0.6); }
 .ctrl .onoff-btn:disabled { opacity: 0.4; filter: saturate(0.4); }
 /* Footer: ghost pills, Reset in warning red */
-.deck-foot { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.deck-foot { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .ctrl .small-btn, .ctrl .reset-btn {
   padding: 12px 6px; border-radius: 12px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
   white-space: nowrap; transition: transform 70ms, background 120ms;

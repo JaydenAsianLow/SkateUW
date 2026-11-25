@@ -92,6 +92,7 @@ export default function Skateboard() {
   const camera = useThree((t) => t.camera);
   if (import.meta.env.DEV && window.__skate) {
     window.__skate.world = world;
+    window.__skate.rapierRay = rapier.Ray; // console / test ray casts
     // Console: __skate.bail('back' | 'side' | 'slam', speed?) to try the falls.
     window.__skate.bail = (kind = 'side', speed) => (s.current.devBail = [kind === 'slam' ? 'side' : kind, speed ?? (kind === 'slam' ? 7 : undefined)]);
   }

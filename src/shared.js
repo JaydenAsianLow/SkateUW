@@ -4,11 +4,13 @@
 // Choice settings: key -> allowed values (the first is the default).
 export const CHOICES = {
   stance: ['regular', 'goofy'],
+  camera: ['behind', 'shoulder', 'side'],
 };
 
 // How the Settings menus (laptop and phone) show them: [key, label, { value: button text }, hint].
 export const CHOICE_UI = [
   ['stance', 'Stance', { regular: 'Regular', goofy: 'Goofy' }, 'Goofy rides right foot forward.'],
+  ['camera', 'Camera', { behind: 'Behind', shoulder: 'Shoulder', side: 'Side' }, 'Behind, over the shoulder, or from the side.'],
 ];
 
 export const SHARED_DEFAULTS = Object.fromEntries(Object.entries(CHOICES).map(([k, v]) => [k, v[0]]));
