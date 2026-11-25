@@ -362,6 +362,10 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
   // | 'off' (down after a fall). The phone only follows the laptop, and only once two packets in a row agree.
   const [mode, setMode] = useState('ride');
   const pendingMode = useRef({ mode: 'ride', n: 0 });
+  // Long grind on the laptop: show the big TAP button for the timing bar; it flashes green / red on each tap's result.
+  const [tapOn, setTapOn] = useState(false);
+  const tapOnRef = useRef(false);
+  const [tapFlash, setTapFlash] = useState(null); // { kind: 'good' | 'miss', key }
   const onFoot = mode !== 'ride'; // joystick instead of the deck
 
   useEffect(() => {
@@ -375,9 +379,18 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
       pm.n = pm.mode === m ? pm.n + 1 : 1;
       pm.mode = m;
       if (pm.n >= 2) setMode(m);
+      const tap = d.tap === true;
+      if (tap !== tapOnRef.current) (tapOnRef.current = tap), setTapOn(tap);
+    };
+    const onHaptic = (d) => {
+      if (d?.type === 'tapGood' || d?.type === 'tapMiss') setTapFlash({ kind: d.type === 'tapGood' ? 'good' : 'miss', key: performance.now() });
     };
     s.on('board', onBoard);
-    return () => s.off('board', onBoard);
+    s.on('haptic', onHaptic);
+    return () => {
+      s.off('board', onBoard);
+      s.off('haptic', onHaptic);
+    };
   }, [socketRef]);
 
   // Back on the board: recalibrate (however you held the phone on foot, the deck pose is the new neutral).
@@ -623,6 +636,21 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
             </div>
           )}
           <canvas ref={canvasRef} className="deck-trail" />
+          {tapOn && (
+            // Fires on touch-down (no click delay) and doesn't reach the deck, so a tap is never read as a swipe.
+            <button
+              className={`tap-btn ${tapFlash ? tapFlash.kind : ''}`}
+              key={tapFlash?.key ?? 0}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                socketRef.current?.emit('grindTap');
+              }}
+            >
+              TAP
+              <small>when the marker is in the green</small>
+            </button>
+          )}
         </div>
       )}
       {/* Fires on touch-down, not click: phones don't send a click for a tap while another finger is on the screen

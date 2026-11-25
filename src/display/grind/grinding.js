@@ -7,14 +7,15 @@
 //  - The trick is picked once, in the grind window (from the ollie's pop to GRIND_WINDOW s after locking on), and
 //    then locked: ollied on + a half circle (the frontside / backside 180 finger movement) = boardslide; no jump or no
 //    gesture = 50-50; a half circle given up halfway in the window, or any half circle after it, = bail.
-//  - Short lines (< GRIND_LONG) ride to the end by themselves. Long ones need balancing (tilt the phone) and get the
-//    side camera.
+//  - A grind that will last more than GRIND_TIMING.minTime (the line left / your speed when you lock on) gets the
+//    timing bar: tap (phone button, Space) each time the moving marker is in the green; a miss counts, too many bail.
+//    Shorter ones (stair sets, handrails) play by themselves.
 //  - At the end you pop off and land rolling; an ollie gets you out early. Locked on slowly (under GRIND_HOP_SPEED)
 //    it's a short hop on, hop off; any grind slower than GRIND_MIN_SPEED for GRIND_SLOW_TIME hops off. Never stuck.
 import { clamp01 } from '../util.js';
 import { RAIL_R } from '../redSquare/bars.js';
 import {
-  GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
+  GRAVITY, GRIND_TIMING, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
   GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_SPEED, GRIND_MIN_ENTRY, GRIND_SQUARE_KEEP,
   GRIND_HOP_DIST, GRIND_HOP_SLIDE, GRIND_HOP_SPEED, GRIND_SLOW_TIME, GRIND_MIN_SPEED, GRIND_NEAR, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
 } from '../tuning.js';
@@ -140,7 +141,7 @@ export function findCorner(lines, g) {
 
 // Carry a grind round a corner onto the next line: same trick, a little slower, already decided.
 export function continueGrind(g, next, center, half, now) {
-  const g2 = { ...g, line: next.line, s: next.s, s0: next.s, dir: next.dir, speed: g.speed * GRIND_CORNER_KEEP, t: 0, decided: true, lockAt: now, snapT: 0, bal: next.line.long ? g.bal : null, far: 0 };
+  const g2 = { ...g, line: next.line, s: next.s, s0: next.s, dir: next.dir, speed: g.speed * GRIND_CORNER_KEEP, t: 0, decided: true, lockAt: now, snapT: 0, far: 0 };
   const { c } = seat(g2, half);
   g2.offset = [center[0] - c[0], center[1] - c[1], center[2] - c[2]];
   return g2;
@@ -163,7 +164,10 @@ export function seat(g, half) {
 
 // popAt: when the ollie that got you here popped (performance.now() ms), or null if you rolled / rode on.
 export function startGrind(hit, center, half, now, popAt = null) {
-  const g = { line: hit.line, s: hit.s, dir: hit.dir, speed: hit.along, t: 0, kind: '5050', decided: false, lockAt: now, popAt, snapT: 0, bal: null, slideSign: 1, hop: hit.along < GRIND_HOP_SPEED };
+  const g = { line: hit.line, s: hit.s, dir: hit.dir, speed: hit.along, t: 0, kind: '5050', decided: false, lockAt: now, popAt, snapT: 0, slideSign: 1, hop: hit.along < GRIND_HOP_SPEED, bonus: 0, timing: null };
+  // Long grind (by how long it will take at this speed): the timing bar.
+  const left = hit.dir > 0 ? hit.line.length - hit.s : hit.s;
+  if (!g.hop && left / Math.max(hit.along, 0.1) > GRIND_TIMING.minTime) g.timing = { m: 0, v: 1, misses: 0, hits: 0, tapped: false, wasIn: false, hist: [], flash: null };
   const { c } = seat(g, half);
   g.offset = [center[0] - c[0], center[1] - c[1], center[2] - c[2]];
   return g;
@@ -215,22 +219,10 @@ export function stepGrind(g, dt, inp, half) {
     g.s = Math.max(0, Math.min(line.length, g.s));
     return { end: 'off' };
   }
-  // Long lines: balance. The green zone drifts; tilting the phone moves the marker (keyboard: it balances itself).
-  if (line.long) {
-    const diff = GRIND_BALANCE[g.kind];
-    if (!g.bal) g.bal = { t: 0, out: 0, ph: [0, 1, 2, 3].map(() => Math.random() * 6.28) };
-    const b = g.bal;
-    b.t += dt * diff.drift;
-    const wave = (f1, p1, f2, p2) => 0.6 * Math.sin(f1 * b.t + p1) + 0.4 * Math.sin(f2 * b.t + p2);
-    b.centre = 0.5 + diff.swing * (wave(1, b.ph[0], 2.3, b.ph[1]) - wave(0, b.ph[0], 0, b.ph[1]));
-    let marker = inp.live ? 0.5 + inp.steer * 0.5 : b.centre;
-    marker = clamp01(marker + diff.sway * wave(1.7, b.ph[2], 3.1, b.ph[3]));
-    const off = marker - b.centre;
-    b.out = Math.abs(off) > diff.zone ? b.out + dt : 0;
-    if (b.out >= diff.tolerance || marker <= 0.02 || marker >= 0.98) return { end: 'bail' };
-    b.marker = marker;
-    b.zone = { c: b.centre, w: diff.zone, out: b.out / diff.tolerance };
-    b.balance = clamp01(0.5 + off / (2 * diff.zone));
+  // Long grinds: the timing bar.
+  if (g.timing) {
+    stepTiming(g, dt, inp);
+    if (g.timing.misses >= GRIND_TIMING.misses) return { end: 'bail' };
   }
   // Ease onto the line from where the board locked on.
   g.snapT += dt;
@@ -238,6 +230,36 @@ export function stepGrind(g, dt, inp, half) {
   const e = 1 - k * k * (3 - 2 * k);
   const { c, t } = seat(g, half);
   return { end: null, c: [c[0] + g.offset[0] * e, c[1] + g.offset[1] * e, c[2] + g.offset[2] * e], t, seat: c };
+}
+
+// The timing bar: the marker sweeps 0..1 and back, faster the longer the grind lasts; the green zone is the middle
+// (narrower for a boardslide). Each pass through the green needs one tap: a tap in it = good (points), a tap
+// outside it or a pass with no tap = a miss. A phone tap is judged against where the marker was GRIND_TIMING.latency
+// s earlier (what you saw when you tapped: the tap takes that long to arrive). Sets g.timing.event = 'good' | 'miss'.
+function stepTiming(g, dt, inp) {
+  const T = GRIND_TIMING;
+  const tm = g.timing;
+  tm.event = null;
+  tm.m += (tm.v * (1 + T.speedup * g.t) * dt) / T.sweep;
+  if (tm.m > 1) (tm.m = 2 - tm.m), (tm.v = -1);
+  if (tm.m < 0) (tm.m = -tm.m), (tm.v = 1);
+  tm.hist.push(inp.now, tm.m);
+  while (tm.hist.length > 2 && tm.hist[0] < inp.now - 500) tm.hist.splice(0, 2);
+  const back = inp.now - (inp.live ? T.latency * 1000 : 0);
+  let mj = tm.m;
+  for (let i = tm.hist.length - 2; i >= 0; i -= 2) if (tm.hist[i] <= back) { mj = tm.hist[i + 1]; break; }
+  tm.zw = T.zone[g.kind];
+  const inZone = Math.abs(mj - 0.5) <= tm.zw;
+  if (inp.tap) {
+    if (inZone && !tm.tapped) (tm.tapped = true), tm.hits++, (g.bonus += T.points), (tm.event = 'good');
+    else if (!inZone) tm.misses++, (tm.event = 'miss');
+  }
+  if (tm.wasIn && !inZone) {
+    if (!tm.tapped) tm.misses++, (tm.event = 'miss'); // went through the green without a tap
+    tm.tapped = false;
+  }
+  tm.wasIn = inZone;
+  if (tm.event) tm.flash = { kind: tm.event, at: inp.now };
 }
 
 export const grindName = (g) => (g.kind === 'boardslide' ? 'BOARDSLIDE' : '50-50');

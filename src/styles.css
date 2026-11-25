@@ -280,6 +280,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .steer-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, 0.5); }
 .psheet-row input[type='range'] { grid-column: 1 / -1; }
 .hud-btn.score { color: var(--accent); font-weight: 800; }
+/* Grind timing bar (Hud.jsx TimingBar): same look as the manual meter, a fast marker, a flash per tap. */
+.timing .balance-needle { transition: none; }
+.timing .balance-frame.good { animation: tap-good 0.3s ease-out; }
+.timing .balance-frame.miss { animation: tap-miss 0.4s ease-out; }
+@keyframes tap-good { 0% { box-shadow: 0 0 0 4px #3cc24a, 0 0 26px #3cc24a; } 100% { box-shadow: 0 3px 0 #5e6168, 0 6px 14px rgba(0,0,0,0.55); } }
+@keyframes tap-miss { 0% { box-shadow: 0 0 0 5px #e8341c, 0 0 30px #e8341c; transform: translateX(-4px); } 30% { transform: translateX(4px); } 100% { box-shadow: 0 3px 0 #5e6168, 0 6px 14px rgba(0,0,0,0.55); transform: none; } }
+.timing-misses { text-align: center; margin-top: 8px; font: 900 14px/1 system-ui, sans-serif; letter-spacing: 4px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 .balance-ends { display: flex; justify-content: space-between; margin-top: 14px; font: 800 10px/1 system-ui, sans-serif; letter-spacing: 2px; color: #fff2d6; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 
 /* ---------- Laptop menus (main menu, pairing, phone lost) ---------- */
@@ -366,3 +373,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .psheet-row input[type='range'] { width: 100%; accent-color: var(--accent); }
 .psheet-btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 .psheet .chip { font-size: 13px; padding: 7px 11px; border-radius: 8px; }
+
+/* Phone: TAP button for a long grind's timing bar (Controller.jsx); flashes green on a good tap, red on a miss. */
+.tap-btn {
+  position: absolute; left: 8%; right: 8%; bottom: 10%; height: 34%; z-index: 5; border: 0; border-radius: 22px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font: 900 44px/1 system-ui, sans-serif; letter-spacing: 6px; color: #fff; touch-action: none; user-select: none;
+  background: linear-gradient(#ff9b3d, #e8541c); box-shadow: 0 6px 0 #8a2f10, 0 10px 24px rgba(0,0,0,0.5);
+}
+.tap-btn small { font: 700 12px/1 system-ui, sans-serif; letter-spacing: 1px; opacity: 0.85; }
+.tap-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #8a2f10, 0 6px 16px rgba(0,0,0,0.5); }
+.tap-btn.good { animation: tap-btn-good 0.3s ease-out; }
+.tap-btn.miss { animation: tap-btn-miss 0.45s ease-out; }
+@keyframes tap-btn-good { 0% { background: #3cc24a; box-shadow: 0 0 0 6px #3cc24a, 0 0 40px #3cc24a; } }
+@keyframes tap-btn-miss { 0% { background: #e8341c; box-shadow: 0 0 0 6px #e8341c, 0 0 40px #e8341c; transform: translateX(-6px); } 30% { transform: translateX(6px); } }

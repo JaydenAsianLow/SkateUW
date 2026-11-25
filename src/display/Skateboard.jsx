@@ -19,7 +19,7 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_HOP_ROLL, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
+  TURN_RATE, GRIND_TIMING, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_HOP_ROLL, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
 import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, nearest, startGrind, stepGrind } from './grind/grinding.js';
@@ -178,7 +178,7 @@ export default function Skateboard() {
   // Score one grind (or one leg of a grind that rounded corners): its points with the combo multiplier.
   const scoreGrind = (leg) => {
     const mult = comboLink(leg.startMs);
-    const pts = Math.round(grindPoints(leg.type, leg.kind, leg.dist, leg.t) * mult);
+    const pts = Math.round((grindPoints(leg.type, leg.kind, leg.dist, leg.t) + (leg.bonus ?? 0)) * mult); // + good taps
     board.score += pts;
     return { pts, mult };
   };
@@ -199,7 +199,7 @@ export default function Skateboard() {
     settle(rb, [gt[0] * g.dir, gt[1] * g.dir, gt[2] * g.dir]);
     const lp = rb.translation();
     st.grindSkip = { x: lp.x, z: lp.z, until: performance.now() + GRIND_COOL * 1000 }; // no re-grab of lines near here
-    const chain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t, startMs: g.lockAt }];
+    const chain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t, startMs: g.lockAt, bonus: g.bonus ?? 0 }];
     st.grindChain = [];
     if (!end) return;
     addScuff(g.line, g.s0, g.s);
@@ -555,7 +555,7 @@ export default function Skateboard() {
 
     // Paused (menu, pairing, phone disconnected): freeze, and drop moves sent meanwhile so nothing fires on resume.
     if (!game.running) {
-      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, partialQueued: false, resetQueued: false, carryQueued: false, jumpQueued: false });
+      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, partialQueued: false, resetQueued: false, carryQueued: false, jumpQueued: false, tapQueued: false });
       for (const k of EDGE_KEYS) st.held[k] = keys[k];
       return;
     }
@@ -589,6 +589,9 @@ export default function Skateboard() {
     if (revertReq) (st.arcAt = nowMs), (st.arcDir = revertReq);
     if (trickReq?.type === 'fs180' || trickReq?.type === 'bs180') (st.arcAt = nowMs), (st.arcDir = trickReq.type === 'fs180' ? 1 : -1);
     if (phone.partialQueued) (st.partialAt = nowMs), (phone.partialQueued = false);
+    const tapReq = phone.tapQueued; // grind timing bar: phone TAP button or Space (Display.jsx)
+    phone.tapQueued = false;
+    board.view.tap = false; // set again below while a timing grind is on (the phone shows its TAP button)
     let carryReq = phone.carryQueued;
     phone.carryQueued = false;
     const jumpReq = phone.jumpQueued || pressed('jump');
@@ -808,6 +811,7 @@ export default function Skateboard() {
         zone: null,
         manualT: 0,
         balanceLabel: null,
+        timing: null,
       });
       board.grind = null;
       return;
@@ -820,7 +824,8 @@ export default function Skateboard() {
     if (st.grind) {
       const g = st.grind;
       const gap = g.lastC ? Math.hypot(p.x - g.lastC[0], p.y - g.lastC[1], p.z - g.lastC[2]) : 0;
-      const r = stepGrind(g, dt, { now: nowMs, arcAt: st.arcAt ?? -1e9, arcDir: st.arcDir ?? 1, partialAt: st.partialAt ?? -1e9, steer: targetSteer, live, ollie: pop > 0, gap }, HALF.y);
+      const r = stepGrind(g, dt, { now: nowMs, arcAt: st.arcAt ?? -1e9, arcDir: st.arcDir ?? 1, partialAt: st.partialAt ?? -1e9, live, tap: tapReq, ollie: pop > 0, gap }, HALF.y);
+      if (g.timing?.event) haptic(g.timing.event === 'good' ? 'tapGood' : 'tapMiss');
       if (g.changed) {
         g.changed = false;
         st.trick = null; // the half circle was for the slide, not a 180
@@ -874,15 +879,16 @@ export default function Skateboard() {
       const pitch = slope * fwd * (1 - across);
       if (deck.current) deck.current.rotation.set(pitch, 0, slope * fwd * Math.sign(st.slideYaw || 1) * across);
       st.pitchNow = pitch;
-      const b = g.bal;
-      Object.assign(board.view, { roll: (deck.current?.rotation.z ?? 0) * mir, pitch, yaw: 0, spin: st.slideYaw, lift: 0, height: 0, mode: 'ride' });
+      const tm = g.timing;
+      if (tm) board.timingUntil = nowMs + 700; // Display.jsx: Space is a tap until shortly after the grind
+      Object.assign(board.view, { roll: (deck.current?.rotation.z ?? 0) * mir, pitch, yaw: 0, spin: st.slideYaw, lift: 0, height: 0, mode: 'ride', tap: !!tm });
       Object.assign(board, { speed: g.speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: st.stance === 1, mirror: mir, mode: 'ride', loose: null });
-      board.grind = { id: g.line.id, type: g.line.type, kind: g.kind, long: g.line.long, tx: (tx * g.dir) / th, tz: (tz * g.dir) / th };
+      board.grind = { id: g.line.id, type: g.line.type, kind: g.kind, long: g.line.long, timing: !!tm, tx: (tx * g.dir) / th, tz: (tz * g.dir) / th };
       Object.assign(board.anim, {
         pushT: -1, popT: -1, flip: -1, air: false, pitch, steer: st.steer, fall: 0, manual: 0,
-        balance: b?.balance ?? -1, meter: b?.marker ?? 0, zone: b?.zone ?? null, manualT: 0,
-        balanceLabel: `★ ${grindName(g)} ★`, balanceEnds: ['BAIL', 'BAIL'],
-        balanceInfo: `${grindPoints(g.line.type, g.kind, Math.abs(g.s - g.s0), g.t)}`,
+        balance: -1, meter: 0, zone: null, manualT: 0, balanceLabel: null, balanceInfo: null, balanceEnds: null,
+        // the timing bar on long grinds (Hud.jsx TimingBar)
+        timing: tm && { m: tm.m, zw: tm.zw ?? 0.1, misses: tm.misses, max: GRIND_TIMING.misses, hits: tm.hits, flash: tm.flash, name: grindName(g), pts: grindPoints(g.line.type, g.kind, Math.abs(g.s - g.s0), g.t) + g.bonus },
       });
       return;
     }
@@ -1167,6 +1173,7 @@ export default function Skateboard() {
       balanceLabel: null,
       balanceInfo: null,
       balanceEnds: null,
+      timing: null,
     });
   }, -1); // before the rider (and camera), so they see this frame's pose
 

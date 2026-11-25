@@ -113,6 +113,7 @@ export default function Display() {
     s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
     s.on('partial', () => (phone.partialQueued = true));
+    s.on('grindTap', () => (phone.tapQueued = true));
     s.on('reset', () => (phone.resetQueued = true));
     s.on('carry', () => (phone.carryQueued = true));
     s.on('jump', () => (phone.jumpQueued = true));
@@ -142,6 +143,12 @@ export default function Display() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.repeat || !game.running) return;
+      if (e.code === 'Space' && performance.now() < (board.timingUntil ?? 0)) {
+        // Space taps the timing bar on a long grind (never back to spawn mid-grind, nor from a tap just after it)
+        phone.tapQueued = true;
+        e.preventDefault();
+        return;
+      }
       if (e.code === 'Space' && board.view.mode === 'carry') return; // Space jumps on foot (board in hand)
       if (e.code === settings.returnKey) commands.toSpawn = true;
       else if (e.code === settings.setSpawnKey) commands.setSpawn = true;

@@ -127,6 +127,7 @@ io.on('connection', (socket) => {
   relay('trick', (d) => ({ type: TRICK_TYPES.has(d.type) ? d.type : 'kickflip', side: d.side < 0 ? -1 : 1 }));
   relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
   relay('partial', () => ({})); // a half circle given up halfway (bails a grind)
+  relay('grindTap', () => ({})); // TAP button: the timing bar on a long grind
   relay('reset', () => ({}));
   relay('carry', () => ({}));
   relay('jump', () => ({})); // on foot, board in hand
@@ -143,11 +144,12 @@ io.on('connection', (socket) => {
       lift: num(d.lift, -1, 1),
       height: num(d.height, 0, 2),
       mode: ['ride', 'carry', 'find', 'off'].includes(d.mode) ? d.mode : 'ride',
+      tap: d.tap === true, // a long grind's timing bar is on: show the TAP button
     });
   });
 
   // Vibration events from the game (push, land, bail, ...) for the phone.
-  const HAPTIC_TYPES = new Set(['push', 'land', 'trick', 'manual', 'manualWarn', 'bail']);
+  const HAPTIC_TYPES = new Set(['push', 'land', 'trick', 'manual', 'manualWarn', 'bail', 'tapGood', 'tapMiss']);
   socket.on('haptic', (d) => {
     if (socket.data.role !== 'display' || socket.id !== roomState(socket.data.room).activeDisplay) return;
     if (HAPTIC_TYPES.has(d?.type)) toControllers().emit('haptic', { type: d.type }); // not volatile (see Display.jsx)

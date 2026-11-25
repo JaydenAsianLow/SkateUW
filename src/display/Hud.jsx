@@ -51,6 +51,7 @@ export default function Hud({ onMenu }) {
       )}
       {foot === 'find' && <div className="foot-hint">Walk to your board to pick it up</div>}
       <BalanceMeter />
+      <TimingBar />
     </>
   );
 }
@@ -126,6 +127,62 @@ function BalanceMeter() {
         <span>WHEELS DOWN</span>
         <span>BAIL</span>
       </div>
+    </div>
+  );
+}
+
+// Timing bar on long grinds (grind/grinding.js stepTiming): the marker sweeps back and forth; tap (phone TAP button
+// or Space) while it's in the green. Flashes green on a good tap, red on a miss; the dots are the misses left.
+function TimingBar() {
+  const wrap = useRef(null);
+  const needle = useRef(null);
+  const zone = useRef(null);
+  const label = useRef(null);
+  const info = useRef(null);
+  const dots = useRef(null);
+  useEffect(() => {
+    let raf;
+    let shownUntil = 0;
+    let shown = null;
+    let last = { name: '', pts: -1, misses: -1, max: -1, flash: null, zw: -1 };
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const t = board.anim.timing;
+      const now = performance.now();
+      if (t) shownUntil = now + 350;
+      const show = now < shownUntil;
+      if (wrap.current && show !== shown) (shown = show), (wrap.current.style.opacity = show ? '1' : '0');
+      if (!t) return;
+      needle.current.style.left = `${t.m * 100}%`;
+      if (t.zw !== last.zw) (last.zw = t.zw), (zone.current.style.left = `${(0.5 - t.zw) * 100}%`), (zone.current.style.width = `${t.zw * 200}%`);
+      if (t.name !== last.name) label.current.textContent = `★ ${(last.name = t.name)} ★`;
+      if (t.pts !== last.pts) info.current.textContent = `${(last.pts = t.pts)} · TAP / SPACE IN THE GREEN`;
+      if (t.misses !== last.misses || t.max !== last.max) {
+        (last.misses = t.misses), (last.max = t.max);
+        dots.current.textContent = Array.from({ length: t.max }, (_, i) => (i < t.misses ? '✕' : '●')).join(' ');
+      }
+      if (t.flash && t.flash !== last.flash) {
+        last.flash = t.flash;
+        const f = wrap.current.querySelector('.balance-frame');
+        f.classList.remove('good', 'miss');
+        void f.offsetWidth; // restart the animation
+        f.classList.add(t.flash.kind);
+      }
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div ref={wrap} className="balance timing">
+      <div ref={label} className="balance-label" />
+      <div className="balance-frame">
+        <div className="balance-bar">
+          <div ref={zone} className="balance-zone" />
+        </div>
+        <div ref={needle} className="balance-needle" />
+      </div>
+      <div ref={info} className="balance-info" />
+      <div ref={dots} className="timing-misses" />
     </div>
   );
 }

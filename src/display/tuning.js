@@ -140,6 +140,8 @@ export const HAPTICS = {
   manual: { pattern: [10, 30, 10], gap: 0.5 }, // front wheels up
   manualWarn: { pattern: 8, gap: 0.2 }, // marker outside the green zone
   bail: { pattern: [90, 50, 180], gap: 1.5 },
+  tapGood: { pattern: 25, gap: 0.05 }, // grind timing bar: a tap in the green
+  tapMiss: { pattern: [70, 40, 110], gap: 0.1 }, // a miss (stronger)
 };
 
 // ---------- Phone tilt -> steering (steering.js, used on the phone) ----------
@@ -154,7 +156,7 @@ export const TRUCK_MAX = 2;
 export const SWIPE_MIN = 0.04; // shortest swipe that counts, as a fraction of the screen height
 
 // --- Grinding (src/display/grind/). Grind lines are built once when the level loads.
-export const GRIND_LONG = 10; // m: lines at least this long are "long" (balance bar + side camera); shorter ones auto-complete
+export const GRIND_LONG = 10; // m: lines at least this long are labelled LONG in the debug view (G). Whether a grind gets the timing bar depends on its time (GRIND_TIMING.minTime)
 export const GRIND_MIN_LEN = 1.5; // m: scanned edges shorter than this are not grindable
 export const GRIND_MIN_DROP = 0.1; // m: a scanned edge must stand at least this far above the ground beside it ...
 export const GRIND_MAX_DROP = 0.65; // m: ... and at most this far (taller = a wall, not a ledge)
@@ -188,10 +190,20 @@ export const GRIND_HOP_SLIDE = 1.5;
 export const GRIND_HOP_ROLL = 1.5;
 export const GRIND_MAX_SPEED = 9; // m/s
 export const GRIND_EXIT_LIFT = 1.4; // m/s up when you pop off the end of a line (or ollie out)
-// Long lines: keep the marker in the drifting green zone by tilting the phone left / right (like the manual meter).
-export const GRIND_BALANCE = {
-  '5050': { drift: 0.8, swing: 0.2, zone: 0.14, tolerance: 0.9, sway: 0.08 },
-  boardslide: { drift: 1.0, swing: 0.22, zone: 0.12, tolerance: 0.8, sway: 0.1 },
+// Long grinds: the timing bar. A grind gets it when it will last more than `minTime` s (the line left / your speed
+// when you lock on); shorter ones (stair sets, handrails) just play. A marker sweeps end to end in `sweep` s (faster
+// by `speedup` x per second on the line); tap (phone TAP button / Space) while it's in the green zone in the middle
+// (half-width `zone`, narrower on a boardslide). Each good tap adds `points`; a tap outside the green or a pass
+// through it with no tap is a miss, and `misses` misses bail. Phone taps are judged against where the marker was
+// `latency` s before (the time a tap takes to reach the laptop).
+export const GRIND_TIMING = {
+  minTime: 2,
+  sweep: 1.0,
+  speedup: 0.06,
+  zone: { '5050': 0.14, boardslide: 0.09 },
+  misses: 3,
+  points: 40,
+  latency: 0.08,
 };
 // Side camera on every grind: out to the side of the line (the side with more room), a bit behind, looking ahead.
 // It eases in over `time` s when you lock on and back out over the same when you leave; the usual wall check keeps
