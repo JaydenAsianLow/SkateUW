@@ -4,8 +4,9 @@
 // One set of rules for every surface (rail, ledge, curb):
 //  - Lock on from the air (an ollie, or rolling off something) when the board is close to a line (GRIND_SNAP) and
 //    at any angle (across a rail locks on too). It eases onto the line over GRIND_SNAP_TIME.
-//  - No gesture = 50-50, a half circle (any time on the line) = boardslide, a half circle started but not
-//    finished in the first GRIND_WINDOW seconds = bail.
+//  - The trick is picked once, in the grind window (from the ollie's pop to GRIND_WINDOW s after locking on), and
+//    then locked: ollied on + a half circle (the frontside / backside 180 finger movement) = boardslide; no jump or no
+//    gesture = 50-50; a half circle given up halfway in the window, or any half circle after it, = bail.
 //  - Short lines (< GRIND_LONG) ride to the end by themselves. Long ones need balancing (tilt the phone) and get the
 //    side camera.
 //  - At the end you pop off and land rolling; an ollie gets you out early.
@@ -159,8 +160,9 @@ export function seat(g, half) {
   return { c: [x, p[1] + lift, z], t };
 }
 
-export function startGrind(hit, center, half, now) {
-  const g = { line: hit.line, s: hit.s, dir: hit.dir, speed: hit.along, t: 0, kind: '5050', decided: false, lockAt: now, snapT: 0, bal: null, slideSign: 1 };
+// popAt: when the ollie that got you here popped (performance.now() ms), or null if you rolled / rode on.
+export function startGrind(hit, center, half, now, popAt = null) {
+  const g = { line: hit.line, s: hit.s, dir: hit.dir, speed: hit.along, t: 0, kind: '5050', decided: false, lockAt: now, popAt, snapT: 0, bal: null, slideSign: 1 };
   const { c } = seat(g, half);
   g.offset = [center[0] - c[0], center[1] - c[1], center[2] - c[2]];
   return g;
@@ -176,17 +178,23 @@ export function stepGrind(g, dt, inp, half) {
   // Never trapped: if the board can't follow the line (something in the way) for GRIND_STUCK seconds, let go.
   g.far = inp.gap > 0.5 ? (g.far ?? 0) + dt : 0;
   if (g.far > GRIND_STUCK) return { end: 'stall' };
-  // Trick choice. A half circle at any time on the line (or just before locking on) makes it a boardslide: drawing
-  // one after an ollie takes about as long as the ollie, so it can't be limited to the first moments. A half circle
-  // given up halfway bails only in the first GRIND_WINDOW seconds (later it is just a stray swipe).
-  const since = g.lockAt - GRIND_PRE * 1000;
-  if (g.kind !== 'boardslide' && inp.arcAt >= since) {
-    g.kind = 'boardslide';
-    g.slideSign = inp.arcDir < 0 ? -1 : 1;
-    g.changed = true;
-  } else if (g.kind !== 'boardslide' && g.t < GRIND_WINDOW && inp.partialAt >= since) {
-    return { end: 'bail' };
+  // Trick choice, once, in the grind window: from the pop of the ollie that got you here (or GRIND_PRE s before
+  // locking on, for a roll-on) to GRIND_WINDOW s after. Then the trick is locked: a 50-50 never turns into a slide.
+  const from = g.popAt ?? g.lockAt - GRIND_PRE * 1000;
+  const late = g.lockAt + GRIND_WINDOW * 1000; // half circles after this bail
+  if (!g.decided) {
+    if (g.popAt != null && inp.arcAt >= from && inp.arcAt <= late) {
+      g.kind = 'boardslide';
+      g.slideSign = inp.arcDir < 0 ? -1 : 1;
+      g.changed = true;
+      g.decided = true;
+    } else if (inp.partialAt >= from) {
+      return { end: 'bail' }; // a half circle given up halfway
+    } else if (g.t >= GRIND_WINDOW) {
+      g.decided = true; // nothing in the window: it stays a 50-50
+    }
   }
+  if (g.decided && (inp.arcAt > late || inp.partialAt > late)) return { end: 'bail' }; // too late: you lose it
   // Speed: surface drag, and gravity along the slope.
   const here = at(line, g.s);
   const down = -here.t[1] * g.dir; // sine of the slope, + going downhill

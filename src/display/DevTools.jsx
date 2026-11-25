@@ -71,7 +71,8 @@ export function RideTest() {
 // mode air (default): drops the board in the air just before a grind line (?grinddebug lists the ids), moving along
 // it, as if ollied onto it. mode ollie: rolls up on the ground 2.5 m before it (side offset, angle) and ollies after
 // <pop s>. mode curb: rolls toward a curb's edge from its low side at <angle> (no ollie).
-// gesture = none | arc | partial is sent the moment it locks on; ollieout pops 1 s into the grind. freeze = stop everything that long after locking on (for a screenshot; 0 = never). Writes what
+// gesture = none | arc | partial is sent the moment it locks on; arclate 0.9 s after; airarc (mode ollie) in the air
+// just after the pop; ollieout pops 1 s into the grind. freeze = stop everything that long after locking on (for a screenshot; 0 = never). Writes what
 // happened into <pre id="grindtest"> (read it with a headless browser's --dump-dom).
 const GTEST = import.meta.env.DEV && urlParams.get('grindtest')?.split(',');
 export function GrindTest() {
@@ -119,6 +120,8 @@ export function GrindTest() {
           const y = a[1] - line.height + 0.1;
           window.__skate.place({ x, y, z, heading: Math.atan2(-dx, -dz), vx: dx * v, vy: 0, vz: dz * v, popped: false });
           if (mode === 'ollie') setTimeout(() => (phone.popQueued = 1), Number(popAt) * 1000);
+          // airarc: the half circle drawn in the air 0.12 s after the pop (the phone sends it as a frontside 180)
+          if (mode === 'ollie' && gesture === 'airarc') setTimeout(() => (phone.trickQueued = { type: 'fs180', side: 1 }), (Number(popAt) + 0.12) * 1000);
         }
         log.push(`line ${id} ${line.type} ${line.long ? 'long' : 'short'} ${line.length.toFixed(1)}m h${line.height.toFixed(2)}, gesture ${gesture}, ${mode} at ${v} m/s`);
         phase = 'fly';

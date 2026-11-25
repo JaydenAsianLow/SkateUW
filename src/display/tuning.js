@@ -168,9 +168,10 @@ export const GRIND_REACH = 0.55;
 export const GRIND_DROP_IN = 0.4;
 export const GRIND_SQUARE_KEEP = 0.7; // share of your speed kept when you hit a rail square-on (any angle locks on; along it keeps all of it)
 export const GRIND_MIN_ENTRY = 1.0; // m/s along the line needed to lock on
-// The trick is picked in this window after locking on (s): no gesture = 50-50, a half circle = boardslide, a half
-// circle started but not finished = bail. A half circle drawn up to GRIND_PRE s before locking on also counts.
-export const GRIND_WINDOW = 0.8;
+// The grind window: the trick is picked from the ollie's pop until GRIND_WINDOW s after locking on, then locked.
+// Ollied on + a half circle = boardslide; no jump or no gesture = 50-50; a half circle given up halfway in the
+// window, or any half circle after it, = bail. Riding on without an ollie: the window starts GRIND_PRE s before.
+export const GRIND_WINDOW = 0.4;
 export const GRIND_PRE = 0.35;
 // Slowing down on each surface (fraction of speed lost per second): waxed rails slide best, ledges and curbs grab more.
 export const GRIND_DRAG = { rail: 0.06, ledge: 0.1, curb: 0.13 };

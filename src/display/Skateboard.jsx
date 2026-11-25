@@ -518,7 +518,7 @@ export default function Skateboard() {
       if (st.grind) endGrind(rb, null);
       rb.setTranslation({ x: o.x, y: o.y, z: o.z }, true);
       rb.setLinvel({ x: o.vx ?? 0, y: o.vy ?? 0, z: o.vz ?? 0 }, true);
-      Object.assign(st, { heading: o.heading ?? st.heading, mode: 'ride', track: null, loose: null, popT: o.popped ? 0.2 : -1, trick: null, air: true, airT: 0.2 });
+      Object.assign(st, { heading: o.heading ?? st.heading, mode: 'ride', track: null, loose: null, popT: o.popped ? 0.2 : -1, popAt: o.popped ? performance.now() - 200 : null, trick: null, air: true, airT: 0.2 });
       setHeading(rb, st.heading);
       return;
     }
@@ -904,7 +904,7 @@ export default function Skateboard() {
       const near = nearby(grind, p.x, p.z); // only the lines within ~5 m (grid lookup)
       const hit = grounded ? findCurbEntry(near, b, skipFn) : findEntry(near, b, skipFn);
       if (hit) {
-        st.grind = startGrind(hit, [p.x, p.y, p.z], HALF.y, nowMs);
+        st.grind = startGrind(hit, [p.x, p.y, p.z], HALF.y, nowMs, st.popT >= 0 ? st.popAt ?? null : null);
         st.grind.s0 = hit.s;
         st.grindChain = [];
         // A 180 started in the air this close to locking on was the half circle for a boardslide.
@@ -1023,6 +1023,7 @@ export default function Skateboard() {
     const doPop = (power, fromNose = false) => {
       vy = air.pop * Math.sqrt(power);
       st.popT = 0;
+      st.popAt = nowMs;
       st.trick = null;
       st.pushLeft = 0;
       st.popFakie = st.stance === 1;
