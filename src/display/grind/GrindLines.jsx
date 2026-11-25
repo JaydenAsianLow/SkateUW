@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Html } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useRapier } from '@react-three/rapier';
-import { BoxGeometry, Color, Matrix4, MeshBasicMaterial, Vector3 } from 'three';
+import { BoxGeometry, Color, Euler, Matrix4, MeshBasicMaterial, PlaneGeometry, Quaternion, Vector3 } from 'three';
 import { merge } from '../look.js';
 import { urlParams } from '../util.js';
 import { CURB, LEDGE, RAIL, buildGrindLines, grind } from './lines.js';
+import { scuffs } from './grinding.js';
 
 // Builds the grind lines once the level is in the physics world, and draws them in the debug view (?grinddebug).
 // Mount inside <Physics>, after <World />.
@@ -37,12 +38,44 @@ export default function GrindLines() {
       const c = { rail: 0, ledge: 0, curb: 0 };
       grind.lines.forEach((l) => c[l.type]++);
       console.info(`[grind] ${grind.lines.length} lines (rails ${c.rail}, ledges ${c.ledge}, curbs ${c.curb}) from ${n} colliders in ${grind.buildMs.toFixed(0)} ms`);
-      if (import.meta.env.DEV && window.__skate) window.__skate.grind = grind;
+      if (import.meta.env.DEV && window.__skate) (window.__skate.grind = grind), (window.__skate.scuffs = scuffs);
       setVersion((v) => v + 1);
     }, 400);
     return () => clearInterval(timer);
   }, [world, rapier]);
-  return DEBUG && version > 0 ? <GrindDebug key={version} /> : null;
+  return (
+    <>
+      <Scuffs />
+      {DEBUG && version > 0 && <GrindDebug key={version} />}
+    </>
+  );
+}
+
+// Dark scuff marks where the trucks / deck ground along a ledge or curb (grinding.js addScuff).
+const SCUFF_W = 0.1;
+function Scuffs() {
+  const mesh = useMemo(() => {
+    const g = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+    const m = new MeshBasicMaterial({ color: '#0d0907', transparent: true, opacity: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    return { g, m };
+  }, []);
+  const ref = useRef(null);
+  const seen = useRef(-1);
+  useFrame(() => {
+    const im = ref.current;
+    if (!im || seen.current === scuffs.version) return;
+    seen.current = scuffs.version;
+    const m = new Matrix4();
+    const q = new Quaternion();
+    const e = new Euler();
+    scuffs.list.forEach((sc, i) => {
+      m.compose(new Vector3(sc.x, sc.y, sc.z), q.setFromEuler(e.set(0, sc.yaw + Math.PI / 2, 0)), new Vector3(sc.len, 1, SCUFF_W));
+      im.setMatrixAt(i, m);
+    });
+    im.count = scuffs.list.length;
+    im.instanceMatrix.needsUpdate = true;
+  });
+  return <instancedMesh ref={ref} args={[mesh.g, mesh.m, scuffs.max]} count={0} frustumCulled={false} renderOrder={2} />;
 }
 
 const W = Number(urlParams.get('grindwidth')) || 0.35; // ribbon width in the debug view (wider for far top-down shots)

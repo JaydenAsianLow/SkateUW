@@ -20,7 +20,7 @@ import {
   TURN_RATE, GRIND_EXIT_LIFT,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
-import { at, findEntry, grindName, startGrind, stepGrind } from './grind/grinding.js';
+import { addScuff, at, findEntry, grindName, startGrind, stepGrind } from './grind/grinding.js';
 import { bailTrack, cavemanTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, jumpPose, walkPose, walkRate } from './choreo.js';
 
 // Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
@@ -174,6 +174,7 @@ export default function Skateboard() {
     st.grindSkip = { line: g.line, until: performance.now() + 450 };
     if (!end) return;
     const dist = Math.abs(g.s - g.s0);
+    addScuff(g.line, g.s0, g.s);
     if (end === 'bail') {
       board.trick = { name: `${grindName(g)} BAIL`, at: performance.now() };
       startBail(rb, 'side', g.speed);
@@ -193,10 +194,8 @@ export default function Skateboard() {
     if (end === 'stall' && g.line.inner) (vx -= g.line.inner[0] * 1.2), (vz -= g.line.inner[1] * 1.2); // off the open side
     setVelocity(rb, vx, vy, vz);
     st.slideYaw = 0;
-    if (end !== 'stall') {
-      board.trick = { name: `${grindName(g)} ${dist.toFixed(1)}m`, at: performance.now() };
-      haptic('land');
-    }
+    board.trick = { name: `${grindName(g)} ${dist.toFixed(1)}m`, at: performance.now() };
+    haptic('land');
   };
 
   // --- Bail: pick the fall, set the board loose with a kick that grows with speed.

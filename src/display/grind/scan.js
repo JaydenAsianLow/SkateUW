@@ -180,6 +180,12 @@ export function scanBoxEdges(snap, opts) {
         // ... and open above (room for a skater)
         const above = vray(snap, p.x, top + 0.05, p.z, 1, opts.clear);
         if (above) { ok = false; break; }
+        // A step in a flight: the ground keeps dropping one tread further out. Only the last (bottom) step of a
+        // flight is grindable, so you don't catch every nosing riding down the stairs.
+        if (opts.lastStepOnly) {
+          const further = dropBeside(snap, p.x, top, p.z, ed.n.x, ed.n.z, 0.75);
+          if (further !== null && further > d + 0.08) { ok = false; break; }
+        }
         drops.push(d);
       }
       if (!ok) continue;

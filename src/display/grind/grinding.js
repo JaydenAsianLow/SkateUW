@@ -154,3 +154,24 @@ export function stepGrind(g, dt, inp, half) {
 }
 
 export const grindName = (g) => (g.kind === 'boardslide' ? 'BOARDSLIDE' : '50-50');
+
+// Scuff marks left on ledges and curbs (drawn by GrindLines.jsx as one instanced mesh, oldest replaced first).
+// Each: { x, y, z, yaw, len }. Added once per grind, never per frame.
+export const scuffs = { list: [], version: 0, max: 48 };
+export function addScuff(line, s0, s1) {
+  if (line.type === 'rail' || Math.abs(s1 - s0) < 0.3) return;
+  const [lo, hi] = s0 < s1 ? [s0, s1] : [s1, s0];
+  const inn = line.inner ?? [0, 0];
+  for (let i = 0; i < line.pts.length - 1; i++) {
+    const a = Math.max(lo, line.cum[i]), b = Math.min(hi, line.cum[i + 1]);
+    if (b - a < 0.2) continue;
+    const pa = at(line, a).p, pb = at(line, b).p;
+    scuffs.list.push({
+      // just above the top (authored edge lines sit up to 2 cm under the stone), a few cm in from the edge
+      x: (pa[0] + pb[0]) / 2 + inn[0] * 0.04, y: (pa[1] + pb[1]) / 2 + 0.022, z: (pa[2] + pb[2]) / 2 + inn[1] * 0.04,
+      yaw: Math.atan2(pb[0] - pa[0], pb[2] - pa[2]), len: b - a,
+    });
+  }
+  while (scuffs.list.length > scuffs.max) scuffs.list.shift();
+  scuffs.version++;
+}

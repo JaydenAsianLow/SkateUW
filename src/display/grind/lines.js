@@ -42,8 +42,9 @@ function segDist(x, z, a, b) {
   return Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz);
 }
 
-// Authored lines that are not grind edges: the hill's crest is a smooth rounded top, not an edge.
-const SKIP_AUTHORED = /hill_crest/;
+// Authored lines that are not grind edges: the hill's crest is a smooth rounded top, not an edge; Suzzallo's
+// balustrade is 0.9 m above its terrace and 2.1 m above the plaza (out of reach).
+const SKIP_AUTHORED = /hill_crest|balustrade/;
 
 function authoredType(piece, name) {
   if (piece === 'stairs' || /rail/i.test(name)) return RAIL;
@@ -112,11 +113,19 @@ export function buildGrindLines(world, rapier) {
     maxDrop: GRIND_MAX_DROP,
     clear: 1.2,
     noGrind,
+    lastStepOnly: true,
   });
   const authored = lines.slice();
   for (const e of scanned) {
     const a = e.a.toArray(), b = e.b.toArray();
-    const dup = authored.some((l) => distToSeg(a, l.pts[0], l.pts[1]) < 0.6 && distToSeg(b, l.pts[0], l.pts[1]) < 0.6);
+    // Already an authored line: both ends within 0.8 m of it in plan, at about the same height, and parallel.
+    const dup = authored.some((l) => {
+      const [p, q] = l.pts;
+      const near = (u) => distToSeg([u[0], p[1], u[2]], p, [q[0], p[1], q[2]]) < 0.8 && Math.abs(u[1] - (p[1] + q[1]) / 2) < 0.15;
+      const lx = q[0] - p[0], lz = q[2] - p[2], ex = b[0] - a[0], ez = b[2] - a[2];
+      const par = Math.abs(lx * ex + lz * ez) / ((Math.hypot(lx, lz) * Math.hypot(ex, ez)) || 1) > 0.98;
+      return par && near(a) && near(b);
+    });
     if (dup) continue;
     add({ name: 'scan', type: e.height <= GRIND_CURB_MAX ? CURB : LEDGE, pts: [a, b], height: e.height, inner: [-e.n.x, -e.n.z], source: 'scan' });
   }
