@@ -10,6 +10,7 @@
 //    side camera.
 //  - At the end you pop off and land rolling; an ollie gets you out early.
 import { clamp01 } from '../util.js';
+import { RAIL_R } from '../redSquare/bars.js';
 import {
   GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
   GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_SPEED, GRIND_MIN_ENTRY, GRIND_SQUARE_KEEP,
@@ -143,11 +144,15 @@ export function continueGrind(g, next, center, half, now) {
   return g2;
 }
 
+// How far above a line the board's underside rides: rail lines run along the bar's centre, so on top of the bar
+// (its radius) plus a little; ledge and curb lines are the stone's top edge.
+export const seatLift = (type) => (type === 'rail' ? RAIL_R + 0.008 : 0.012);
+
 // Where the board's centre goes on the line. half = the board collider's half height.
 export function seat(g, half) {
   const { p, t } = at(g.line, g.s);
   const line = g.line;
-  const lift = half + (line.type === 'rail' ? 0.035 : 0.012);
+  const lift = half + seatLift(line.type);
   let x = p[0], z = p[2];
   // Ledge / curb 50-50: the trucks ride the edge with the board over the top.
   if (g.kind === '5050' && line.inner) (x += line.inner[0] * 0.07), (z += line.inner[1] * 0.07);
@@ -217,7 +222,7 @@ export function stepGrind(g, dt, inp, half) {
   const k = clamp01(g.snapT / GRIND_SNAP_TIME);
   const e = 1 - k * k * (3 - 2 * k);
   const { c, t } = seat(g, half);
-  return { end: null, c: [c[0] + g.offset[0] * e, c[1] + g.offset[1] * e, c[2] + g.offset[2] * e], t };
+  return { end: null, c: [c[0] + g.offset[0] * e, c[1] + g.offset[1] * e, c[2] + g.offset[2] * e], t, seat: c };
 }
 
 export const grindName = (g) => (g.kind === 'boardslide' ? 'BOARDSLIDE' : '50-50');

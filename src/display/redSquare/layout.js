@@ -80,7 +80,7 @@ export const HOLES = [
 export const BOUNDS = [
   [[-39.38, -91.88], [-12.5, -91.88]], // NW: path between Odegaard and Kane toward the Quad
   [[62.75, -53.38], [83.12, -31.88], [87.62, -21.88]], // NE: between Kane and Suzzallo
-  [[-49, -42.5], [-49, -25], [-57.25, -17], [-63.5, -17]], // W: Odegaard's corner, down to the west steps
+  [[-49.45, -42.5], [-49.45, -25], [-57.25, -17], [-63.5, -17]], // W: Odegaard's corner (inside the flights' brick wall, clear of its handrail), down to the west steps
   [[-54.88, 73.5], [-38.12, 69.12]], // SW: between Meany and Gerberding (Meany's front and the west steps are open)
   [[43.75, 105], [97.5, 79.38]], // end of the playable landing below the Rainier Vista steps
 ];

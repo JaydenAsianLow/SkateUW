@@ -9,7 +9,9 @@ import { POI } from '../redSquare/osm.js';
 import LANDMARKS from '../../../public/map/rs-landmarks.json';
 import { pointInPolygon } from '../redSquare/geo.js';
 import { dropBeside, scanBoxEdges, snapshot } from './scan.js';
-import { buildGrid } from './grinding.js';
+import { at, buildGrid, seatLift } from './grinding.js';
+import { makeClearTest } from './clear.js';
+import { BOARD_HALF_Y } from '../look.js';
 import { GRIND_CURB_MAX, GRIND_LONG, GRIND_MAX_DROP, GRIND_MIN_DROP, GRIND_MIN_LEN } from '../tuning.js';
 
 export const RAIL = 'rail';
@@ -104,7 +106,8 @@ export function buildGrindLines(world, rapier) {
       const pts = item.pts ?? [item.a, item.b]; // a path (rails with bends), or a straight a-b line
       const a = pts[0], b = pts[pts.length - 1];
       if (SKIP_AUTHORED.test(name)) continue;
-      if (noGrind(a[0], a[2]) && noGrind(b[0], b[2])) continue;
+      // (the handrail bolted to the pillar's side is a handrail, not part of the monolith: grindable)
+      if (noGrind(a[0], a[2]) && noGrind(b[0], b[2]) && !/pillar_handrail/.test(name)) continue;
       const type = authoredType(piece, name);
       const { height, inner } = measure(snap, pts);
       add({ name: `${piece}/${name}`, type, pts, height, inner: type === RAIL ? null : inner, source: 'authored' });
@@ -133,6 +136,36 @@ export function buildGrindLines(world, rapier) {
     if (dup) continue;
     add({ name: 'scan', type: e.height <= GRIND_CURB_MAX ? CURB : LEDGE, pts: [a, b], height: e.height, inner: [-e.n.x, -e.n.z], source: 'scan' });
   }
+  // 3. Ends that run into a wall or pillar (the Kane steps end flush against a monolith): cut them back to where the
+  // board has room, so you pop off before it instead of grinding into it. A line with no room at all is dropped.
+  const clear = makeClearTest(world, rapier);
+  const kept = [];
+  grind.trimmed = [];
+  for (const l of lines) {
+    const roomAt = (s) => {
+      const { p, t } = at(l, s);
+      return clear([p[0], p[1] + BOARD_HALF_Y + seatLift(l.type), p[2]], t);
+    };
+    const max = Math.min(3, l.length / 2);
+    let s0 = 0, s1 = l.length;
+    while (s0 < max && !roomAt(s0)) s0 += 0.1;
+    while (l.length - s1 < max && !roomAt(s1)) s1 -= 0.1;
+    if (s0 >= max || l.length - s1 >= max || s1 - s0 < 1) {
+      grind.trimmed.push(`${l.name} dropped (no room)`);
+      continue;
+    }
+    if (s0 > 0 || s1 < l.length) {
+      grind.trimmed.push(`${l.name} trimmed ${s0.toFixed(1)} m / ${(l.length - s1).toFixed(1)} m`);
+      const inner = l.pts.filter((_, i) => l.cum[i] > s0 && l.cum[i] < s1);
+      l.pts = [at(l, s0).p, ...inner, at(l, s1).p];
+      l.length = pathLength(l.pts);
+      l.long = l.length >= GRIND_LONG;
+      withPath(l);
+    }
+    kept.push(l);
+  }
+  lines.length = 0;
+  lines.push(...kept);
   const tag = { [RAIL]: 'R', [LEDGE]: 'L', [CURB]: 'C' };
   const count = { R: 0, L: 0, C: 0 };
   for (const l of lines) l.id = tag[l.type] + ++count[tag[l.type]];

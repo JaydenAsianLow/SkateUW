@@ -47,6 +47,7 @@ export default function GrindLines() {
       }
       const c = { rail: 0, ledge: 0, curb: 0 };
       grind.lines.forEach((l) => c[l.type]++);
+      if (grind.trimmed.length) console.info('[grind] ends cut back: ' + grind.trimmed.join('; '));
       console.info(`[grind] ${grind.lines.length} lines (rails ${c.rail}, ledges ${c.ledge}, curbs ${c.curb}) from ${n} colliders in ${grind.buildMs.toFixed(0)} ms`);
       if (import.meta.env.DEV && window.__skate) (window.__skate.grind = grind), (window.__skate.scuffs = scuffs);
       setVersion((v) => v + 1);

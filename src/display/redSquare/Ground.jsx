@@ -11,7 +11,7 @@ import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS, stairCorners } from './layout
 // The plaza deck (y = 0) with holes where the ground drops to LOW, the lower ground, retaining walls,
 // stair sets, invisible boundaries, and the paved/lawn mask the ground shader reads.
 
-const WORLD = 700; // half-size of the deck
+const WORLD = 900; // half-size of the deck (must contain every hole: Rainier Vista's runs out to 812.5 m, and a hole poking out of the deck breaks its triangulation)
 const WALL_T = 0.5; // retaining wall collider thickness
 const TRIMESH_FIX_INTERNAL_EDGES = 144;
 const RAIL_H = 0.9; // handrail height above the stair line
@@ -81,7 +81,7 @@ export default function Ground() {
     for (const hole of HOLES) {
       for (const ed of edges(hole)) {
         if (ed.i === 0) continue;
-        const far = (p) => Math.max(Math.abs(p[0]), Math.abs(p[1])) > WORLD - 60;
+        const far = (p) => Math.max(Math.abs(p[0]), Math.abs(p[1])) > 640; // out at the horizon (no walls there)
         if (far(ed.a) && far(ed.b)) continue; // runs along the edge of the world
         const h = -LOW + 0.02;
         // The hole's outward normal points into the deck, so the wall sits just outside the hole.

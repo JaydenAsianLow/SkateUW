@@ -6,7 +6,9 @@ import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Quaternion, Shape, Vect
 import { board, game, haptic, phone, phoneIsLive } from '../state.js';
 import { commands, settings, updateSettings } from '../settings.js';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
-import { LOW, SPAWN } from './redSquare/layout.js';
+import { HOLES, LOW, SPAWN } from './redSquare/layout.js';
+import { pointInPolygon } from './redSquare/geo.js';
+import { makeClearTest } from './grind/clear.js';
 import Rider from './RiderModel.jsx';
 import { NOT_RAGDOLL, PLAYER_GROUPS } from './ragdoll.js';
 import { mocap, runTopSpeed } from './mocap.js';
@@ -98,6 +100,7 @@ export default function Skateboard() {
   if (import.meta.env.DEV && window.__skate) {
     window.__skate.world = world;
     window.__skate.rapierRay = rapier.Ray; // console / test ray casts
+    window.__skate.rapier = rapier;
     // Console: __skate.bail('back' | 'side' | 'slam', speed?) to try the falls.
     window.__skate.bail = (kind = 'side', speed) => (s.current.devBail = [kind === 'slam' ? 'side' : kind, speed ?? (kind === 'slam' ? 7 : undefined)]);
     // Console / ?grindtest: put the board somewhere moving ({ x, y, z, heading, vx, vy, vz, popped }); freeze holds it still.
@@ -106,6 +109,7 @@ export default function Skateboard() {
   }
   const ray = useMemo(() => new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 }), [rapier]);
   const wallRay = useMemo(() => new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }), [rapier]);
+  const roomFor = useMemo(() => makeClearTest(world, rapier), [world, rapier]); // is the board clear of the level here?
   const s = useRef({
     heading: SPAWN.heading,
     steer: 0,
@@ -186,8 +190,13 @@ export default function Skateboard() {
     const g = st.grind;
     st.grind = null;
     board.grind = null;
+    if (import.meta.env.DEV && window.__skate) window.__skate.lastEnd = { end, why: g.why, s: +g.s.toFixed(2), len: +g.line.length.toFixed(2), t: +g.t.toFixed(2) };
     rb.collider(0)?.setCollisionGroups(PLAYER_GROUPS);
     rb.setGravityScale(1, true);
+    // Leave from the line itself (the last spot on it that was clear of the level), not from wherever the body lags.
+    if (g.safe) rb.setTranslation({ x: g.safe[0], y: g.safe[1], z: g.safe[2] }, true);
+    const gt = at(g.line, g.s).t;
+    settle(rb, [gt[0] * g.dir, gt[1] * g.dir, gt[2] * g.dir]);
     const lp = rb.translation();
     st.grindSkip = { x: lp.x, z: lp.z, until: performance.now() + GRIND_COOL * 1000 }; // no re-grab of lines near here
     const chain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t, startMs: g.lockAt }];
@@ -211,7 +220,15 @@ export default function Skateboard() {
       vy = Math.max(vy, 0) + airPhysics().pop;
       Object.assign(st, { popT: 0, trick: null, popFakie: st.stance === 1, popSwitch: st.swap, popNose: false });
     }
-    if (end === 'stall' && g.line.inner) (vx -= g.line.inner[0] * 1.2), (vz -= g.line.inner[1] * 1.2); // off the open side
+    if (end === 'stall' || end === 'blocked') {
+      // Hop off sideways so you land beside the line, never left standing on it: off a ledge's open side, off a rail
+      // to whichever side has room. Blocked (something solid ahead): most of the speed goes, it's a bump.
+      const [sx, sz] = hopSide(rb, g);
+      const keep = end === 'blocked' ? 0.3 : 1;
+      vx = vx * keep + sx * 1.6;
+      vz = vz * keep + sz * 1.6;
+      vy = Math.max(vy, 0) + 2.2;
+    }
     setVelocity(rb, vx, vy, vz);
     st.slideYaw = 0;
     // Score each leg (a corner carry-on is the next combo link), then open the window for the next link.
@@ -221,6 +238,50 @@ export default function Skateboard() {
     callout = `${chain[0].kind === 'boardslide' ? 'BOARDSLIDE' : '50-50'} ${total}`; // just the score
     board.trick = { name: callout, at: performance.now() };
     haptic('land');
+  };
+
+  // Which way to hop off a line (unit [x, z] in plan): a ledge's or curb's open side; for a rail, the side with
+  // room for the board (tested half a metre out), else the side you came from.
+  const hopSide = (rb, g) => {
+    if (g.line.inner) return [-g.line.inner[0], -g.line.inner[1]];
+    const { t } = at(g.line, g.s);
+    const h = Math.hypot(t[0], t[2]) || 1;
+    const nx = -t[2] / h, nz = t[0] / h;
+    const p = rb.translation();
+    for (const sg of [1, -1]) if (roomFor([p.x + nx * sg * 0.5, p.y, p.z + nz * sg * 0.5], [t[0], 0, t[2]])) return [nx * sg, nz * sg];
+    return [nx, nz];
+  };
+  // Collisions come back on after a grind: if the board is inside something (it never should be: grinding stops
+  // short of walls), put it on top of what's there with a ray from above, or else back at the last safe spot.
+  const settle = (rb, dir) => {
+    const p = rb.translation();
+    if (roomFor([p.x, p.y, p.z], dir)) return;
+    const d = probe(rb, p.x, p.y + 1.5, p.z, 3);
+    const top = p.y + 1.5 - d;
+    if (Number.isFinite(d) && top > p.y - HALF.y - 0.05 && roomFor([p.x, top + HALF.y + 0.02, p.z], dir)) {
+      rb.setTranslation({ x: p.x, y: top + HALF.y + 0.02, z: p.z }, true);
+      return;
+    }
+    toSafeSpot(rb);
+  };
+  // The last place the skater was on solid ground (saved every 0.25 s while rolling or walking on it).
+  const toSafeSpot = (rb) => {
+    const sp = s.current.safeSpot;
+    if (!sp) return;
+    rb.setTranslation({ x: sp.x, y: sp.y + 0.05, z: sp.z }, true);
+    rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    s.current.heading = sp.heading;
+    setHeading(rb, sp.heading);
+  };
+  // Below the ground: lower than the lowest ground anywhere, or under the plaza deck where there is no hole in it
+  // (the deck is a thin surface with the lower ground 2 m under it, so a board pushed through it would roll on there).
+  const underMap = (x, y, z) => y < LOW - 0.5 || (y < -0.35 && !HOLES.some((h) => pointInPolygon([x, z], h)));
+
+  const saveSafe = (p, now) => {
+    const st = s.current;
+    if (now - (st.safeAt ?? -1e9) < 250 || underMap(p.x, p.y, p.z)) return;
+    st.safeAt = now;
+    st.safeSpot = { x: p.x, y: p.y, z: p.z, heading: st.heading };
   };
 
   // --- Bail: pick the fall, set the board loose with a kick that grows with speed.
@@ -549,6 +610,15 @@ export default function Skateboard() {
       commands.clearSpawn = false;
       updateSettings({ spawn: null });
     }
+    // Safety net: never below the ground. Back to the last safe spot (and the board, if it was lost under there too).
+    if (underMap(p.x, p.y, p.z) && !st.ragdoll && st.safeSpot) {
+      if (st.grind) endGrind(rb, null);
+      toSafeSpot(rb);
+      Object.assign(st, { popT: -1, trick: null, revert: null, air: false, airT: 0, offSpeed: 0, walkSpeed: 0, jumpT: -1 });
+      board.trick = { name: 'BACK ON SOLID GROUND', at: performance.now() };
+      return;
+    }
+    if (st.loose && underMap(st.loose.x, st.loose.y, st.loose.z) && st.safeSpot) Object.assign(st.loose, { x: st.safeSpot.x + 1, y: st.safeSpot.y - HALF.y, z: st.safeSpot.z, vx: 0, vy: 0, vz: 0, vyaw: 0 });
     if (commands.toSpawn || phone.resetQueued || p.y < LOW - 10) {
       commands.toSpawn = false;
       phone.resetQueued = false;
@@ -608,6 +678,7 @@ export default function Skateboard() {
         fwdSpeed = st.walkSpeed;
         // Jumping (board in hand): take off, then land when the feet touch the ground again.
         const footGap = probe(rb, p.x, p.y, p.z, 4) - HALF.y; // feet above the ground
+        if (footGap < 0.06) saveSafe(p, nowMs);
         if (airborne) {
           st.jumpT += dt;
           if (st.jumpT > 0.1 && footGap < 0.06 && v.y <= 0) (st.jumpT = -1), (st.landT = FOOT_LAND_TIME);
@@ -765,10 +836,21 @@ export default function Skateboard() {
         endGrind(rb, r.end);
         return;
       }
+      // Something solid on the line ahead (a pillar, a wall): stop at the last clear spot and drop off there, never
+      // into it (collisions are off while grinding, so nothing else would stop the board).
+      if (!roomFor(r.seat, [r.t[0] * g.dir, r.t[1] * g.dir, r.t[2] * g.dir])) {
+        g.why = 'blocked';
+        endGrind(rb, 'blocked');
+        return;
+      }
+      g.safe = r.seat;
       g.lastC = r.c;
-      // Velocity along the line plus a pull onto the seat point, so Rapier's interpolation stays smooth.
+      // Put the board on the line, moving along it. Position is set outright, not pulled there with a velocity: after
+      // a frame hitch physics runs several steps at once, and a downward pull (with collisions off) would carry the
+      // board straight through the floor.
       const [tx, ty, tz] = r.t;
-      setVelocity(rb, tx * g.dir * g.speed + (r.c[0] - p.x) * 30, ty * g.dir * g.speed + (r.c[1] - p.y) * 30, tz * g.dir * g.speed + (r.c[2] - p.z) * 30);
+      rb.setTranslation({ x: r.c[0], y: r.c[1], z: r.c[2] }, true);
+      setVelocity(rb, tx * g.dir * g.speed, ty * g.dir * g.speed, tz * g.dir * g.speed);
       rb.setGravityScale(0, true);
       const th = Math.hypot(tx, tz) || 1;
       st.heading = Math.atan2((-tx * g.dir) / th, (-tz * g.dir) / th);
@@ -809,6 +891,7 @@ export default function Skateboard() {
     const dEnds = Math.min(probe(rb, p.x + fx * 0.3, p.y, p.z + fz * 0.3, 0.5), probe(rb, p.x - fx * 0.3, p.y, p.z - fz * 0.3, 0.5));
     const grounded = Math.min(dCenter, dEnds) < HALF.y + 0.06 && v.y < 0.8;
     const heightAbove = Number.isFinite(dCenter) ? Math.max(0, dCenter - HALF.y) : 8;
+    if (grounded) saveSafe(p, nowMs);
     let speed = Math.max(0, v.x * fx + v.z * fz);
 
     // Lock onto a grind line from the air (an ollie, or rolling off something). Not mid-flip or mid-revert.
