@@ -170,8 +170,9 @@ for f in (0.25, 0.75):
 b.rail('pillar_handrail', ra, rb)
 
 # --- The hill right of the obelisk: one long, wide, smooth ramp up onto the level. Cosine profile along the run, so
-# the slope eases in at the bottom and out at the top (max slope = atan(pi/2 * H / run), about 6 degrees), and side
-# wings that roll down the same way so it has no hard sides. One smooth surface for both the mesh and the collider.
+# the slope eases in at the bottom and out at the top (max slope = atan(pi/2 * H / run), about 4 degrees), and long
+# side wings (the side approaches) that roll down the same way over HL['wing'] m (about 8 degrees at most, eased at
+# both ends) so you can ride up from either side too. One smooth surface for both the mesh and the collider.
 HL = LV['hill']
 (hx0, hz0), (hx1, hz1) = HL['top']
 hlen = math.hypot(hx1 - hx0, hz1 - hz0)
@@ -201,7 +202,7 @@ for k in range(len(grid) - 1):
 b.mesh('M_paverbrick', verts, faces)
 b.mesh('COLMESH_hill', verts, faces)
 b.rail('hill_crest', V((hx0, hz0), H), V((hx1, hz1), H))
-print('HILL max slope deg', math.degrees(math.atan(math.pi / 2 * H / HRUN)), 'width', hlen + 2 * WING)
+print('HILL max slope deg', math.degrees(math.atan(math.pi / 2 * H / HRUN)), 'side', math.degrees(math.atan(math.pi / 2 * H / WING)), 'width', hlen + 2 * WING)
 
 # --- The two short flights next to the monolith up to the north level, brick wall + handrail on the Odegaard side
 OS = L['odegaardStairs']

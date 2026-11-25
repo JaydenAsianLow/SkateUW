@@ -16,6 +16,10 @@ export const TRICK_WINDOW = 0.5; // seconds after the pop that a trick swipe sti
 export const LAND_OK = 0.78; // a trick at least this far through its rotation when you land still counts
 export const ASSIST_MAX = 1.2; // m/s of extra lift a late trick may get so it can finish (keeps tricks landable)
 export const REVERT_TIME = 0.34; // seconds for a ground revert (180° on the wheels)
+// Rolling uphill: share of the speed lost to the climb that is given back, on slopes up to HILL_ASSIST_MAX_DEG
+// (0 = pure physics: climbing 1.05 m then needs ~5.6 m/s; 0.7 = it costs like 0.3 m, two or three pushes).
+export const HILL_ASSIST = 0.7;
+export const HILL_ASSIST_MAX_DEG = 12;
 
 // Trick definitions. flip = kickflip turns (board roll), shove = board-only yaw turns,
 // spin = rider + board yaw turns (you ride away fakie after a 180). time = seconds for the rotation.

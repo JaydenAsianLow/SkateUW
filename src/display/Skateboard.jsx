@@ -19,7 +19,7 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE, GRIND_EXIT_LIFT, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
+  TURN_RATE, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
 import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, nearest, startGrind, stepGrind } from './grind/grinding.js';
@@ -939,6 +939,12 @@ export default function Skateboard() {
     if (st.pushT >= 0) {
       st.pushT += dt;
       if (st.pushT > PUSH_ANIM || st.popT >= 0) st.pushT = -1;
+    }
+    // Rolling up a gentle slope (the hill by the obelisk): give back part of the speed the climb takes, so normal
+    // pushing gets you up. Steeper than HILL_ASSIST_MAX_DEG (banks, curb bumps) climbs on speed alone.
+    if (grounded && st.popT < 0 && v.y > 0.02 && speed > 0.3) {
+      const sin = v.y / Math.hypot(speed, v.y);
+      if (sin < Math.sin((HILL_ASSIST_MAX_DEG * Math.PI) / 180)) speed += HILL_ASSIST * GRAVITY * sin * dt;
     }
     if (grounded) {
       if (st.pushLeft > 0) {

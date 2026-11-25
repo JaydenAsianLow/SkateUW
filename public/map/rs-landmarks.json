@@ -326,7 +326,8 @@
     0.97
    ],
    "run": 24.0,
-   "wing": 4.0
+   "wing": 12.0,
+   "_wing": "side approaches: each side of the hill eases down to the plaza over this many metres (cosine), max side slope = atan(pi/2 * height / wing) ~ 7.8 deg, so you can ride up it from the side too"
   }
  },
  "odegaardStairs": {
