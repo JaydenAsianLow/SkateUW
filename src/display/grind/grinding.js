@@ -3,7 +3,7 @@
 //
 // One set of rules for every surface (rail, ledge, curb):
 //  - Lock on from the air (an ollie, or rolling off something) when the board is close to a line (GRIND_SNAP) and
-//    travelling roughly along it (GRIND_MAX_ANGLE). It eases onto the line over GRIND_SNAP_TIME.
+//    at any angle (across a rail locks on too). It eases onto the line over GRIND_SNAP_TIME.
 //  - The trick is picked in the first GRIND_WINDOW seconds: no gesture = 50-50, a half circle = boardslide,
 //    a half circle started but not finished = bail.
 //  - Short lines (< GRIND_LONG) ride to the end by themselves. Long ones need balancing (tilt the phone) and get the
