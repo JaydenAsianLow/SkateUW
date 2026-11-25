@@ -13,5 +13,7 @@ export const MOVES = [
   ['Steer', 'tilt left / right'],
   ['Manual', 'tilt the top of the phone up; keep the arrow in the green'],
   ['Get off / on', 'tap Get off (the board goes in your hand), use the joystick to walk / run, tap Get on to drop in. After a fall, walk to the board to pick it up'],
+  ['Jump', 'on foot with the board in hand: tap Jump'],
+  ['Caveman', 'jump, then tap Get on in the air just before you land: the board drops under your feet'],
   ['Respawn', 'tap Reset'],
 ];

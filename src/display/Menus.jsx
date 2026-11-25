@@ -170,6 +170,7 @@ const KEYBOARD = [
   ['Frontside 180', 'E'],
   ['Revert', 'Q'],
   ['Get off / on', 'B (on foot: WASD, Shift to run)'],
+  ['Jump / caveman', 'Space on foot with the board, then B in the air'],
 ];
 
 export function ControlsList() {

@@ -842,6 +842,66 @@ export function runMountTrack(start) {
   return { keys, dur: 0.46, blendOut: 0.12 };
 }
 
+// --- Jumping on foot with the board in hand (no Mixamo jump clip, so it's posed here). base: the walk / run pose
+// now. tuck 0..1: knees drawn up in the air (0 = legs stretched, as at take-off and just before landing);
+// land 0..1: the landing crouch.
+export function jumpPose(base, tuck, land) {
+  const [hx, hy, hz] = base.hips;
+  const air = {
+    ...base,
+    hips: [hx, hy - 0.04, hz],
+    bend: base.bend + 0.15,
+    headPitch: 0.25,
+    hands: [at(-0.3, 1.05, -0.15), base.hands[1]], // free arm up for balance
+    ankles: [at(-0.1, 0.4, -0.12), at(0.1, 0.34, 0.12)],
+    knees: [norm([-0.1, 0.5, -1]), norm([0.1, 0.4, -1])],
+    toes: [norm([-0.08, -0.35, -1]), norm([0.08, -0.35, -1])],
+    soles: [UP, UP],
+  };
+  const crouch = {
+    ...base,
+    hips: [hx, 0.7, hz + 0.04],
+    ...torso(WALK_FACE, 0.35),
+    bend: 0.35,
+    headPitch: 0.3,
+    hands: [at(-0.26, 0.72, -0.25), base.hands[1]],
+    ankles: [at(-0.12, ANK, -0.05), at(0.12, ANK, 0.08)],
+    knees: [norm([-0.15, 0, -1]), norm([0.15, 0, -1])],
+    toes: [norm([-0.1, 0, -1]), norm([0.1, 0, -1])],
+    soles: [UP, UP],
+  };
+  return lerpPose(lerpPose(base, air, tuck), crouch, land);
+}
+
+// Caveman: in the air with the board in hand, let it go so it drops flat under the feet, and land on it in the
+// riding stance. start: the jump pose now; dur: seconds until the feet touch down.
+export function cavemanTrack(start, dur) {
+  const g = { hand: 1, local: EDGE_GRIP, w: 1 };
+  const m0 = { ...start, grip: start.grip ?? g };
+  const drop = { p: [0.05, 0.25, 0.0], q: lerpPose({ q: CARRY_Q }, { q: [0, 0, 0, 1] }, 0.85).q };
+  const m1 = P(m0, {
+    ...torso(-1.0, 0.12),
+    twist: -0.2,
+    headYaw: -0.5,
+    headPitch: 0.45,
+    hands: [at(-0.25, 1.05, -0.3), at(0.2, 0.75, 0.1)],
+    elbows: STANCE.elbows,
+    ankles: [at(-0.05, 0.42, -0.2), at(-0.02, 0.4, 0.22)],
+    knees: [norm([0.6, 0.4, -1]), norm([0.8, 0.4, -0.4])],
+    toes: [norm(yd(-0.6)), norm(yd(-0.1))],
+    board: drop,
+    grip: { ...g, w: 0 },
+  });
+  const land = { ...CROUCH, board: FLAT(), grip: { ...g, w: 0 } };
+  const keys = [
+    [0, m0],
+    [dur * 0.45, m1, 'out'],
+    [dur, land, 'in'],
+    [dur + 0.14, { ...STANCE, board: FLAT(), grip: { ...g, w: 0 } }],
+  ];
+  return { keys, dur: dur + 0.14, blendOut: 0.12 };
+}
+
 // --- Dropping back in. start: the walk pose at this moment (at the origin). carry: drop the board from the hand
 // first; otherwise the board is already on the ground 0.55 m ahead. Ends in the riding stance on the board, with
 // the body (root) moved onto it.

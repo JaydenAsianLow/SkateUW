@@ -204,6 +204,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ctrl .onoff-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #8f2a1c, inset 0 2px 0 rgba(255, 255, 255, 0.4); }
 .ctrl .onoff-btn.carry:active { box-shadow: 0 1px 0 #a4481c, inset 0 2px 0 rgba(255, 255, 255, 0.6); }
 .ctrl .onoff-btn:disabled { opacity: 0.4; filter: saturate(0.4); }
+.onoff-row { display: flex; gap: 10px; }
+.ctrl .onoff-btn.jump { flex: 0 0 38%; background: linear-gradient(180deg, #fff1cf, #f7d38b 60%, #e8b45a); color: var(--ink); text-shadow: none; box-shadow: 0 6px 0 #9a6a26, 0 12px 28px rgba(255, 200, 100, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.7); }
 /* Footer: ghost pills, Reset in warning red */
 .deck-foot { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .ctrl .small-btn, .ctrl .reset-btn {

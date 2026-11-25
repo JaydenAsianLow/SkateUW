@@ -17,6 +17,7 @@ export const phone = {
   revertQueued: 0, // -1 / 1 spin direction (0 = none)
   resetQueued: false,
   carryQueued: false, // Walk / Ride button: step off and carry the board, or drop back in
+  jumpQueued: false, // Jump button (on foot, board in hand)
 };
 
 export const net = { connected: false, controllers: 0 };

@@ -549,6 +549,12 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, sh
     setFlash({ label: `VIEW: ${viewName[next].toUpperCase()}`, key: performance.now() });
   };
 
+  // Jump (on foot, board in hand). Get on while in the air = caveman.
+  const jump = () => {
+    socketRef.current?.emit('jump');
+    navigator.vibrate?.(15);
+  };
+
   const reset = () => {
     socketRef.current?.emit('reset');
     navigator.vibrate?.([40, 40, 40]);
@@ -593,17 +599,31 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, sh
       )}
       {/* Fires on touch-down, not click: phones don't send a click for a tap while another finger is on the screen
           (your thumb on the joystick), so a click-only button ignored Get on while running. */}
-      <button
-        className={`onoff-btn ${mode}`}
-        onPointerDown={(e) => {
-          e.preventDefault();
-          getOnOff();
-        }}
-        onClick={(e) => e.detail === 0 && getOnOff() /* keyboard Enter / Space */}
-        disabled={mode === 'off' || mode === 'find'}
-      >
-        {mode === 'ride' ? 'Get off' : mode === 'carry' ? 'Get on' : 'Go to board'}
-      </button>
+      <div className="onoff-row">
+        {mode === 'carry' && (
+          <button
+            className="onoff-btn jump"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              jump();
+            }}
+            onClick={(e) => e.detail === 0 && jump()}
+          >
+            Jump
+          </button>
+        )}
+        <button
+          className={`onoff-btn ${mode}`}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            getOnOff();
+          }}
+          onClick={(e) => e.detail === 0 && getOnOff() /* keyboard Enter / Space */}
+          disabled={mode === 'off' || mode === 'find'}
+        >
+          {mode === 'ride' ? 'Get off' : mode === 'carry' ? 'Get on' : 'Go to board'}
+        </button>
+      </div>
       <div className="deck-foot">
         <button className="secondary small-btn" onClick={onCalibrate} disabled={calibrating}>
           {calibrating ? 'Hold still…' : 'Recalibrate'}

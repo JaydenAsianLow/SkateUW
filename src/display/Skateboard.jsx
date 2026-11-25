@@ -11,13 +11,14 @@ import Rider from './RiderModel.jsx';
 import { mocap, runTopSpeed } from './mocap.js';
 import { clamp, clamp01, damp, urlParams, wrapAngle } from './util.js';
 import {
-  ASSIST_MAX, AUTO_GRAB, BAIL_FAST, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_BAIL_AT, MANUAL_CALLOUT, MANUAL_DIFFICULTY, MANUAL_DRIFT_GROW, MANUAL_IN, MANUAL_LET_GO,
+  ASSIST_MAX, AUTO_GRAB, BAIL_FAST, CAVEMAN_MAX_LEAD, CAVEMAN_MIN_LEAD, CAVEMAN_POINTS, FOOT_AIR_CONTROL, FOOT_JUMP_SPEED,
+  FOOT_LAND_TIME, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_BAIL_AT, MANUAL_CALLOUT, MANUAL_DIFFICULTY, MANUAL_DRIFT_GROW, MANUAL_IN, MANUAL_LET_GO,
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
   TURN_RATE,
 } from './tuning.js';
-import { bailTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, walkPose, walkRate } from './choreo.js';
+import { bailTrack, cavemanTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, jumpPose, walkPose, walkRate } from './choreo.js';
 
 // Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
 // so the jump also gets a bit higher (∝ A^¾) instead of just floating in slow motion.
@@ -32,7 +33,7 @@ const START = [SPAWN.position[0], HALF.y + 0.05, SPAWN.position[1]];
 const PIVOT = DECK_TOP - 0.035; // flips spin around the middle of the board, not the ground
 
 const KEY_TRICKS = ['kickflip', 'varial', 'tre', 'shove', 'fs180'];
-const EDGE_KEYS = ['forward', 'pop', 'nollie', 'revert', 'carry', ...KEY_TRICKS];
+const EDGE_KEYS = ['forward', 'pop', 'nollie', 'revert', 'carry', 'jump', ...KEY_TRICKS];
 
 // Goofy (setting) and riding switch both mirror the rider across the board (x -> -x in rider space): right foot
 // forward, facing the other edge. -1 = mirrored. Rider space is mirrored, the world (steering, travel) is not.
@@ -128,6 +129,9 @@ export default function Skateboard() {
     offDrag: 0,
     walkSpeed: 0,
     walkPhase: 0,
+    jumpT: -1, // on foot: seconds since the jump, -1 on the ground
+    landT: 0, // on foot: landing crouch left (s)
+    caveman: false, // this Get on was a caveman (scores when you land on the board)
     pitchNow: 0,
     manual: 0, // 0 flat .. 1 nose fully up (smoothed)
     manualT: 0, // seconds the current manual has been held
@@ -339,6 +343,24 @@ export default function Skateboard() {
     st.loose = null;
   };
 
+  // Knees drawn up in the middle of an on-foot jump (0 at take-off and touch-down).
+  const tuckOf = (st) => (st.jumpT >= 0 ? Math.sin(Math.PI * clamp01(st.jumpT / ((2 * FOOT_JUMP_SPEED) / GRAVITY))) : 0);
+  // Caveman (Get on in the air, good timing): the board drops under the feet, you land on it riding.
+  const startCaveman = (left) => {
+    const st = s.current;
+    st.track = cavemanTrack(jumpPose(walkPose(st.walkPhase, st.walkSpeed, true), tuckOf(st), 0), left);
+    Object.assign(st, { mode: 'mount', modeT: 0, stance: 0, offSpeed: Math.max(0, st.walkSpeed), offDrag: 0, walkSpeed: 0, jumpT: -1, caveman: true });
+  };
+  // Let go of the board in the air with bad timing: it falls on its own (from your side, as carried) and you land on foot.
+  const dropBoard = (rb, why) => {
+    const st = s.current;
+    const p = rb.translation();
+    const v = rb.linvel();
+    const [sx, sz] = toWorld(st, 0.32, 0); // carried at the right side
+    st.loose = { x: p.x + sx, y: p.y - HALF.y + 0.45, z: p.z + sz, vx: v.x, vy: v.y, vz: v.z, yaw: yawS(st), vyaw: 0, pitch: 0, roll: (-Math.PI / 2) * mirrorOf(st), vroll: 0, spin: st.wheelSpin };
+    board.trick = { name: why, at: performance.now() };
+  };
+
   useFrame((_, rawDt) => {
     const rb = body.current;
     if (!rb) return;
@@ -376,7 +398,7 @@ export default function Skateboard() {
 
     // Paused (menu, pairing, phone disconnected): freeze, and drop moves sent meanwhile so nothing fires on resume.
     if (!game.running) {
-      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, resetQueued: false, carryQueued: false });
+      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, resetQueued: false, carryQueued: false, jumpQueued: false });
       for (const k of EDGE_KEYS) st.held[k] = keys[k];
       return;
     }
@@ -406,6 +428,8 @@ export default function Skateboard() {
     if (phone.revertQueued) (revertReq = phone.revertQueued), (phone.revertQueued = 0);
     let carryReq = phone.carryQueued;
     phone.carryQueued = false;
+    const jumpReq = phone.jumpQueued || pressed('jump');
+    phone.jumpQueued = false;
     if (pressed('forward')) push += 1; // tap W = one push
     if (pressed('pop')) pop = 1;
     if (pressed('nollie')) (pop = 1), (nose = true);
@@ -436,7 +460,7 @@ export default function Skateboard() {
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rb.setGravityScale(1, true);
       Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, swap: false, air: false, airT: 0, pushT: -1 });
-      Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0 });
+      Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0, jumpT: -1, landT: 0, caveman: false });
       board.pose = null;
       return;
     }
@@ -447,6 +471,7 @@ export default function Skateboard() {
       const v = rb.linvel();
       let fwdSpeed = 0;
       let turn = 0;
+      let jumpVy = null; // take-off speed this frame
       let latX = 0;
       let latZ = 0;
       if (st.mode === 'walk') {
@@ -479,13 +504,30 @@ export default function Skateboard() {
         st.turnVel = damp(st.turnVel ?? 0, turnTarget, 12, dt);
         st.heading += st.turnVel * dt;
         turn = st.turnVel;
-        st.walkSpeed = damp(st.walkSpeed, target, target > st.walkSpeed ? 5 : 8, dt);
+        const airborne = st.jumpT >= 0;
+        st.walkSpeed = damp(st.walkSpeed, target, (target > st.walkSpeed ? 5 : 8) * (airborne ? FOOT_AIR_CONTROL : 1), dt);
         fwdSpeed = st.walkSpeed;
+        // Jumping (board in hand): take off, then land when the feet touch the ground again.
+        const footGap = probe(rb, p.x, p.y, p.z, 4) - HALF.y; // feet above the ground
+        if (airborne) {
+          st.jumpT += dt;
+          if (st.jumpT > 0.1 && footGap < 0.06 && v.y <= 0) (st.jumpT = -1), (st.landT = FOOT_LAND_TIME);
+        } else if (jumpReq && !st.loose && footGap < 0.06) {
+          st.jumpT = 0;
+          jumpVy = FOOT_JUMP_SPEED;
+        }
+        st.landT = Math.max(0, st.landT - dt);
         const L = st.loose;
         if (L) {
           // Board on the ground: walking up to it picks it up.
           const still = Math.hypot(L.vx, L.vz) < 0.5 && L.vy === 0;
           if (still && Math.hypot(L.x - p.x, L.z - p.z) < AUTO_GRAB) startPickup(rb);
+        } else if (carryReq && airborne) {
+          // Caveman: let the board go in the air. Good timing (time left before touching down): it drops under the
+          // feet and you land riding. Too late or too early: you land on foot and the board lands by itself.
+          const left = (v.y + Math.sqrt(v.y * v.y + 2 * GRAVITY * Math.max(0, footGap))) / GRAVITY;
+          if (left >= CAVEMAN_MIN_LEAD && left <= CAVEMAN_MAX_LEAD) startCaveman(left);
+          else dropBoard(rb, left < CAVEMAN_MIN_LEAD ? 'TOO LATE' : 'TOO EARLY');
         } else if (carryReq && v.y > -1) startMount(true); // Get on: drop the board and step on
       } else {
         // Playing a track (bail, stepping off, stepping on): slide along with what speed is left, plus root motion.
@@ -504,12 +546,17 @@ export default function Skateboard() {
             Object.assign(st, { mode: 'walk', walkSpeed: Math.min(runTopSpeed(RUN_SPEED), Math.max(0, st.offSpeed)), walkPhase: 0, offSpeed: 0, turnVel: 0 });
           } else {
             st.mode = 'ride';
+            if (st.caveman) {
+              st.caveman = false;
+              board.score += CAVEMAN_POINTS;
+              board.trick = { name: `CAVEMAN +${CAVEMAN_POINTS}`, at: performance.now() };
+            }
           }
           st.modeT = 0;
           st.track = null;
         }
       }
-      if (st.mode === 'walk') {
+      if (st.mode === 'walk' && st.jumpT < 0) {
         // Stride matched to ground speed (feet never slide); turning on the spot still shuffles the feet.
         const shuffle = Math.abs(st.walkSpeed) < 0.3 ? Math.min(1.2, Math.abs(turn) * 0.25) : 0;
         st.walkPhase += (Math.sign(st.walkSpeed || 1) * walkRate(st.walkSpeed) + shuffle) * dt;
@@ -523,7 +570,7 @@ export default function Skateboard() {
       const fx = -Math.sin(st.heading);
       const fz = -Math.cos(st.heading);
       rb.setGravityScale(1, true);
-      setVelocity(rb, fx * fwdSpeed + latX, v.y, fz * fwdSpeed + latZ);
+      setVelocity(rb, fx * fwdSpeed + latX, jumpVy ?? v.y, fz * fwdSpeed + latZ);
       setHeading(rb, st.heading);
 
       // Pose for the rider, board placement.
@@ -535,8 +582,11 @@ export default function Skateboard() {
       } else if (st.mode !== 'ride') {
         pose = finish(walkPose(st.walkPhase, st.walkSpeed, !st.loose, turn));
       }
-      board.pose = pose && { w, state: st.mode, ...pose };
-      if (board.pose && st.mode === 'walk') board.pose.loco = { v: st.walkSpeed, turn, carry: !st.loose };
+      // Jump: knees tuck up through the air, then a short crouch on landing (posed: there's no jump clip).
+      const jumping = st.mode === 'walk' && (st.jumpT >= 0 || st.landT > 0);
+      if (jumping) pose = finish(jumpPose(walkPose(st.walkPhase, st.walkSpeed, !st.loose, turn), tuckOf(st), st.landT / FOOT_LAND_TIME));
+      board.pose = pose && { w, state: jumping ? 'jump' : st.mode, ...pose };
+      if (board.pose && st.mode === 'walk' && !jumping) board.pose.loco = { v: st.walkSpeed, turn, carry: !st.loose };
       if (board.pose && st.mode === 'pickup') board.pose.mocap = { clip: 'pickup', t: st.modeT, rate: st.pickRate ?? 1 };
       resetBoardVisuals();
       placeBoard(pose?.board);

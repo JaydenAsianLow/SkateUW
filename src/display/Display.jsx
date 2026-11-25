@@ -25,6 +25,7 @@ const keyMap = [
   { name: 'right', keys: ['ArrowRight', 'KeyD'] },
   { name: 'pop', keys: ['ShiftLeft', 'ShiftRight'] }, // Space is the default return-to-spawn key
   { name: 'nollie', keys: ['KeyN'] },
+  { name: 'jump', keys: ['Space'] }, // on foot with the board in hand (caveman: then B in the air)
   { name: 'kickflip', keys: ['KeyF'] },
   { name: 'varial', keys: ['KeyG'] },
   { name: 'tre', keys: ['KeyT'] },
@@ -112,6 +113,7 @@ export default function Display() {
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
     s.on('reset', () => (phone.resetQueued = true));
     s.on('carry', () => (phone.carryQueued = true));
+    s.on('jump', () => (phone.jumpQueued = true));
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
       // Only while actually playing, so a second laptop tab (menu, paused) never contradicts the game's state.
@@ -133,6 +135,7 @@ export default function Display() {
   useEffect(() => {
     const onKey = (e) => {
       if (commands.rebinding || e.repeat || !game.running) return;
+      if (e.code === 'Space' && board.view.mode === 'carry') return; // Space jumps on foot (board in hand)
       if (e.code === settings.returnKey) commands.toSpawn = true;
       else if (e.code === settings.setSpawnKey) commands.setSpawn = true;
       else return;

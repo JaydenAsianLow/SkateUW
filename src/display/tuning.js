@@ -73,6 +73,15 @@ export const RUN_SPEED = 4.2; // m/s at full push (without a run clip; with one,
 export const TURN_MAX = 6; // rad/s; the turn rate itself eases in/out so the body doesn't snap round
 export const AUTO_GRAB = 1.0; // m: walking this close to a board on the ground picks it up
 export const ON_THE_MOVE = 1.5; // m/s: faster than this, Get on is a running jump and Get off a hop into a run
+// Jump on foot with the board in hand (phone Jump / Space). Airtime = 2 v / g, so ~0.56 s and ~0.6 m high.
+export const FOOT_JUMP_SPEED = 4.2; // m/s straight up
+export const FOOT_AIR_CONTROL = 0.35; // how much the joystick can still change your speed in the air (1 = as on the ground)
+export const FOOT_LAND_TIME = 0.25; // s of landing crouch
+// Caveman: Get on in the air lets the board go so it drops under your feet. It works when you let go this long
+// before touching down (the board needs a moment to get under you; too early and it lands before you do).
+export const CAVEMAN_MIN_LEAD = 0.12; // s
+export const CAVEMAN_MAX_LEAD = 0.45; // s
+export const CAVEMAN_POINTS = 250;
 
 // ---------- Chase camera (CameraRig.jsx, DESIGN.md §3) ----------
 // Low over-the-shoulder: hip height, ~2.5–3 m behind and a little to the right so the skater sits left of centre,

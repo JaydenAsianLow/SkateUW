@@ -128,6 +128,7 @@ io.on('connection', (socket) => {
   relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
   relay('reset', () => ({}));
   relay('carry', () => ({}));
+  relay('jump', () => ({})); // on foot, board in hand
 
   // Deck rotation from the display, mirrored by the phone's 3D board.
   socket.on('board', (d) => {
