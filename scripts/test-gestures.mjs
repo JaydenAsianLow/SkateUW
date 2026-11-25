@@ -14,8 +14,9 @@ function rig() {
     onPop: (power, nose) => out.push(nose ? 'nollie' : 'pop'),
     onTrick: (type, side) => out.push(`${type}${side < 0 ? '-' : ''}`),
     onRevert: (dir) => out.push(`revert${dir < 0 ? '-' : '+'}`),
+    onPartial: () => out.push('partial'),
   });
-  const tracker = createStrokeTracker({ onSegment: (e) => reader.segment(e), onArc: (e) => reader.arc(e), minSegPx: 24 });
+  const tracker = createStrokeTracker({ onSegment: (e) => reader.segment(e), onArc: (e) => reader.arc(e), onPartialArc: () => reader.partial(), minSegPx: 24 });
   // Animate one finger along a list of points (already dense) with optional start delay.
   async function finger(id, pts, { delay = 0, hold = null, at = {}, pause = {} } = {}) {
     await sleep(delay);
@@ -123,6 +124,8 @@ Object.assign(tests, {
     finger(1, chain(line(200, 300, 200, 420), arc(222, 420, 22, 180 * D, 0 * D, 5), line(244, 420, 244, 330))),
   'revert, small half circle (r=35)': async ({ finger }) => finger(1, arc(200, 300, 35, -90 * D, 90 * D, 6)),
   'revert, big half circle (r=130)': async ({ finger }) => finger(1, arc(200, 400, 130, -90 * D, -270 * D, 12)),
+  'partial half circle (a quarter, let go)': async ({ finger }) => finger(1, arc(200, 300, 70, -90 * D, 0 * D)),
+  'partial half circle (100°)': async ({ finger }) => finger(1, arc(200, 300, 70, -90 * D, 10 * D)),
   'sloppy diagonal flick after ollie (curved 20°)': async ({ finger }) =>
     finger(1, chain(line(200, 300, 200, 420), line(200, 420, 200, 320), arc(320, 320, 120, 180 * D, 200 * D, 8).map(([x, y]) => [x, y - 0]), line(207.2, 279, 160, 250))),
 });
@@ -131,6 +134,8 @@ const expect = {
   'kickflip, rounded corner into the flick': 'push pop kickflip',
   'ollie, wider hairpin (r=22)': 'push pop',
   'revert, small half circle (r=35)': 'revert-',
+  'partial half circle (a quarter, let go)': 'partial',
+  'partial half circle (100°)': 'partial',
   'revert, big half circle (r=130)': 'revert+',
   'sloppy diagonal flick after ollie (curved 20°)': 'push pop kickflip-',
   'push': 'push',

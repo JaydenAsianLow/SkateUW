@@ -126,6 +126,7 @@ io.on('connection', (socket) => {
   relay('pop', (d) => ({ power: num(d.power, 0.5, 1.5) || 1, nose: d.nose === true })); // nose = nollie
   relay('trick', (d) => ({ type: TRICK_TYPES.has(d.type) ? d.type : 'kickflip', side: d.side < 0 ? -1 : 1 }));
   relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
+  relay('partial', () => ({})); // a half circle given up halfway (bails a grind)
   relay('reset', () => ({}));
   relay('carry', () => ({}));
   relay('jump', () => ({})); // on foot, board in hand

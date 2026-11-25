@@ -17,8 +17,10 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE,
+  TURN_RATE, GRIND_EXIT_LIFT,
 } from './tuning.js';
+import { grind } from './grind/lines.js';
+import { at, findEntry, grindName, startGrind, stepGrind } from './grind/grinding.js';
 import { bailTrack, cavemanTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, jumpPose, walkPose, walkRate } from './choreo.js';
 
 // Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
@@ -98,6 +100,8 @@ export default function Skateboard() {
     window.__skate.rapierRay = rapier.Ray; // console / test ray casts
     // Console: __skate.bail('back' | 'side' | 'slam', speed?) to try the falls.
     window.__skate.bail = (kind = 'side', speed) => (s.current.devBail = [kind === 'slam' ? 'side' : kind, speed ?? (kind === 'slam' ? 7 : undefined)]);
+    // Console / ?grindtest: put the board somewhere moving ({ x, y, z, heading, vx, vy, vz, popped }); freeze holds it still.
+    window.__skate.place = (o) => (s.current.devPlace = o);
   }
   const ray = useMemo(() => new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 }), [rapier]);
   const wallRay = useMemo(() => new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }), [rapier]);
@@ -156,6 +160,43 @@ export default function Skateboard() {
     const sn = Math.sin(y);
     x *= mirrorOf(st);
     return [x * c + z * sn, -x * sn + z * c];
+  };
+
+  // --- Grinding (grind/grinding.js): leave the line. end = 'off' (end of the line: pop off), 'ollie' (popped out),
+  // 'stall' (too slow: drop off the side), 'bail', or null (reset: just let go).
+  const endGrind = (rb, end) => {
+    const st = s.current;
+    const g = st.grind;
+    st.grind = null;
+    board.grind = null;
+    rb.collider(0)?.setCollisionGroups(PLAYER_GROUPS);
+    rb.setGravityScale(1, true);
+    st.grindSkip = { line: g.line, until: performance.now() + 450 };
+    if (!end) return;
+    const dist = Math.abs(g.s - g.s0);
+    if (end === 'bail') {
+      board.trick = { name: `${grindName(g)} BAIL`, at: performance.now() };
+      startBail(rb, 'side', g.speed);
+      return;
+    }
+    const { t } = at(g.line, g.s);
+    const h = Math.hypot(t[0], t[2]) || 1;
+    const speed = g.speed;
+    let vx = ((t[0] * g.dir) / h) * speed;
+    let vz = ((t[2] * g.dir) / h) * speed;
+    let vy = Math.min(0, t[1] * g.dir * speed);
+    if (end === 'off') vy += GRIND_EXIT_LIFT;
+    if (end === 'ollie') {
+      vy = Math.max(vy, 0) + airPhysics().pop;
+      Object.assign(st, { popT: 0, trick: null, popFakie: st.stance === 1, popSwitch: st.swap, popNose: false });
+    }
+    if (end === 'stall' && g.line.inner) (vx -= g.line.inner[0] * 1.2), (vz -= g.line.inner[1] * 1.2); // off the open side
+    setVelocity(rb, vx, vy, vz);
+    st.slideYaw = 0;
+    if (end !== 'stall') {
+      board.trick = { name: `${grindName(g)} ${dist.toFixed(1)}m`, at: performance.now() };
+      haptic('land');
+    }
   };
 
   // --- Bail: pick the fall, set the board loose with a kick that grows with speed.
@@ -379,6 +420,21 @@ export default function Skateboard() {
     const st = s.current;
     const keys = getKeys();
     const pressed = (k) => keys[k] && !st.held[k];
+    if (import.meta.env.DEV && window.__skate?.freeze) {
+      rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      rb.setGravityScale(0, true);
+      return;
+    }
+    if (import.meta.env.DEV && st.devPlace) {
+      const o = st.devPlace;
+      st.devPlace = null;
+      if (st.grind) endGrind(rb, null);
+      rb.setTranslation({ x: o.x, y: o.y, z: o.z }, true);
+      rb.setLinvel({ x: o.vx ?? 0, y: o.vy ?? 0, z: o.vz ?? 0 }, true);
+      Object.assign(st, { heading: o.heading ?? st.heading, mode: 'ride', track: null, loose: null, popT: o.popped ? 0.2 : -1, trick: null, air: true, airT: 0.2 });
+      setHeading(rb, st.heading);
+      return;
+    }
 
     if (POSE_TEST) {
       const [kind, a, t] = POSE_TEST.split(':');
@@ -407,7 +463,7 @@ export default function Skateboard() {
 
     // Paused (menu, pairing, phone disconnected): freeze, and drop moves sent meanwhile so nothing fires on resume.
     if (!game.running) {
-      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, resetQueued: false, carryQueued: false, jumpQueued: false });
+      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, partialQueued: false, resetQueued: false, carryQueued: false, jumpQueued: false });
       for (const k of EDGE_KEYS) st.held[k] = keys[k];
       return;
     }
@@ -435,6 +491,12 @@ export default function Skateboard() {
     if (phone.popQueued) (pop = phone.popQueued), (nose = phone.popNose), (phone.popQueued = 0);
     if (phone.trickQueued) (trickReq = phone.trickQueued), (phone.trickQueued = null);
     if (phone.revertQueued) (revertReq = phone.revertQueued), (phone.revertQueued = 0);
+    // Half circles (a revert on the ground, a 180 in the air) and half circles given up halfway: the grind window
+    // reads these (grind/grinding.js), so remember when they came.
+    const nowMs = performance.now();
+    if (revertReq) (st.arcAt = nowMs), (st.arcDir = revertReq);
+    if (trickReq?.type === 'fs180' || trickReq?.type === 'bs180') (st.arcAt = nowMs), (st.arcDir = trickReq.type === 'fs180' ? 1 : -1);
+    if (phone.partialQueued) (st.partialAt = nowMs), (phone.partialQueued = false);
     let carryReq = phone.carryQueued;
     phone.carryQueued = false;
     const jumpReq = phone.jumpQueued || pressed('jump');
@@ -468,6 +530,7 @@ export default function Skateboard() {
       rb.setTranslation({ x: sp.x, y: sp.y + 0.05, z: sp.z }, true);
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rb.setGravityScale(1, true);
+      if (st.grind) endGrind(rb, null);
       Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, swap: false, air: false, airT: 0, pushT: -1 });
       Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0, jumpT: -1, landT: 0, caveman: false, ragdoll: false });
       board.ragdoll = null;
@@ -642,12 +705,61 @@ export default function Skateboard() {
         meter: 0,
         zone: null,
         manualT: 0,
+        balanceLabel: null,
       });
+      board.grind = null;
       return;
     }
     board.pose = null;
     showLoose(false);
     placeBoard(null);
+
+    // --- Grinding: locked to a grind line (grind/grinding.js). The line carries the board; this only applies it.
+    if (st.grind) {
+      const g = st.grind;
+      const r = stepGrind(g, dt, { now: nowMs, arcAt: st.arcAt ?? -1e9, arcDir: st.arcDir ?? 1, partialAt: st.partialAt ?? -1e9, steer: targetSteer, live, ollie: pop > 0 }, HALF.y);
+      if (g.changed) {
+        g.changed = false;
+        st.trick = null; // the half circle was for the slide, not a 180
+        haptic('trick');
+      }
+      if (r.end) {
+        endGrind(rb, r.end);
+        return;
+      }
+      // Velocity along the line plus a pull onto the seat point, so Rapier's interpolation stays smooth.
+      const [tx, ty, tz] = r.t;
+      setVelocity(rb, tx * g.dir * g.speed + (r.c[0] - p.x) * 30, ty * g.dir * g.speed + (r.c[1] - p.y) * 30, tz * g.dir * g.speed + (r.c[2] - p.z) * 30);
+      rb.setGravityScale(0, true);
+      const th = Math.hypot(tx, tz) || 1;
+      st.heading = Math.atan2((-tx * g.dir) / th, (-tz * g.dir) / th);
+      setHeading(rb, st.heading);
+      // Visuals: a boardslide turns the board (and rider) across the line; the deck follows the slope.
+      const mir = mirrorOf(st);
+      st.slideYaw = damp(st.slideYaw ?? 0, g.kind === 'boardslide' ? (g.slideSign * Math.PI) / 2 : 0, 18, dt);
+      const slope = Math.atan2(ty * g.dir, th); // + uphill
+      const across = Math.abs(Math.sin(st.slideYaw));
+      const fwd = st.stance === 1 ? -1 : 1;
+      if (stanceG.current) {
+        stanceG.current.rotation.y = st.stance * Math.PI + st.slideYaw * mir;
+        stanceG.current.scale.x = mir;
+      }
+      if (shoveG.current) (shoveG.current.rotation.y = 0), (shoveG.current.position.y = -HALF.y);
+      const pitch = slope * fwd * (1 - across);
+      if (deck.current) deck.current.rotation.set(pitch, 0, slope * fwd * Math.sign(st.slideYaw || 1) * across);
+      st.pitchNow = pitch;
+      const b = g.bal;
+      Object.assign(board.view, { roll: (deck.current?.rotation.z ?? 0) * mir, pitch, yaw: 0, spin: st.slideYaw, lift: 0, height: 0, mode: 'ride' });
+      Object.assign(board, { speed: g.speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: st.stance === 1, mirror: mir, mode: 'ride', loose: null });
+      board.grind = { id: g.line.id, type: g.line.type, kind: g.kind, long: g.line.long, tx: (tx * g.dir) / th, tz: (tz * g.dir) / th };
+      Object.assign(board.anim, {
+        pushT: -1, popT: -1, flip: -1, air: false, pitch, steer: st.steer, fall: 0, manual: 0,
+        balance: b?.balance ?? -1, meter: b?.marker ?? 0, zone: b?.zone ?? null, manualT: 0,
+        balanceLabel: `★ ${grindName(g)} ★`, balanceInfo: `${Math.abs(g.s - g.s0).toFixed(1)}m`, balanceEnds: ['BAIL', 'BAIL'],
+      });
+      return;
+    }
+    board.grind = null;
 
     // --- Ground contact: rays down from the middle, nose and tail of the board.
     const fx = -Math.sin(st.heading);
@@ -658,6 +770,23 @@ export default function Skateboard() {
     const grounded = Math.min(dCenter, dEnds) < HALF.y + 0.06 && v.y < 0.8;
     const heightAbove = Number.isFinite(dCenter) ? Math.max(0, dCenter - HALF.y) : 8;
     let speed = Math.max(0, v.x * fx + v.z * fz);
+
+    // Lock onto a grind line from the air (an ollie, or rolling off something). Not mid-flip or mid-revert.
+    const trickBusy = st.revert || (st.trick && st.trick.t / st.trick.def.time < LAND_OK && !(st.trick.def.spin && !st.trick.def.flip && !st.trick.def.shove));
+    if (grind.ready && !grounded && !trickBusy) {
+      const skip = st.grindSkip && nowMs < st.grindSkip.until ? st.grindSkip.line : null;
+      const hit = findEntry(grind.lines, { x: p.x, z: p.z, bottom: p.y - HALF.y, vx: v.x, vy: v.y, vz: v.z, popped: st.popT >= 0 }, skip && ((l) => l === skip));
+      if (hit) {
+        st.grind = startGrind(hit, [p.x, p.y, p.z], HALF.y, nowMs);
+        st.grind.s0 = hit.s;
+        // A 180 started in the air this close to locking on was the half circle for a boardslide.
+        if (st.trick?.def.spin && !st.trick.def.flip) st.trick = null;
+        Object.assign(st, { popT: -1, air: false, airT: 0, pushLeft: 0, pushT: -1, manualT: 0, manual: 0 });
+        rb.collider(0)?.setCollisionGroups(0); // the line carries the board: no snagging on the rail or ledge itself
+        haptic('land');
+        return;
+      }
+    }
 
     if (import.meta.env.DEV && st.devBail) {
       const [kind, sp] = st.devBail;
@@ -893,6 +1022,9 @@ export default function Skateboard() {
       meter: st.meter ?? 0, // marker position on the HUD meter (0..1)
       zone: st.manualBalance >= 0 ? st.zone : null, // the drifting green zone { c, w, out } for the HUD
       manualT: st.manualT,
+      balanceLabel: null,
+      balanceInfo: null,
+      balanceEnds: null,
     });
   }, -1); // before the rider (and camera), so they see this frame's pose
 

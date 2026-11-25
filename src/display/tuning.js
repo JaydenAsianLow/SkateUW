@@ -155,3 +155,31 @@ export const GRIND_MIN_LEN = 1.5; // m: scanned edges shorter than this are not 
 export const GRIND_MIN_DROP = 0.1; // m: a scanned edge must stand at least this far above the ground beside it ...
 export const GRIND_MAX_DROP = 0.65; // m: ... and at most this far (taller = a wall, not a ledge)
 export const GRIND_CURB_MAX = 0.3; // m: scanned edges up to this height are curbs, higher ones ledges
+// Locking on: the board snaps onto a line it's this close to (m, in plan) while in the air, easing over SNAP_TIME (s).
+export const GRIND_SNAP = 0.3;
+export const GRIND_SNAP_TIME = 0.15;
+// An ollie can reach a line up to this far above the board's underside (m): the ollie alone peaks ~0.45 m, so the
+// handrails (0.9 m) need the lift. Rolling off something (no pop) only catches lines within GRIND_DROP_IN below.
+export const GRIND_REACH = 0.55;
+export const GRIND_DROP_IN = 0.4;
+export const GRIND_MAX_ANGLE = 55; // degrees between your travel and the line; more square-on than this doesn't lock
+export const GRIND_MIN_ENTRY = 1.0; // m/s along the line needed to lock on
+// The trick is picked in this window after locking on (s): no gesture = 50-50, a half circle = boardslide, a half
+// circle started but not finished = bail. A half circle drawn up to GRIND_PRE s before locking on also counts.
+export const GRIND_WINDOW = 0.5;
+export const GRIND_PRE = 0.35;
+// Slowing down on each surface (fraction of speed lost per second): waxed rails slide best, ledges and curbs grab more.
+export const GRIND_DRAG = { rail: 0.06, ledge: 0.1, curb: 0.13 };
+export const GRIND_BOARDSLIDE_DRAG = 1.3; // boardslides scrub this much more than 50-50s
+export const GRIND_SLOPE = 0.7; // share of gravity along a sloped line (handrails speed you up going down)
+export const GRIND_MIN_SPEED = 0.6; // m/s: slower than this you stall and drop off
+export const GRIND_MAX_SPEED = 9; // m/s
+export const GRIND_EXIT_LIFT = 1.4; // m/s up when you pop off the end of a line (or ollie out)
+// Long lines: keep the marker in the drifting green zone by tilting the phone left / right (like the manual meter).
+export const GRIND_BALANCE = {
+  '5050': { drift: 0.8, swing: 0.2, zone: 0.14, tolerance: 0.9, sway: 0.08 },
+  boardslide: { drift: 1.0, swing: 0.22, zone: 0.12, tolerance: 0.8, sway: 0.1 },
+};
+// Side camera on long grinds: out to the side of the line (the side with more room), a bit behind, looking ahead.
+// It blends in and back out at `blend` (1/s); the usual wall check keeps it out of buildings.
+export const GRIND_CAM = { distance: 4.2, height: 1.3, back: 1.0, ahead: 1.6, blend: 3 };

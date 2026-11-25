@@ -9,7 +9,7 @@ import { cleanSetting, sharedOnly } from '../shared.js';
 import World from './World.jsx';
 import Skateboard from './Skateboard.jsx';
 import RayCheck from './RayCheck.jsx';
-import { Labels, RideTest } from './DevTools.jsx';
+import { GrindTest, Labels, RideTest } from './DevTools.jsx';
 import GrindLines from './grind/GrindLines.jsx';
 import { GRAVITY } from './tuning.js';
 import CameraRig from './CameraRig.jsx';
@@ -112,6 +112,7 @@ export default function Display() {
     });
     s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
+    s.on('partial', () => (phone.partialQueued = true));
     s.on('reset', () => (phone.resetQueued = true));
     s.on('carry', () => (phone.carryQueued = true));
     s.on('jump', () => (phone.jumpQueued = true));
@@ -174,6 +175,7 @@ export default function Display() {
               <Skateboard />
               {import.meta.env.DEV && urlParams.has('raycheck') && <RayCheck />}
               {import.meta.env.DEV && urlParams.has('ridetest') && <RideTest />}
+              {import.meta.env.DEV && urlParams.has('grindtest') && <GrindTest />}
               <CameraRig /> {/* inside Physics: it ray casts so it never ends up inside a wall */}
             </Physics>
             {import.meta.env.DEV && urlParams.has('labels') && <Labels />}

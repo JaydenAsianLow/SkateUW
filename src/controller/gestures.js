@@ -17,6 +17,7 @@
 //       half circle                         -> revert (on the ground)
 //       D, U, then half circle(s)           -> frontside 180 (left finger arcs down, right finger arcs up)
 //                                              or backside 180 (the opposite way)
+//       half circle started, not finished   -> partial (a bail if it's the trick choice on a grind)
 
 const STEP_PX = 6; // resample distance; smooths out touch jitter
 const TURN_DEG = 38; // a step this far off the segment's direction starts a new segment (up -> up-right is 45°)
@@ -25,6 +26,7 @@ const REVERSE_DEG = 14; // turning back the other way this much ends a curve
 const CURVE_DEG = 15; // a stroke that has curved this much might be a half circle: hold its segments back
 const ARC_DEG = 115; // smooth turning that counts as a half circle (fires before you finish drawing it)
 const ARC_MIN_PX = 55;
+const PARTIAL_DEG = 55; // a smooth curve this far round, let go before ARC_DEG, is a half circle given up halfway
 const COMBO_GAP_MS = 550; // max time between segments of one combo
 // After the pop, trick swipes still upgrade the ollie. Sized for the display's default airtime
 // (~0.9 s in the air, settings.js); the display still rejects a trick that comes too late for its setting.
@@ -51,7 +53,7 @@ export function classify(dx, dy) {
 
 const newRun = () => ({ turn: 0, len: 0, dx: 0, dy: 0, sx: 0, n: 0 });
 
-export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
+export function createStrokeTracker({ onSegment, onArc, onPartialArc, minSegPx = 24 }) {
   const fingers = new Map();
   const cosTurn = Math.cos(TURN_DEG * RAD);
 
@@ -143,7 +145,15 @@ export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
     },
     up(id) {
       const f = fingers.get(id);
-      if (f && !f.arced) flush(f);
+      if (f && !f.arced) {
+        const r = f.run;
+        const ratio = Math.hypot(r.dx, r.dy) / (r.len || 1);
+        if (Math.abs(r.turn) >= PARTIAL_DEG * RAD && r.len >= ARC_MIN_PX * 0.5 && ratio > 0.35) {
+          f.pending.length = 0; // it was meant as a half circle: its straight bits are not swipes
+          onPartialArc?.({ id, t: f.lastT });
+        }
+        flush(f);
+      }
       fingers.delete(id);
     },
   };
@@ -153,7 +163,7 @@ export function createStrokeTracker({ onSegment, onArc, minSegPx = 24 }) {
 const power = (speed) => clamp(0.8 + (speed - 0.3) * 0.4, 0.75, 1.3);
 
 // pointers() -> [{ id, holding }] for every finger currently on the deck (holding = resting still).
-export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, pointers }) {
+export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial, onStage, pointers }) {
   let stage = 'idle'; // 'idle' | 'down' | 'up' | 'pop'
   let lastT = -Infinity;
   let popT = -Infinity;
@@ -256,6 +266,9 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, p
         setStage('idle');
         queueFlick(ev); // maybe half of a two-finger pop shove-it
       } else setStage('up'); // maybe the start of a nollie
+    },
+    partial() {
+      onPartial?.();
     },
     arc(ev) {
       arcs.push(ev);

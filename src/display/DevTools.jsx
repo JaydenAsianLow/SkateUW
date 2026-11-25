@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { board, phone } from '../state.js';
+import { board, game, phone } from '../state.js';
 import { urlParams } from './util.js';
 
 // Dev-only helpers for checking the level (MAP.md §13). Nothing here runs in a normal game.
@@ -64,5 +64,68 @@ export function RideTest() {
     };
   }, []);
   useFrame(() => {}); // keeps the frame loop alive while testing
+  return null;
+}
+
+// ?grindtest=<line id>,<gesture>,<freeze s>[,<speed>][,<from end>]: drops the board in the air just before a grind
+// line (?grinddebug lists the ids), moving along it, as if ollied onto it. gesture = none | arc | partial is sent the
+// moment it locks on. freeze = stop everything that long after locking on (for a screenshot; 0 = never). Writes what
+// happened into <pre id="grindtest"> (read it with a headless browser's --dump-dom).
+const GTEST = import.meta.env.DEV && urlParams.get('grindtest')?.split(',');
+export function GrindTest() {
+  useEffect(() => {
+    if (!GTEST) return undefined;
+    const [id, gesture = 'none', freeze = '0', spd = '4', fromEnd = '0'] = GTEST;
+    const log = [];
+    const pre = document.createElement('pre');
+    pre.id = 'grindtest';
+    document.body.appendChild(pre);
+    const out = () => (pre.textContent = log.join('\n'));
+    let phase = 'wait';
+    let lockT = 0;
+    let lastTrick = null;
+    const t0 = performance.now();
+    const tick = setInterval(() => {
+      const now = performance.now();
+      const g = window.__skate?.grind;
+      if (phase === 'wait') {
+        if (!g?.ready || !game.running || now - t0 < 1500) return;
+        const line = g.lines.find((l) => l.id === id);
+        if (!line) return log.push(`no line ${id}`), out(), clearInterval(tick);
+        const back = fromEnd === '1';
+        const a = back ? line.pts[line.pts.length - 1] : line.pts[0];
+        const b = back ? line.pts[line.pts.length - 2] : line.pts[1];
+        const L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+        const u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L, (b[2] - a[2]) / L];
+        const h = Math.hypot(u[0], u[2]);
+        const v = Number(spd);
+        // 0.5 m along the line, 0.3 m above it, moving along it and slightly down
+        const x = a[0] + u[0] * 0.5, z = a[2] + u[2] * 0.5, y = a[1] + u[1] * 0.5 + 0.3 + 0.06;
+        window.__skate.place({ x, y, z, heading: Math.atan2(-u[0] / h, -u[2] / h), vx: (u[0] / h) * v, vy: -0.3, vz: (u[2] / h) * v, popped: true });
+        log.push(`line ${id} ${line.type} ${line.long ? 'long' : 'short'} ${line.length.toFixed(1)}m, gesture ${gesture}, entry ${v} m/s`);
+        phase = 'fly';
+        out();
+        return;
+      }
+      const b = board;
+      if (b.trick && b.trick !== lastTrick) (lastTrick = b.trick), log.push(`t=${((now - t0) / 1000).toFixed(2)} callout: ${b.trick.name}`), out();
+      if (phase === 'fly' && b.grind) {
+        phase = 'grind';
+        lockT = now;
+        log.push(`locked on ${b.grind.id} (${b.grind.type}) at (${b.x.toFixed(2)}, ${b.y.toFixed(2)}, ${b.z.toFixed(2)})`);
+        if (gesture === 'arc') phone.revertQueued = 1;
+        if (gesture === 'partial') phone.partialQueued = true;
+        out();
+      }
+      if (phase === 'grind') {
+        if (b.grind) log.push(`  ${((now - lockT) / 1000).toFixed(2)}s ${b.grind.kind} speed ${b.speed.toFixed(2)} y ${b.y.toFixed(2)} balance ${(b.anim.balance ?? -1).toFixed(2)}`);
+        else (phase = 'after'), log.push(`left the line after ${((now - lockT) / 1000).toFixed(2)}s, mode ${b.mode}`);
+        if (Number(freeze) > 0 && b.grind && now - lockT > Number(freeze) * 1000) (window.__skate.freeze = true), log.push('frozen'), clearInterval(tick);
+        out();
+      }
+      if (phase === 'after' && now - lockT > 6000) clearInterval(tick);
+    }, 100);
+    return () => clearInterval(tick);
+  }, []);
   return null;
 }

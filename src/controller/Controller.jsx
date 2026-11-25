@@ -412,6 +412,7 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
       onPop: (power, nose = false) => send('pop', { power, nose }, nose ? 'NOLLIE' : 'OLLIE', 30),
       onTrick: (type, side) => send('trick', { type, side }, TRICK_LABEL[type] ?? type, [15, 30, 15]),
       onRevert: (dir) => send('revert', { dir }, 'REVERT', [10, 20, 10]),
+      onPartial: () => socketRef.current?.emit('partial', {}), // only matters on a grind (bail): no flash or buzz
       onStage: (stage) => {
         setPips(STAGE_PIPS[stage] ?? 0);
         clearTimeout(pipsTimer.current);
@@ -424,6 +425,7 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
       createStrokeTracker({
         onSegment: (ev) => reader.current.segment(ev),
         onArc: (ev) => reader.current.arc(ev),
+        onPartialArc: () => reader.current.partial(),
         minSegPx: Math.max(16, window.innerHeight * SWIPE_MIN),
       }),
     [],

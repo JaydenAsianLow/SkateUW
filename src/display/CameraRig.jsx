@@ -9,7 +9,7 @@ import { NOT_RAGDOLL } from './ragdoll.js';
 import { smooth, urlParams } from './util.js';
 import {
   CAM_CLEAR_FROM, CAM_CLIP_PAD, CAM_DISTANCE, CAM_FOLLOW, CAM_HEIGHT, CAM_LOOK_AHEAD, CAM_LOOK_RIGHT, CAM_LOOK_Y, CAM_MAX_ROLL, CAM_MIN_DISTANCE,
-  CAM_RIGHT, CAM_SWITCH_TIME, SHOULDER_DISTANCE, SHOULDER_HEIGHT, SHOULDER_LOOK_AHEAD, SHOULDER_LOOK_Y, SHOULDER_SIDE,
+  CAM_RIGHT, CAM_SWITCH_TIME, GRIND_CAM, SHOULDER_DISTANCE, SHOULDER_HEIGHT, SHOULDER_LOOK_AHEAD, SHOULDER_LOOK_Y, SHOULDER_SIDE,
   SIDE_DISTANCE, SIDE_HEIGHT, SIDE_LOOK_AHEAD, SIDE_LOOK_Y,
 } from './tuning.js';
 
@@ -17,6 +17,8 @@ const aim = new Vector3();
 const fromPos = new Vector3();
 const fromAim = new Vector3();
 const eye = new Vector3();
+const sidePos = new Vector3();
+const sideAim = new Vector3();
 
 // ?topdown (or ?topdown=300 for the height in meters) shows the level from above.
 const TOP_DOWN = urlParams.has('topdown') ? Number(urlParams.get('topdown')) || 260 : 0;
@@ -61,6 +63,7 @@ export default function CameraRig() {
   const angle = useRef(0); // camera swing toward the side during a manual (rad)
   const first = useRef(true);
   const sw = useRef({ view: settings.camera, from: null, t: 1 }); // view switch in progress
+  const gc = useRef({ w: 0, id: null, side: 1, tx: 0, tz: -1 }); // long-grind side camera: blend weight, line, side
 
   useFrame(({ camera, scene }, rawDt) => {
     const dt = Math.min(rawDt, 0.1); // real time, like the physics, so the speed lead below stays exact
@@ -106,9 +109,25 @@ export default function CameraRig() {
       target.current.lerp(fromPos, 1 - k);
       aim.lerp(fromAim, 1 - k);
     }
+    // Long grind: swing out to the side of the line, and back afterwards.
+    const g = board.grind;
+    const G = gc.current;
+    G.w += ((g?.long ? 1 : 0) - G.w) * (1 - Math.exp(-GRIND_CAM.blend * dt));
+    if (g?.long) {
+      if (G.id !== g.id) (G.id = g.id), (G.side = roomierSide(p, -g.tz, g.tx));
+      (G.tx = g.tx), (G.tz = g.tz);
+    } else if (!g) G.id = null;
+    if (G.w > 0.002) {
+      const px = -G.tz * G.side, pz = G.tx * G.side;
+      sidePos.set(p.x + px * GRIND_CAM.distance - G.tx * GRIND_CAM.back, p.y + GRIND_CAM.height, p.z + pz * GRIND_CAM.distance - G.tz * GRIND_CAM.back);
+      sideAim.set(p.x + G.tx * GRIND_CAM.ahead, p.y + 0.5, p.z + G.tz * GRIND_CAM.ahead);
+      const k = smooth(G.w);
+      target.current.lerp(sidePos, k);
+      aim.lerp(sideAim, k);
+    }
     // Fixed distance at any speed: the camera eases toward its target (rate CAM_FOLLOW), which on its own would
     // trail speed/CAM_FOLLOW metres further back when moving fast; leading the target by that much cancels it.
-    const lead = Math.min(board.speed, 10) / CAM_FOLLOW;
+    const lead = (Math.min(board.speed, 10) / CAM_FOLLOW) * (1 - G.w);
     target.current.x += fx * lead;
     target.current.z += fz * lead;
 
@@ -128,6 +147,21 @@ export default function CameraRig() {
 
     updateSunView(camera);
   });
+
+  // Which side of the line has more open space (for the grind camera): +1 or -1 along (px, pz).
+  function roomierSide(p, px, pz) {
+    const room = (sg) => {
+      ray.origin.x = p.x;
+      ray.origin.y = p.y + GRIND_CAM.height;
+      ray.origin.z = p.z;
+      ray.dir.x = px * sg;
+      ray.dir.y = 0;
+      ray.dir.z = pz * sg;
+      const hit = world.castRay(ray, GRIND_CAM.distance + 2, true, undefined, NOT_RAGDOLL);
+      return hit ? hit.timeOfImpact : Infinity;
+    };
+    return room(1) >= room(-1) ? 1 : -1;
+  }
 
   // A wall, stair or building between the rider and the camera: move the camera in front of it. Two rays to the
   // camera, from head height and from knee height (low ledges and stairs would otherwise hide the board).

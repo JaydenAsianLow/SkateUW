@@ -17,6 +17,7 @@ export const phone = {
   popNose: false, // that pop is a nollie (off the nose)
   trickQueued: null, // { type, side } (see TRICKS in Skateboard.jsx)
   revertQueued: 0, // -1 / 1 spin direction (0 = none)
+  partialQueued: false, // a half circle given up halfway (grind window: bail)
   resetQueued: false,
   carryQueued: false, // Walk / Ride button: step off and carry the board, or drop back in
   jumpQueued: false, // Jump button (on foot, board in hand)

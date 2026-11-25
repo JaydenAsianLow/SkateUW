@@ -64,12 +64,15 @@ function BalanceMeter() {
   const needle = useRef(null);
   const zone = useRef(null);
   const info = useRef(null);
+  const label = useRef(null);
+  const ends = useRef(null);
   useEffect(() => {
     let raf;
     let shownUntil = 0;
     let shown = null;
     let meter = null;
     let text = '';
+    let title = '';
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const a = board.anim;
@@ -93,8 +96,17 @@ function BalanceMeter() {
         zone.current.style.width = `${z.w * 200}%`;
         zone.current.classList.toggle('out', z.out > 0);
       }
+      // The same meter balances grinds (grind/grinding.js): its own title, info and end labels.
+      const ttl = a.balanceLabel ?? '★ MANUAL ★';
+      if (label.current && ttl !== title) {
+        title = ttl;
+        label.current.textContent = ttl;
+        const [l, r] = a.balanceEnds ?? ['WHEELS DOWN', 'BAIL'];
+        ends.current.children[0].textContent = l;
+        ends.current.children[1].textContent = r;
+      }
       const t = a.manualT ?? 0;
-      const s = t > 0 ? `${t.toFixed(1)}s · ${manualPoints(t)}` : text;
+      const s = a.balanceInfo ?? (t > 0 ? `${t.toFixed(1)}s · ${manualPoints(t)}` : text);
       if (info.current && s !== text) info.current.textContent = text = s;
     };
     tick();
@@ -102,7 +114,7 @@ function BalanceMeter() {
   }, []);
   return (
     <div ref={wrap} className="balance">
-      <div className="balance-label">★ MANUAL ★</div>
+      <div ref={label} className="balance-label">★ MANUAL ★</div>
       <div className="balance-frame">
         <div className="balance-bar">
           <div ref={zone} className="balance-zone" />
@@ -110,7 +122,7 @@ function BalanceMeter() {
         <div ref={needle} className="balance-needle" />
       </div>
       <div ref={info} className="balance-info" />
-      <div className="balance-ends">
+      <div ref={ends} className="balance-ends">
         <span>WHEELS DOWN</span>
         <span>BAIL</span>
       </div>
