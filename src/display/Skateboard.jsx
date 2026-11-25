@@ -19,7 +19,7 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE, GRIND_TIMING, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_HOP_ROLL, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
+  TURN_RATE, GRIND_REACH, GRIND_TIMING, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_HOP_ROLL, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
 import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, nearest, startGrind, stepGrind } from './grind/grinding.js';
@@ -32,6 +32,10 @@ const airPhysics = () => {
   const A = settings.airtime;
   return { pop: POP_VELOCITY * A ** -0.25, g: GRAVITY * A ** -1.25, window: TRICK_WINDOW * A };
 };
+// How far above the board an ollie can still lock onto a line: GRIND_REACH is set for the default airtime (1.7);
+// with less airtime the ollie peaks lower, so the reach grows by the difference (same handrails reachable).
+const ollieApex = (A) => (POP_VELOCITY * A ** -0.25) ** 2 / (2 * GRAVITY * A ** -1.25);
+const grindReach = () => GRIND_REACH + Math.max(0, ollieApex(1.7) - ollieApex(settings.airtime));
 const stickSpeed = (m) => runTopSpeed(RUN_SPEED) * clamp01((m - STICK_DEAD) / (1 - STICK_DEAD)) ** 2;
 const HALF = { x: 0.12, y: BOARD_HALF_Y, z: 0.42 }; // collider half extents (real-size board)
 const START = [SPAWN.position[0], HALF.y + 0.05, SPAWN.position[1]];
@@ -910,7 +914,7 @@ export default function Skateboard() {
     // On the ground: riding up to a curb's edge at a shallow angle locks on too (no ollie needed for a curb).
     if (grind.ready && !trickBusy && (!grounded || st.popT < 0)) {
       const cool = st.grindSkip && nowMs < st.grindSkip.until ? st.grindSkip : null;
-      const b = { x: p.x, z: p.z, bottom: p.y - HALF.y, vx: v.x, vy: v.y, vz: v.z, popped: st.popT >= 0 };
+      const b = { x: p.x, z: p.z, bottom: p.y - HALF.y, vx: v.x, vy: v.y, vz: v.z, popped: st.popT >= 0, reach: grindReach() };
       const skipFn = cool && ((l) => nearest(l, cool.x, cool.z).d < GRIND_COOL_R);
       const near = nearby(grind, p.x, p.z); // only the lines within ~5 m (grid lookup)
       const hit = grounded ? findCurbEntry(near, b, skipFn) : findEntry(near, b, skipFn);

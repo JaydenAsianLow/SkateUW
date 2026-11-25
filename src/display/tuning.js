@@ -166,14 +166,17 @@ export const GRIND_SNAP = 0.3;
 export const GRIND_SNAP_TIME = 0.15;
 // An ollie can reach a line up to this far above the board's underside (m): the ollie alone peaks ~0.45 m, so the
 // handrails (0.9 m) need the lift. Rolling off something (no pop) only catches lines within GRIND_DROP_IN below.
-export const GRIND_REACH = 0.55;
+export const GRIND_REACH = 0.55; // at airtime 1.7 (the default); lower airtimes reach further to match (Skateboard.jsx)
 export const GRIND_DROP_IN = 0.4;
 export const GRIND_SQUARE_KEEP = 0.7; // share of your speed kept when you hit a rail square-on (any angle locks on; along it keeps all of it)
 export const GRIND_MIN_ENTRY = 1.0; // m/s along the line needed to lock on
 // The grind window: the trick is picked from the ollie's pop until GRIND_WINDOW s after locking on, then locked.
 // Ollied on + a half circle = boardslide; no jump or no gesture = 50-50; a half circle given up halfway in the
 // window, or any half circle after it, = bail. Riding on without an ollie: the window starts GRIND_PRE s before.
-export const GRIND_WINDOW = 0.4;
+export const GRIND_WINDOW = 0.6;
+// ... or until this long after the pop, if that's later: the phone reads a half circle as part of the ollie for
+// 1.05 s after the pop (gestures.js ARC_WINDOW_MS), and at airtime 1 you're on the rail ~0.3 s after popping.
+export const GRIND_ARC_AFTER_POP = 1.05;
 export const GRIND_PRE = 0.35;
 // Slowing down on each surface (fraction of speed lost per second): waxed rails slide best, ledges and curbs grab more.
 export const GRIND_DRAG = { rail: 0.06, ledge: 0.1, curb: 0.13 };

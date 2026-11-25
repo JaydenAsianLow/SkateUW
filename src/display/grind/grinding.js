@@ -4,7 +4,8 @@
 // One set of rules for every surface (rail, ledge, curb):
 //  - Lock on from the air (an ollie, or rolling off something) when the board is close to a line (GRIND_SNAP) and
 //    at any angle (across a rail locks on too). It eases onto the line over GRIND_SNAP_TIME.
-//  - The trick is picked once, in the grind window (from the ollie's pop to GRIND_WINDOW s after locking on), and
+//  - The trick is picked once, in the grind window (from the ollie's pop to GRIND_WINDOW s after locking on, or
+//    GRIND_ARC_AFTER_POP s after the pop if that's later), and
 //    then locked: ollied on + a half circle (the frontside / backside 180 finger movement) = boardslide; no jump or no
 //    gesture = 50-50; a half circle given up halfway in the window, or any half circle after it, = bail.
 //  - A grind that will last more than GRIND_TIMING.minTime (the line left / your speed when you lock on) gets the
@@ -15,7 +16,7 @@
 import { clamp01 } from '../util.js';
 import { RAIL_R } from '../redSquare/bars.js';
 import {
-  GRAVITY, GRIND_TIMING, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
+  GRAVITY, GRIND_TIMING, GRIND_ARC_AFTER_POP, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
   GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_SPEED, GRIND_MIN_ENTRY, GRIND_SQUARE_KEEP,
   GRIND_HOP_DIST, GRIND_HOP_SLIDE, GRIND_HOP_SPEED, GRIND_SLOW_TIME, GRIND_MIN_SPEED, GRIND_NEAR, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
 } from '../tuning.js';
@@ -54,7 +55,8 @@ export function nearest(line, x, z) {
 }
 
 const GRIND_NOSE = 0.45; // m from the board's centre to its nose
-// Look for a line to lock onto. b = { x, z, bottom (y of the board's underside), vx, vy, vz, popped }.
+// Look for a line to lock onto. b = { x, z, bottom (y of the board's underside), vx, vy, vz, popped, reach (how far
+// above the board's underside an ollie can still reach a line; default GRIND_REACH) }.
 export function findEntry(lines, b, skip) {
   const sp = Math.hypot(b.vx, b.vz);
   if (sp < GRIND_MIN_ENTRY) return null;
@@ -69,7 +71,7 @@ export function findEntry(lines, b, skip) {
     if (n.d > reach) continue;
     const dy = b.bottom - n.y; // + above the line
     if (dy > (b.popped ? 0.6 : GRIND_DROP_IN)) continue;
-    if (dy < -(b.popped ? GRIND_REACH : 0.04)) continue;
+    if (dy < -(b.popped ? b.reach ?? GRIND_REACH : 0.04)) continue;
     if (dy < 0 && b.vy < -1.5) continue; // already falling past it from below
     const { t } = at(line, n.s);
     const th = Math.hypot(t[0], t[2]) || 1;
@@ -173,6 +175,8 @@ export function startGrind(hit, center, half, now, popAt = null) {
   if (!g.hop && left / Math.max(hit.along, 0.1) > GRIND_TIMING.minTime) g.timing = { m: 0, v: 1, misses: 0, hits: 0, tapped: false, wasIn: false, hist: [], flash: null };
   const { c } = seat(g, half);
   g.offset = [center[0] - c[0], center[1] - c[1], center[2] - c[2]];
+  // Lifted up onto a line well above the board: ease up a bit slower, so it reads as a hop, not a jerk.
+  g.snapTime = GRIND_SNAP_TIME + 0.3 * Math.max(0, -g.offset[1]);
   return g;
 }
 
@@ -189,7 +193,9 @@ export function stepGrind(g, dt, inp, half) {
   // Trick choice, once, in the grind window: from the pop of the ollie that got you here (or GRIND_PRE s before
   // locking on, for a roll-on) to GRIND_WINDOW s after. Then the trick is locked: a 50-50 never turns into a slide.
   const from = g.popAt ?? g.lockAt - GRIND_PRE * 1000;
-  const late = g.lockAt + GRIND_WINDOW * 1000; // half circles after this bail
+  // Half circles up to this late count (and later ones bail): GRIND_WINDOW s after landing on the line, or as long
+  // after the ollie's pop as the phone itself still reads a half circle as part of that ollie, whichever is later.
+  const late = Math.max(g.lockAt + GRIND_WINDOW * 1000, g.popAt != null ? g.popAt + GRIND_ARC_AFTER_POP * 1000 : 0);
   if (!g.decided) {
     if (g.popAt != null && inp.arcAt >= from && inp.arcAt <= late) {
       g.kind = 'boardslide';
@@ -198,7 +204,7 @@ export function stepGrind(g, dt, inp, half) {
       g.decided = true;
     } else if (inp.partialAt >= from) {
       return { end: 'bail' }; // a half circle given up halfway
-    } else if (g.t >= GRIND_WINDOW) {
+    } else if (inp.now > late) {
       g.decided = true; // nothing in the window: it stays a 50-50
     }
   }
@@ -229,7 +235,7 @@ export function stepGrind(g, dt, inp, half) {
   }
   // Ease onto the line from where the board locked on.
   g.snapT += dt;
-  const k = clamp01(g.snapT / GRIND_SNAP_TIME);
+  const k = clamp01(g.snapT / (g.snapTime ?? GRIND_SNAP_TIME));
   const e = 1 - k * k * (3 - 2 * k);
   const { c, t } = seat(g, half);
   return { end: null, c: [c[0] + g.offset[0] * e, c[1] + g.offset[1] * e, c[2] + g.offset[2] * e], t, seat: c };
