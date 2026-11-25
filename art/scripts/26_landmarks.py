@@ -218,6 +218,7 @@ for fi, (fname, nr) in enumerate((('lower', OS['lower']), ('upper', OS['upper'])
         b.collider(f'od_{fname}{k}', x0, x1, y, y + OS['tread'], 0.0, z)
         y += OS['tread']
     rail_pts.append(((x0 + 0.22, y_start - 0.3, z_start + 0.85), (x0 + 0.22, y + 0.3, z + 0.85)))
+    b.handrail(f'od_{fname}_east', x1 - 0.22, y_start, z_start, y, z, h=0.85)  # open (monolith) side, on posts
     if fi == 0:  # landing
         b.box('M_paverbrick', x0, x1, y, y + OS['landing'], 0.0, z)
         b.collider('od_landing', x0, x1, y, y + OS['landing'], 0.0, z)

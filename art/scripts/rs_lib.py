@@ -201,20 +201,25 @@ class Builder:
             self.collider(f'{name}_step{k}', cx - ww / 2, cx + ww / 2, yf, y_top, 0, (k + 1) * rise)
         y_bot = y_top - risers * tread
         for i, ox in enumerate(rails):
-            x = cx + ox
-            a = (x, y_bot - 0.3, 0.9)
-            b = (x, y_top + 0.3, z_top + 0.9)
-            self.tube('M_metal', a, b, 0.024)
-            self.tube('M_metal', (x, y_bot - 0.3, 0), (x, y_bot - 0.3, 0.9), 0.022)
-            self.tube('M_metal', (x, y_top + 0.3, z_top), (x, y_top + 0.3, z_top + 0.9), 0.022)
+            self.handrail(f'{name}_rail{i}', cx + ox, y_bot, 0.0, y_top, z_top)
+
+    def handrail(self, name, x, y_bot, z_bot, y_top, z_top, posts=True, h=0.9):
+        """Stair handrail along +y at x: from 0.3 m past the bottom step (floor z_bot) to 0.3 m past the top edge
+        (floor z_top), h above the floors, on posts (posts=False: wall-mounted). Adds the grind line and a thin
+        collider so the board can land on / bump the rail."""
+        a = (x, y_bot - 0.3, z_bot + h)
+        b = (x, y_top + 0.3, z_top + h)
+        self.tube('M_metal', a, b, 0.024)
+        if posts:
+            self.tube('M_metal', (x, a[1], z_bot), a, 0.022)
+            self.tube('M_metal', (x, b[1], z_top), b, 0.022)
             ym = (y_bot + y_top) / 2
-            self.tube('M_metal', (x, ym, z_top / 2), (x, ym, z_top / 2 + 0.9), 0.022)
-            self.rail(f'{name}_rail{i}', a, b)
-            # thin box so the board can land on / bump the rail
-            import math as _m
-            L = _m.hypot(b[1] - a[1], b[2] - a[2])
-            self.col_center(f'{name}_railcol{i}', ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2 - 0.02),
-                            (0.05, L, 0.05), (_m.atan2(b[2] - a[2], b[1] - a[1]), 0, 0))
+            zm = (z_bot + z_top) / 2
+            self.tube('M_metal', (x, ym, zm), (x, ym, zm + h), 0.022)
+        self.rail(name, a, b)
+        L = math.hypot(b[1] - a[1], b[2] - a[2])
+        self.col_center(name + 'col', (x, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2 - 0.02),
+                        (0.05, L, 0.05), (math.atan2(b[2] - a[2], b[1] - a[1]), 0, 0))
 
     def mesh(self, m, verts, faces):
         """Raw polygons: verts = [(x, y, z)], faces = [(i, j, k, ...)]."""

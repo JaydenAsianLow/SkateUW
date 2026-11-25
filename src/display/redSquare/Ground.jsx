@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { CuboidCollider, RigidBody, TrimeshCollider } from '@react-three/rapier';
-import { CanvasTexture, LinearFilter, PlaneGeometry } from 'three';
+import { CanvasTexture, CylinderGeometry, Euler, LinearFilter, PlaneGeometry, Quaternion, Vector3 } from 'three';
 import { groundMask, groundMaskBounds, materials, merge } from '../look.js';
 import { edgeBox, edgeRotY, edges, flatPolygon, worldUv } from './geo.js';
 import { BoxColliders } from './Footprints.jsx';
-import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS } from './layout.js';
+import { grindLines } from './Glb.jsx';
+import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS, stairCorners } from './layout.js';
 
 // The plaza deck (y = 0) with holes where the ground drops to LOW, the lower ground, retaining walls,
 // stair sets, invisible boundaries, and the paved/lawn mask the ground shader reads.
@@ -12,6 +13,21 @@ import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS } from './layout.js';
 const WORLD = 700; // half-size of the deck
 const WALL_T = 0.5; // retaining wall collider thickness
 const TRIMESH_FIX_INTERNAL_EDGES = 144;
+const RAIL_H = 0.9; // handrail height above the stair line
+const RAIL_INSET = 0.35; // handrail distance in from each side of a stair set
+
+const _up = new Vector3();
+const _d = new Vector3();
+const _q = new Quaternion();
+const _e = new Euler();
+
+// A round bar from a to b (Vector3s).
+function tube(a, b, r) {
+  const d = _d.subVectors(b, a);
+  const g = new CylinderGeometry(r, r, d.length(), 8, 1);
+  g.applyQuaternion(_q.setFromUnitVectors(_up.set(0, 1, 0), d.normalize()));
+  return g.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+}
 
 function paintMask() {
   const [x0, z0, w, d] = groundMaskBounds.value;
@@ -111,6 +127,33 @@ export default function Ground() {
       }
     }
 
+    // Handrails down both sides of each stair set (grind lines for the slide/grind moves).
+    const rails = [];
+    const railColliders = [];
+    const lines = [];
+    for (const s of STAIRS) {
+      const { right, run } = stairCorners(s);
+      for (const side of [-1, 1]) {
+        const u = side * (s.width / 2 - RAIL_INSET);
+        const at = (w, y) => new Vector3(s.top[0] + right[0] * u + s.dir[0] * w, y, s.top[1] + right[1] * u + s.dir[1] * w);
+        const a = at(-0.3, RAIL_H);
+        const b = at(run + 0.3, LOW + RAIL_H);
+        rails.push(tube(a, b, 0.024));
+        for (const t of [0, 0.5, 1]) {
+          const p = a.clone().lerp(b, t);
+          rails.push(tube(new Vector3(p.x, p.y - RAIL_H, p.z), p, 0.022));
+        }
+        _q.setFromUnitVectors(_up.set(0, 1, 0), _d.subVectors(b, a).normalize());
+        railColliders.push({
+          args: [0.025, a.distanceTo(b) / 2, 0.025],
+          position: a.clone().lerp(b, 0.5).add(_up.set(0, -0.02, 0)).toArray(),
+          rotation: _e.setFromQuaternion(_q).toArray().slice(0, 3),
+        });
+        lines.push({ name: `${s.key}_rail_${side < 0 ? 'left' : 'right'}`, a: a.toArray(), b: b.toArray() });
+      }
+    }
+    grindLines.set('stairs', lines);
+
     // Invisible boundaries: walls from the lower ground up to 3 m above the deck along each polyline.
     const bounds = [];
     const bh = (3 - LOW) / 2;
@@ -132,6 +175,8 @@ export default function Ground() {
       coping: merge(coping),
       steps: merge(steps),
       nosing: merge(nosing),
+      rails: merge(rails),
+      railColliders,
       colliders: [...wallColliders, ...stepColliders, ...bounds],
     };
   }, []);
@@ -144,6 +189,9 @@ export default function Ground() {
         <TrimeshCollider args={[geo.deckVerts, geo.deckIdx, TRIMESH_FIX_INTERNAL_EDGES]} />
         <CuboidCollider args={[WORLD * 1.5, 0.5, WORLD * 1.5]} position={[0, LOW - 0.5, 0]} />
         <BoxColliders list={geo.colliders} />
+        {geo.railColliders.map((c, i) => (
+          <CuboidCollider key={'rail' + i} args={c.args} position={c.position} rotation={c.rotation} />
+        ))}
       </RigidBody>
       <mesh geometry={geo.deck} material={m.ground} receiveShadow />
       <mesh geometry={geo.lower} material={m.ground} receiveShadow />
@@ -151,6 +199,7 @@ export default function Ground() {
       <mesh geometry={geo.coping} material={m.limestone} receiveShadow />
       <mesh geometry={geo.steps} material={m.limestone} castShadow receiveShadow />
       <mesh geometry={geo.nosing} material={m.granite} receiveShadow />
+      <mesh geometry={geo.rails} material={m.iron} castShadow />
     </>
   );
 }

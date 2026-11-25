@@ -57,6 +57,8 @@ for k in range(RISERS):
     b.box('M_concrete', x_end, SX1, y_front, y_back if k < RISERS - 1 else -WALK, 0, (k + 1) * rise)
     b.collider(f'step{k}', x_end, SX1, y_front, -WALK, 0, (k + 1) * rise)
 b.rail('top_edge', (SX0, -WALK, FLOOR), (SX1, -WALK, FLOOR))
+# Handrail down the east side (the pillar side has its own wall rail, 26_landmarks.py)
+b.handrail('stairs_east', SX1 - 0.3, -WALK - RISERS * TREAD, 0.0, -WALK, FLOOR)
 # (the west side joins the raised north level in front of Odegaard, 26_landmarks.py)
 
 # --- Fins: each is a tapered wedge, deep at the base, slimmer near the roof (photo 4730)
