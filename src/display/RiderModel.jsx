@@ -5,6 +5,9 @@ import { Matrix4, Quaternion, Vector3 } from 'three';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM } from './look.js';
 import { finish, walkPose, walkRate } from './choreo.js';
 import { MOCAP_BONES, loadMocap, locoClips, mocap, sampleClip } from './mocap.js';
+import { createRagdoll } from './ragdoll.js';
+import { RAGDOLL_BLEND, RAGDOLL_RADIUS } from './tuning.js';
+import { useRapier } from '@react-three/rapier';
 import { clamp, damp, smooth, urlParams } from './util.js';
 import { board } from '../state.js';
 import Skater from './Skater.jsx';
@@ -386,7 +389,7 @@ function RiderModel({ boardRef }) {
   const { scene } = useGLTF(MODEL_URL);
   const rig = useMemo(() => buildRig(scene), [scene]);
   const root = useRef(null);
-  const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE, locoPhase: 0, idleT: 0, groundOff: 0 });
+  const st = useRef({ crouch: 0.3, push: 0, open: 0, armOut: 0.3, lean: 0, land: 0, wasAir: false, fadeKey: null, fadeT: FADE, fadeLen: FADE, locoPhase: 0, idleT: 0, groundOff: 0 });
   useEffect(() => {
     loadMocap(rig.rest.Hips.p.y);
   }, [rig]);
@@ -417,6 +420,8 @@ function RiderModel({ boardRef }) {
     };
   }, [rig]);
   const solver = useMemo(() => makeSolver(rig, w, st.current), [rig, w]);
+  const { world, rapier } = useRapier();
+  const rag = useRef(null); // the ragdoll while it's alive: { doll, drive: [[bone, part, primLocal, secLocal]], hips }
 
   useFrame((state, rawDt) => {
     if (!root.current) return;
@@ -599,20 +604,31 @@ function RiderModel({ boardRef }) {
       if (wOff < 1) blendFrom(w.Qs, w.Ps, wOff, rig.names);
     }
 
-    // --- Crossfade on every change of state (FADE s from the last shown pose).
+    // --- Ragdoll bail: the physics bodies pose the skeleton instead (ragdoll.js).
+    const R = board.ragdoll;
+    if (R?.req && !rag.current) rag.current = startRagdoll(R);
+    if (rag.current && !R) {
+      rag.current.doll.destroy(); // back on foot: remove the bodies
+      rag.current = null;
+    }
+    if (rag.current) driveRagdoll(R, dt);
+
+    // --- Crossfade on every change of state (FADE s from the last shown pose; RAGDOLL_BLEND getting up from a
+    // ragdoll; none into one, which starts from the pose as it is).
     const names = rig.names;
-    const key = off ? off.state ?? 'off' : 'ride';
+    const key = rag.current ? 'ragdoll' : off ? off.state ?? 'off' : 'ride';
     if (key !== s.fadeKey) {
       if (s.fadeKey !== null) {
         for (const n of names) w.fadeQ[n].copy(w.lastQ[n]);
         w.fadeP.copy(w.lastP);
         s.fadeT = 0;
       }
+      s.fadeLen = key === 'ragdoll' ? 0 : s.fadeKey === 'ragdoll' ? RAGDOLL_BLEND : FADE;
       s.fadeKey = key;
     }
-    if (s.fadeT < FADE) {
+    if (s.fadeT < s.fadeLen) {
       s.fadeT += dt;
-      blendFrom(w.fadeQ, w.fadeP, smooth(Math.min(1, s.fadeT / FADE)), names);
+      blendFrom(w.fadeQ, w.fadeP, smooth(Math.min(1, s.fadeT / s.fadeLen)), names);
     }
     snapshot(w.lastQ, w.lastP, names);
 
@@ -646,6 +662,67 @@ function RiderModel({ boardRef }) {
       }
     }
   });
+
+  // Build the ragdoll from the skeleton as it is now (world space): capsules from joint to joint, a ball for each
+  // foot. Each posed bone remembers its direction and front in its body's frame, to be aimed from them later.
+  function startRagdoll(R) {
+    root.current.updateWorldMatrix(true, true);
+    const at = (n) => rig.bones[n].getWorldPosition(new Vector3());
+    const past = (a, b, d) => b.clone().add(b.clone().sub(a).normalize().multiplyScalar(d)); // d beyond b
+    const hips = at('Hips');
+    const up = at('Spine').sub(hips).normalize();
+    // Front of the body; a mirrored rider (goofy / switch) has its Left bones on the right.
+    const forward = new Vector3().crossVectors(at('LeftUpLeg').sub(at('RightUpLeg')), up).normalize().multiplyScalar(board.mirror ?? 1);
+    const r = RAGDOLL_RADIUS;
+    const parts = [
+      { key: 'pelvis', bone: 'Hips', a: hips, b: at('Spine'), r: r.pelvis },
+      { key: 'spine', bone: 'Spine', a: at('Spine'), b: at('Neck'), r: r.chest, parent: 'pelvis', joint: 'ball' },
+      { key: 'head', bone: 'Head', a: at('Head'), b: past(at('Neck'), at('Head'), 0.2), r: r.head, parent: 'spine', joint: 'ball' },
+    ];
+    for (const s of SIDE_NAMES) {
+      parts.push(
+        { key: s + 'Arm', bone: s + 'Arm', a: at(s + 'Arm'), b: at(s + 'ForeArm'), r: r.upperArm, parent: 'spine', joint: 'ball' },
+        { key: s + 'ForeArm', bone: s + 'ForeArm', a: at(s + 'ForeArm'), b: past(at(s + 'ForeArm'), at(s + 'Hand'), 0.08), r: r.foreArm, parent: s + 'Arm', joint: 'elbow' },
+        { key: s + 'UpLeg', bone: s + 'UpLeg', a: at(s + 'UpLeg'), b: at(s + 'Leg'), r: r.thigh, parent: 'pelvis', joint: 'ball' },
+        { key: s + 'Leg', bone: s + 'Leg', a: at(s + 'Leg'), b: at(s + 'Foot'), r: r.shin, parent: s + 'UpLeg', joint: 'knee', balls: [{ at: at(s + 'Foot').add(at(s + 'ToeBase')).multiplyScalar(0.5), r: r.foot }, { at: at(s + 'ToeBase'), r: r.toe }] },
+      );
+    }
+    const v = R.req.vel;
+    const doll = createRagdoll(world, rapier, { parts, forward, vel: new Vector3(v.x, v.y, v.z) });
+    R.req = null;
+    // Each posed bone's current direction and front (rider space, from the last shown pose) -> world -> body frame.
+    const M = root.current.matrixWorld;
+    const drive = parts.map((p) => {
+      const n = p.bone;
+      w.M.copy(rig.rest[n].basisT).transpose();
+      w.tmpQ.multiplyQuaternions(w.lastQ[n], rig.rest[n].qInv);
+      const prim = new Vector3().setFromMatrixColumn(w.M, 0).applyQuaternion(w.tmpQ).transformDirection(M);
+      const sec = new Vector3().setFromMatrixColumn(w.M, 1).applyQuaternion(w.tmpQ).transformDirection(M);
+      return [n, p.key, doll.dirIn(p.key, prim), doll.dirIn(p.key, sec)];
+    });
+    return { doll, drive, hips: doll.pointIn('pelvis', hips) };
+  }
+
+  // Pose the skeleton from the ragdoll: aim each driven bone along its body, the bones between keep their rest
+  // bend (so no bone ever stretches), and the hips go where the pelvis body is.
+  const AFTER = { Spine: ['Spine1', 'Spine2', 'Neck', 'LeftShoulder', 'RightShoulder'], LeftForeArm: ['LeftHand'], RightForeArm: ['RightHand'], LeftLeg: ['LeftFoot', 'LeftToeBase'], RightLeg: ['RightFoot', 'RightToeBase'] };
+  function driveRagdoll(R, dt) {
+    const { doll, drive, hips } = rag.current;
+    const { aim, follow } = solver;
+    root.current.updateWorldMatrix(true, false);
+    const inv = w.H.copy(root.current.matrixWorld).invert();
+    for (const [n, key, prim, sec] of drive) {
+      const pr = doll.dirOut(key, prim, w.prim).transformDirection(inv);
+      const sc = doll.dirOut(key, sec, w.sec).transformDirection(inv);
+      aim(n, pr, sc);
+      for (const f of AFTER[n] ?? []) follow(f);
+    }
+    const P = w.P;
+    doll.pointOut('pelvis', hips, w.target);
+    R.at = { x: w.target.x, y: w.target.y, z: w.target.z };
+    P.Hips.copy(w.target).applyMatrix4(inv);
+    if (doll.settled(dt)) R.done = true; // Skateboard puts you back on your feet; the bodies go next frame
+  }
 
   return (
     <group ref={root}>

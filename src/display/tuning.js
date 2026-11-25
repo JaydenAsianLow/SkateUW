@@ -63,6 +63,23 @@ export const BAIL_FAST = 6.5; // m/s: the most severe
 export const SLAM_AT = 0.45; // severity from which a trick bail is a slam instead of a stumble
 export const BOARD_DRAG = 1.3; // loose board: fraction of speed lost per second rolling on the ground
 
+// Ragdoll bails (Settings → Ragdoll falls; ragdoll.js). Capsule radii (m) per body part; the tumble is a random
+// spin (rad/s) added to the crash speed. It ends after lying still (pelvis slower than RAGDOLL_STILL_SPEED) for
+// RAGDOLL_STILL_TIME (the '2-3 s mostly stopped'), at least RAGDOLL_MIN_TIME after the crash and at most
+// RAGDOLL_MAX_TIME, then blends to
+// standing over RAGDOLL_BLEND.
+export const RAGDOLL_RADIUS = { pelvis: 0.13, chest: 0.14, head: 0.1, upperArm: 0.05, foreArm: 0.045, thigh: 0.075, shin: 0.055, foot: 0.05, toe: 0.04 };
+export const RAGDOLL_TUMBLE = 2.5;
+export const RAGDOLL_KNEE_MAX = 2.4; // rad the knee can bend (it can't bend the other way)
+export const RAGDOLL_ELBOW_MAX = 2.5;
+export const RAGDOLL_DAMPING = { linear: 0.05, angular: 0.8 };
+export const RAGDOLL_FRICTION = 0.9;
+export const RAGDOLL_STILL_SPEED = 0.25;
+export const RAGDOLL_STILL_TIME = 2.0;
+export const RAGDOLL_MIN_TIME = 1.0;
+export const RAGDOLL_MAX_TIME = 7.0;
+export const RAGDOLL_BLEND = 0.5;
+
 // ---------- On foot ----------
 // Get off on the phone / B, or after a bail: the phone shows a joystick, moving relative to the camera.
 // The stick is smoothed (~0.1 s), has a 15% dead zone and a squared response: precise near the centre, a run only

@@ -8,6 +8,7 @@ import { commands, settings, updateSettings } from '../settings.js';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
+import { NOT_RAGDOLL, PLAYER_GROUPS } from './ragdoll.js';
 import { mocap, runTopSpeed } from './mocap.js';
 import { clamp, clamp01, damp, urlParams, wrapAngle } from './util.js';
 import {
@@ -143,7 +144,7 @@ export default function Skateboard() {
     ray.origin.x = x;
     ray.origin.y = y;
     ray.origin.z = z;
-    const hit = world.castRay(ray, max, true, undefined, undefined, undefined, rb);
+    const hit = world.castRay(ray, max, true, undefined, NOT_RAGDOLL, undefined, rb);
     return hit ? hit.timeOfImpact : Infinity;
   };
 
@@ -170,6 +171,13 @@ export default function Skateboard() {
     Object.assign(st, { pushLeft: 0, pushT: -1, popT: -1, trick: null, revert: null, air: false, manualT: 0, manual: 0 });
     board.trick = { name: k === 'slam' ? 'SLAM' : 'BAIL', at: performance.now() };
     haptic('bail');
+    // Ragdoll falls: physics takes the body from here (RiderModel), carrying on with the crash speed.
+    st.ragdoll = settings.ragdoll === 'on';
+    if (st.ragdoll) {
+      const v = rb.linvel();
+      st.track = null;
+      board.ragdoll = { req: { vel: { x: -Math.sin(st.heading) * speed, y: v.y, z: -Math.cos(st.heading) * speed } }, at: null, done: false };
+    }
     const p = rb.translation();
     const fx = -Math.sin(st.heading);
     const fz = -Math.cos(st.heading);
@@ -233,7 +241,7 @@ export default function Skateboard() {
       wallRay.dir.x = L.vx / sp;
       wallRay.dir.y = 0;
       wallRay.dir.z = L.vz / sp;
-      const hit = world.castRayAndGetNormal(wallRay, sp * dt + 0.25, true, undefined, undefined, undefined, rb);
+      const hit = world.castRayAndGetNormal(wallRay, sp * dt + 0.25, true, undefined, NOT_RAGDOLL, undefined, rb);
       if (hit) {
         const n = hit.normal;
         const d = L.vx * n.x + L.vz * n.z;
@@ -461,7 +469,8 @@ export default function Skateboard() {
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rb.setGravityScale(1, true);
       Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, swap: false, air: false, airT: 0, pushT: -1 });
-      Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0, jumpT: -1, landT: 0, caveman: false });
+      Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0, jumpT: -1, landT: 0, caveman: false, ragdoll: false });
+      board.ragdoll = null;
       board.pose = null;
       return;
     }
@@ -530,6 +539,19 @@ export default function Skateboard() {
           if (left >= CAVEMAN_MIN_LEAD && left <= CAVEMAN_MAX_LEAD) startCaveman(left);
           else dropBoard(rb, left < CAVEMAN_MIN_LEAD ? 'TOO LATE' : 'TOO EARLY');
         } else if (carryReq && v.y > -1) startMount(true); // Get on: drop the board and step on
+      } else if (st.ragdoll) {
+        // Ragdoll bail: the body (and so the camera) follows the ragdoll's hips along the ground. Once it has lain
+        // still (RiderModel sets done) you're back on your feet there, and walk to the board.
+        const R = board.ragdoll;
+        if (R?.at) {
+          const g = probe(rb, R.at.x, R.at.y + 0.5, R.at.z, 6);
+          rb.setTranslation({ x: R.at.x, y: Number.isFinite(g) ? R.at.y + 0.5 - g + HALF.y : p.y, z: R.at.z }, true);
+        }
+        if (!R || R.done) {
+          if (st.stance === 1) (st.heading += Math.PI), (st.stance = 0);
+          Object.assign(st, { ragdoll: false, mode: 'walk', modeT: 0, walkSpeed: 0, walkPhase: 0, offSpeed: 0, turnVel: 0 });
+          board.ragdoll = null;
+        }
       } else {
         // Playing a track (bail, stepping off, stepping on): slide along with what speed is left, plus root motion.
         st.offSpeed *= Math.exp(-st.offDrag * dt);
@@ -571,8 +593,8 @@ export default function Skateboard() {
 
       const fx = -Math.sin(st.heading);
       const fz = -Math.cos(st.heading);
-      rb.setGravityScale(1, true);
-      setVelocity(rb, fx * fwdSpeed + latX, jumpVy ?? v.y, fz * fwdSpeed + latZ);
+      rb.setGravityScale(st.ragdoll ? 0 : 1, true);
+      setVelocity(rb, fx * fwdSpeed + latX, st.ragdoll ? 0 : jumpVy ?? v.y, fz * fwdSpeed + latZ);
       setHeading(rb, st.heading);
 
       // Pose for the rider, board placement.
@@ -581,7 +603,7 @@ export default function Skateboard() {
       if (st.track) {
         pose = evalTrack(st.track, st.modeT);
         w = trackWeight(st.track, st.modeT);
-      } else if (st.mode !== 'ride') {
+      } else if (st.mode !== 'ride' && !st.ragdoll) {
         pose = finish(walkPose(st.walkPhase, st.walkSpeed, !st.loose, turn));
       }
       // Jump: knees tuck up through the air, then a short crouch on landing (posed: there's no jump clip).
@@ -886,7 +908,7 @@ export default function Skateboard() {
       mass={4}
       ccd
     >
-      <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} />
+      <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} collisionGroups={PLAYER_GROUPS} />
       <group ref={stanceG}>
         <group ref={boardG}>
           <group ref={shoveG} position={[0, -HALF.y, 0]}>

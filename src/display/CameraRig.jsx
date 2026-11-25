@@ -5,6 +5,7 @@ import { Vector3 } from 'three';
 import { board } from '../state.js';
 import { settings } from '../settings.js';
 import { SUN_DIR, sunView } from './look.js';
+import { NOT_RAGDOLL } from './ragdoll.js';
 import { smooth, urlParams } from './util.js';
 import {
   CAM_CLEAR_FROM, CAM_CLIP_PAD, CAM_DISTANCE, CAM_FOLLOW, CAM_HEIGHT, CAM_LOOK_AHEAD, CAM_LOOK_RIGHT, CAM_LOOK_Y, CAM_MAX_ROLL, CAM_MIN_DISTANCE,
@@ -142,7 +143,7 @@ export default function CameraRig() {
       ray.dir.x = (cam.x - eye.x) / dist;
       ray.dir.y = (cam.y - eye.y) / dist;
       ray.dir.z = (cam.z - eye.z) / dist;
-      const hit = world.castRay(ray, dist + CAM_CLIP_PAD, true);
+      const hit = world.castRay(ray, dist + CAM_CLIP_PAD, true, undefined, NOT_RAGDOLL);
       if (hit) keep = Math.min(keep, Math.max(Math.min(CAM_MIN_DISTANCE, dist), hit.timeOfImpact - CAM_CLIP_PAD) / dist);
     }
     // Pull in along the line from the head, so the camera stays above the rider.
