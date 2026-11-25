@@ -9,13 +9,14 @@
 //    gesture = 50-50; a half circle given up halfway in the window, or any half circle after it, = bail.
 //  - Short lines (< GRIND_LONG) ride to the end by themselves. Long ones need balancing (tilt the phone) and get the
 //    side camera.
-//  - At the end you pop off and land rolling; an ollie gets you out early.
+//  - At the end you pop off and land rolling; an ollie gets you out early. Locked on slowly (under GRIND_HOP_SPEED)
+//    it's a short hop on, hop off; any grind slower than GRIND_MIN_SPEED for GRIND_SLOW_TIME hops off. Never stuck.
 import { clamp01 } from '../util.js';
 import { RAIL_R } from '../redSquare/bars.js';
 import {
   GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
   GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_SPEED, GRIND_MIN_ENTRY, GRIND_SQUARE_KEEP,
-  GRIND_MIN_SPEED, GRIND_NEAR, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
+  GRIND_HOP_DIST, GRIND_HOP_SLIDE, GRIND_HOP_SPEED, GRIND_SLOW_TIME, GRIND_MIN_SPEED, GRIND_NEAR, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
 } from '../tuning.js';
 
 // Point and unit tangent at distance s along a line's path.
@@ -162,7 +163,7 @@ export function seat(g, half) {
 
 // popAt: when the ollie that got you here popped (performance.now() ms), or null if you rolled / rode on.
 export function startGrind(hit, center, half, now, popAt = null) {
-  const g = { line: hit.line, s: hit.s, dir: hit.dir, speed: hit.along, t: 0, kind: '5050', decided: false, lockAt: now, popAt, snapT: 0, bal: null, slideSign: 1 };
+  const g = { line: hit.line, s: hit.s, dir: hit.dir, speed: hit.along, t: 0, kind: '5050', decided: false, lockAt: now, popAt, snapT: 0, bal: null, slideSign: 1, hop: hit.along < GRIND_HOP_SPEED };
   const { c } = seat(g, half);
   g.offset = [center[0] - c[0], center[1] - c[1], center[2] - c[2]];
   return g;
@@ -200,9 +201,15 @@ export function stepGrind(g, dt, inp, half) {
   const down = -here.t[1] * g.dir; // sine of the slope, + going downhill
   g.speed += GRAVITY * GRIND_SLOPE * down * dt;
   g.speed *= 1 - GRIND_DRAG[line.type] * (g.kind === 'boardslide' ? GRIND_BOARDSLIDE_DRAG : 1) * dt;
-  g.speed = Math.min(GRIND_MAX_SPEED, g.speed);
-  if (g.speed < GRIND_MIN_SPEED) return { end: 'stall' };
+  g.speed = Math.max(0, Math.min(GRIND_MAX_SPEED, g.speed));
+  // Never stuck on a line: locked on slowly, it's a short hop on, hop off (slide GRIND_HOP_DIST, then off to the
+  // side, landing rolling); and any grind that stays slower than GRIND_MIN_SPEED for GRIND_SLOW_TIME hops off too.
+  if (g.hop) g.speed = Math.max(g.speed, GRIND_HOP_SLIDE);
+  g.slowT = g.speed < GRIND_MIN_SPEED ? (g.slowT ?? 0) + dt : 0;
+  if (g.slowT >= GRIND_SLOW_TIME) return { end: 'stall' };
   g.s += g.dir * g.speed * dt;
+  g.went = (g.went ?? 0) + g.speed * dt;
+  if (g.hop && g.went >= GRIND_HOP_DIST) return { end: 'stall' };
   if (inp.ollie) return { end: 'ollie' };
   if (g.s <= 0 || g.s >= line.length) {
     g.s = Math.max(0, Math.min(line.length, g.s));

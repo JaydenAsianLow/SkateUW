@@ -19,7 +19,7 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
+  TURN_RATE, HILL_ASSIST, HILL_ASSIST_MAX_DEG, GRIND_EXIT_LIFT, GRIND_HOP_ROLL, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
 import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, nearest, startGrind, stepGrind } from './grind/grinding.js';
@@ -211,7 +211,8 @@ export default function Skateboard() {
     }
     const { t } = at(g.line, g.s);
     const h = Math.hypot(t[0], t[2]) || 1;
-    const speed = g.speed;
+    // Hopping off a slow or blocked grind you still land rolling.
+    const speed = end === 'stall' ? Math.max(g.speed, GRIND_HOP_ROLL) : g.speed;
     let vx = ((t[0] * g.dir) / h) * speed;
     let vz = ((t[2] * g.dir) / h) * speed;
     let vy = Math.min(0, t[1] * g.dir * speed);
@@ -228,6 +229,10 @@ export default function Skateboard() {
       vx = vx * keep + sx * 1.6;
       vz = vz * keep + sz * 1.6;
       vy = Math.max(vy, 0) + 2.2;
+      // and roll away from the line afterwards (turned ~25 degrees off it), not along it to lock on again
+      const fx = (t[0] * g.dir) / h, fz = (t[2] * g.dir) / h;
+      st.heading = Math.atan2(-(fx + sx * 0.47), -(fz + sz * 0.47));
+      setHeading(rb, st.heading);
     }
     setVelocity(rb, vx, vy, vz);
     st.slideYaw = 0;
