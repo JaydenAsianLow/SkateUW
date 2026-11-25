@@ -63,7 +63,7 @@ export default function CameraRig() {
   const angle = useRef(0); // camera swing toward the side during a manual (rad)
   const first = useRef(true);
   const sw = useRef({ view: settings.camera, from: null, t: 1 }); // view switch in progress
-  const gc = useRef({ w: 0, id: null, side: 1, tx: 0, tz: -1 }); // long-grind side camera: blend weight, line, side
+  const gc = useRef({ w: 0, id: null, side: 1, tx: 0, tz: -1 }); // grind side camera: blend weight, line, side
 
   useFrame(({ camera, scene }, rawDt) => {
     const dt = Math.min(rawDt, 0.1); // real time, like the physics, so the speed lead below stays exact
@@ -109,15 +109,17 @@ export default function CameraRig() {
       target.current.lerp(fromPos, 1 - k);
       aim.lerp(fromAim, 1 - k);
     }
-    // Long grind: swing out to the side of the line, and back afterwards.
+    // Any grind (50-50 or boardslide, short or long): swing out to the side of the line over GRIND_CAM.time, track
+    // the skater along it, and swing back over the same time when the grind ends. The side with more room is picked
+    // once per line; the wall check below (keepClear) keeps it out of buildings, pillars and stairs.
     const g = board.grind;
     const G = gc.current;
-    G.w += ((g?.long ? 1 : 0) - G.w) * (1 - Math.exp(-GRIND_CAM.blend * dt));
-    if (g?.long) {
+    G.w = Math.min(1, Math.max(0, G.w + (g ? dt : -dt) / GRIND_CAM.time));
+    if (g) {
       if (G.id !== g.id) (G.id = g.id), (G.side = roomierSide(p, -g.tz, g.tx));
       (G.tx = g.tx), (G.tz = g.tz);
-    } else if (!g) G.id = null;
-    if (G.w > 0.002) {
+    } else G.id = null;
+    if (G.w > 0) {
       const px = -G.tz * G.side, pz = G.tx * G.side;
       sidePos.set(p.x + px * GRIND_CAM.distance - G.tx * GRIND_CAM.back, p.y + GRIND_CAM.height, p.z + pz * GRIND_CAM.distance - G.tz * GRIND_CAM.back);
       sideAim.set(p.x + G.tx * GRIND_CAM.ahead, p.y + 0.5, p.z + G.tz * GRIND_CAM.ahead);
@@ -148,17 +150,23 @@ export default function CameraRig() {
     updateSunView(camera);
   });
 
-  // Which side of the line has more open space (for the grind camera): +1 or -1 along (px, pz).
+  // Which side of the line has more open space (for the grind camera): +1 or -1 along (px, pz). Rays out to each
+  // side from just under the board up to camera height (a wall beside a handrail can be lower than the board); the
+  // nearest hit counts. They start 0.2 m out so the rail's own solid wall underneath doesn't count.
   function roomierSide(p, px, pz) {
     const room = (sg) => {
-      ray.origin.x = p.x;
-      ray.origin.y = p.y + GRIND_CAM.height;
-      ray.origin.z = p.z;
-      ray.dir.x = px * sg;
-      ray.dir.y = 0;
-      ray.dir.z = pz * sg;
-      const hit = world.castRay(ray, GRIND_CAM.distance + 2, true, undefined, NOT_RAGDOLL);
-      return hit ? hit.timeOfImpact : Infinity;
+      let d = Infinity;
+      for (const h of [-0.25, 0.4, GRIND_CAM.height]) {
+        ray.origin.x = p.x + px * sg * 0.2;
+        ray.origin.y = p.y + h;
+        ray.origin.z = p.z + pz * sg * 0.2;
+        ray.dir.x = px * sg;
+        ray.dir.y = 0;
+        ray.dir.z = pz * sg;
+        const hit = world.castRay(ray, GRIND_CAM.distance + 2, true, undefined, NOT_RAGDOLL);
+        if (hit) d = Math.min(d, hit.timeOfImpact);
+      }
+      return d;
     };
     return room(1) >= room(-1) ? 1 : -1;
   }

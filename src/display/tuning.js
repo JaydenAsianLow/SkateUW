@@ -185,9 +185,10 @@ export const GRIND_BALANCE = {
   '5050': { drift: 0.8, swing: 0.2, zone: 0.14, tolerance: 0.9, sway: 0.08 },
   boardslide: { drift: 1.0, swing: 0.22, zone: 0.12, tolerance: 0.8, sway: 0.1 },
 };
-// Side camera on long grinds: out to the side of the line (the side with more room), a bit behind, looking ahead.
-// It blends in and back out at `blend` (1/s); the usual wall check keeps it out of buildings.
-export const GRIND_CAM = { distance: 4.2, height: 1.3, back: 1.0, ahead: 1.6, blend: 3 };
+// Side camera on every grind: out to the side of the line (the side with more room), a bit behind, looking ahead.
+// It eases in over `time` s when you lock on and back out over the same when you leave; the usual wall check keeps
+// it out of buildings, pillars and stairs.
+export const GRIND_CAM = { distance: 4.2, height: 1.3, back: 1.0, ahead: 1.6, time: 0.4 };
 // Riding up to a curb's edge (no ollie): locks on when the board is this close (m), within this angle of the curb
 // (degrees, a shallow approach) and moving toward it. Only for edges up to GRIND_CURB_MAX high; taller needs an ollie.
 export const GRIND_CURB_ANGLE = 25;
