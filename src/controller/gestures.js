@@ -163,7 +163,9 @@ export function createStrokeTracker({ onSegment, onArc, onPartialArc, minSegPx =
 const power = (speed) => clamp(0.8 + (speed - 0.3) * 0.4, 0.75, 1.3);
 
 // pointers() -> [{ id, holding }] for every finger currently on the deck (holding = resting still).
-export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial, onStage, pointers }) {
+// timers / now: the clock (the Controls guide's demos run the reader on their own virtual clock).
+const REAL_TIMERS = { set: (fn, ms) => setTimeout(fn, ms), clear: (id) => clearTimeout(id) };
+export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial, onStage, pointers, timers = REAL_TIMERS, now = () => performance.now() }) {
   let stage = 'idle'; // 'idle' | 'down' | 'up' | 'pop'
   let lastT = -Infinity;
   let popT = -Infinity;
@@ -172,7 +174,6 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial,
   let arcs = [];
   let flickTimer = 0;
   let arcTimer = 0;
-  const now = () => performance.now();
   const inPop = (win) => stage === 'pop' && now() - popT < win;
   const setStage = (s) => {
     stage = s;
@@ -182,7 +183,7 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial,
   const partnerPossible = (ids) => pointers().some((p) => !ids.has(p.id) && !p.holding);
 
   function resolveFlicks() {
-    clearTimeout(flickTimer);
+    timers.clear(flickTimer);
     const list = flicks;
     flicks = [];
     if (!list.length) return;
@@ -212,13 +213,13 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial,
   function queueFlick(ev) {
     flicks.push(ev);
     const ids = new Set(flicks.map((f) => f.id));
-    clearTimeout(flickTimer);
+    timers.clear(flickTimer);
     if (ids.size >= 2 || !partnerPossible(ids)) resolveFlicks();
-    else flickTimer = setTimeout(resolveFlicks, MULTI_MS);
+    else flickTimer = timers.set(resolveFlicks, MULTI_MS);
   }
 
   function resolveArcs() {
-    clearTimeout(arcTimer);
+    timers.clear(arcTimer);
     const list = arcs;
     arcs = [];
     if (!list.length) return;
@@ -273,9 +274,9 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onPartial,
     arc(ev) {
       arcs.push(ev);
       const ids = new Set(arcs.map((a) => a.id));
-      clearTimeout(arcTimer);
+      timers.clear(arcTimer);
       if (ids.size >= 2 || !partnerPossible(ids)) resolveArcs();
-      else arcTimer = setTimeout(resolveArcs, MULTI_MS * 1.5);
+      else arcTimer = timers.set(resolveArcs, MULTI_MS * 1.5);
     },
   };
 }

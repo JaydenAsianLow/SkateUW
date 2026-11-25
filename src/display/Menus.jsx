@@ -14,20 +14,20 @@ const blurAfter = (fn) => (e) => {
   fn();
 };
 
-// Title screen: Play / Controls / Settings, over the dimmed level.
-export function MainMenu({ onPlay }) {
-  const [panel, setPanel] = useState(null); // 'controls' | 'settings' | null
+// Title screen: Play / Controls / Settings, over the dimmed level. Controls opens the Controls guide (guide/).
+export function MainMenu({ onPlay, onControls }) {
+  const [panel, setPanel] = useState(null); // 'settings' | null
   if (panel) {
     return (
       <div className="screen">
         <div className="menu-card wide">
           <div className="menu-head">
-            <h2>{panel === 'controls' ? 'Controls' : 'Settings'}</h2>
+            <h2>Settings</h2>
             <button className="menu-btn small" onClick={blurAfter(() => setPanel(null))}>
               Back
             </button>
           </div>
-          {panel === 'controls' ? <ControlsList /> : <SettingsPanel />}
+          <SettingsPanel />
         </div>
       </div>
     );
@@ -43,7 +43,7 @@ export function MainMenu({ onPlay }) {
           <button className="menu-btn primary" onClick={blurAfter(onPlay)} autoFocus>
             Play
           </button>
-          <button className="menu-btn" onClick={blurAfter(() => setPanel('controls'))}>
+          <button className="menu-btn" onClick={blurAfter(onControls)}>
             Controls
           </button>
           <button className="menu-btn" onClick={blurAfter(() => setPanel('settings'))}>

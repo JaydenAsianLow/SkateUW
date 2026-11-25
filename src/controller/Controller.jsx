@@ -7,6 +7,7 @@ import { CHOICES, CHOICE_UI } from '../shared.js';
 import { MOVES } from '../moves.js';
 import { tiltToLean, tiltToSteer } from '../steering.js';
 import SteerPreview from '../SteerPreview.jsx';
+import ControlsGuide from '../guide/ControlsGuide.jsx';
 import { SWIPE_MIN } from '../display/tuning.js';
 
 const SEND_HZ = 50;
@@ -39,6 +40,7 @@ export default function Controller() {
   const tilt = useRef({ steer: 0, lean: 0 }); // latest shaped tilt, read every frame by the on-screen board
   const [shared, setShared] = useState(null); // shared settings from the laptop (shared.js), null until it sends them
   const [showSettings, setShowSettings] = useState(false);
+  const [showGuide, setShowGuide] = useState(false); // the Controls guide, on the phone's own screen
   const [vibrate, setVib] = useState(vibrateOn());
   const sharedRef = useRef(null); // the same, for the 50 Hz tilt loop
   sharedRef.current = shared;
@@ -225,10 +227,14 @@ export default function Controller() {
         <span className="pill muted">
           {displays > 0 ? `${displays} screen${displays > 1 ? 's' : ''}` : 'no screen open'}
         </span>
+        <button className="pill gear guide-pill" onClick={() => setShowGuide(true)}>
+          Controls
+        </button>
         <button className="pill gear" onClick={() => setShowSettings(true)}>
           Settings
         </button>
       </header>
+      {showGuide && <ControlsGuide where="phone" onClose={() => setShowGuide(false)} />}
       {showSettings && (
         <PhoneSettings shared={shared} socketRef={socketRef} onClose={() => setShowSettings(false)}>
           {started && offset.current && <SteerPreview read={() => tilt.current} />}
@@ -287,6 +293,9 @@ export default function Controller() {
           <button className="big" onClick={start}>
             Drop in
           </button>
+          <button className="secondary guide-open" onClick={() => setShowGuide(true)}>
+            See how each move works
+          </button>
           {error && <p className="error">{error}</p>}
         </div>
       ) : calState !== 'done' && !offset.current ? (
@@ -331,7 +340,7 @@ export default function Controller() {
   );
 }
 
-const TRICK_LABEL = {
+export const TRICK_LABEL = {
   kickflip: 'KICKFLIP',
   varial: 'VARIAL FLIP',
   tre: 'TRE FLIP',
@@ -345,7 +354,7 @@ const LOCAL_YAW = 0.14; // nose swings into the turn
 const LOCAL_MANUAL = 0.42; // nose up on the tail
 const LOCAL_NOSE_MANUAL = 0.25; // nose down
 const LOCAL_FOLLOW = 0.2; // per frame
-const STAGE_PIPS = { idle: 0, down: 1, up: 1, pop: 2, trick: 3 };
+export const STAGE_PIPS = { idle: 0, down: 1, up: 1, pop: 2, trick: 3 };
 const TRAIL_MS = 350;
 const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
@@ -763,7 +772,7 @@ function Joystick({ stickRef, hint, flash }) {
 
 // A skateboard built from layers in CSS 3D: grip on top, maple plies for thickness, graphic + trucks underneath.
 const PLIES = [1.5, 3, 4.5, 6, 7.5];
-const Board3D = forwardRef(function Board3D(_, ref) {
+export const Board3D = forwardRef(function Board3D(_, ref) {
   return (
     <div ref={ref} className="board3d">
       {PLIES.map((z, i) => (

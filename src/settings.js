@@ -5,6 +5,8 @@
 import { SHARED_DEFAULTS, sharedOnly } from './shared.js';
 
 const STORE_KEY = 'skate.settings.v1';
+// The Controls guide's demo scene (/?demo, guide/DemoStage.jsx) plays with the defaults and never saves anything.
+const DEMO = new URLSearchParams(globalThis.location?.search ?? '').has('demo');
 
 export const AIRTIME_MIN = 1;
 export const AIRTIME_MAX = 2.5;
@@ -19,7 +21,7 @@ const DEFAULTS = {
 
 export const settings = { ...DEFAULTS };
 try {
-  const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null');
+  const saved = DEMO ? null : JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null');
   if (saved && typeof saved === 'object') Object.assign(settings, saved);
 } catch {
   /* unreadable or blocked storage: use defaults */
@@ -38,7 +40,7 @@ export const onSettings = (fn) => (listeners.add(fn), () => listeners.delete(fn)
 export function updateSettings(patch) {
   Object.assign(settings, patch);
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(settings));
+    if (!DEMO) localStorage.setItem(STORE_KEY, JSON.stringify(settings));
   } catch {
     /* not saved, still applies this session */
   }

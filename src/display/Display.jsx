@@ -6,6 +6,7 @@ import { connect, displayRoom } from '../socket.js';
 import { board, game, haptics, phone, net, phoneIsLive } from '../state.js';
 import { commands, onSettings, settings, updateSettings } from '../settings.js';
 import { cleanSetting, sharedOnly } from '../shared.js';
+import { PHONE_EVENTS, applyPhoneEvent } from '../phoneEvents.js';
 import World from './World.jsx';
 import Skateboard from './Skateboard.jsx';
 import RayCheck from './RayCheck.jsx';
@@ -15,7 +16,8 @@ import { GRAVITY } from './tuning.js';
 import CameraRig from './CameraRig.jsx';
 import Effects from './Effects.jsx';
 import Hud from './Hud.jsx';
-import { MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
+import { ControlsList, MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
+import ControlsGuide from '../guide/ControlsGuide.jsx';
 import { urlParams } from './util.js';
 
 // Keyboard fallback so the scene can be tested without a phone.
@@ -63,6 +65,7 @@ function usePhoneStatus() {
 export default function Display() {
   const [screen, setScreen] = useState(SKIP_MENU ? 'play' : 'menu'); // 'menu' | 'pair' | 'play'
   const [keyboard, setKeyboard] = useState(SKIP_MENU);
+  const [guide, setGuide] = useState(false); // the Controls guide is open: the game pauses and stops drawing
   const status = usePhoneStatus();
   // Only call the phone lost after a short grace period, so Wi-Fi blips don't flash the red card.
   const [lostLong, setLostLong] = useState(false);
@@ -74,7 +77,7 @@ export default function Display() {
     return () => clearTimeout(t);
   }, [waiting]);
   const phoneLost = waiting && lostLong;
-  const running = screen === 'play' && !phoneLost;
+  const running = screen === 'play' && !phoneLost && !guide;
   // Shared with the 3D scene; set after render (before the next frame) rather than during it.
   useLayoutEffect(() => {
     game.running = running;
@@ -104,20 +107,12 @@ export default function Display() {
       phone.lastUpdate = performance.now();
       phone.packets++;
     });
-    s.on('push', (d) => (phone.pushQueued = Math.min(3, phone.pushQueued + (d?.power ?? 1))));
-    s.on('pop', (d) => ((phone.popQueued = d?.power ?? 1), (phone.popNose = d?.nose === true)));
     s.on('setting', (d) => {
       const value = cleanSetting(d?.key, d?.value);
       if (value !== undefined) updateSettings({ [d.key]: value });
     });
-    s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
-    s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
-    s.on('partial', () => (phone.partialQueued = true));
-    s.on('grindTap', () => (phone.tapQueued = true));
-    s.on('reset', () => (phone.resetQueued = true));
-    s.on('carry', () => (phone.carryQueued = true));
-    s.on('jump', () => (phone.jumpQueued = true));
-    s.on('setSpawn', () => (commands.setSpawn = true));
+    // Moves (push, pop, trick, ...): the same handler the Controls guide's demos use (phoneEvents.js).
+    for (const ev of PHONE_EVENTS) s.on(ev, (d) => applyPhoneEvent(ev, d));
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
       // Only while actually playing, so a second laptop tab (menu, paused) never contradicts the game's state.
@@ -163,6 +158,7 @@ export default function Display() {
     <KeyboardControls map={keyMap}>
       <div className="display">
         <Canvas
+          frameloop={guide ? 'never' : 'always'} // hidden behind the guide: don't spend the GPU on it
           shadows="percentage" // PCF: what three.js uses anyway since it dropped PCFSoft (no console warning)
           flat
           dpr={[1, 1.5]} // above 1.5x the GPU cost grows ~4x for a barely visible gain on a laptop screen
@@ -190,8 +186,8 @@ export default function Display() {
           </Suspense>
         </Canvas>
         {CLEAN ? null : <>
-        {screen === 'play' && <Hud onMenu={toMenu} />}
-        {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} />}
+        {screen === 'play' && <Hud onMenu={toMenu} onControls={() => setGuide(true)} />}
+        {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} onControls={() => setGuide(true)} />}
         {screen === 'pair' && (
           <PairScreen
             status={status}
@@ -203,10 +199,23 @@ export default function Display() {
           />
         )}
         {phoneLost && <PhoneLost status={status} onMenu={toMenu} />}
+        {guide && (
+          <ControlsGuide onClose={() => setGuide(false)} footer={<AllKeys />} />
+        )}
         </>}
         {/* ODbL attribution for the OpenStreetMap layout (MAP.md §6). Always visible. */}
         <div className="osm-credit">Red Square, UW · Map data © OpenStreetMap contributors</div>
       </div>
     </KeyboardControls>
+  );
+}
+
+// The whole list as text, at the bottom of the guide (phone moves and keyboard keys).
+function AllKeys() {
+  return (
+    <details className="guide-list">
+      <summary>Every control as a list</summary>
+      <ControlsList />
+    </details>
   );
 }

@@ -1,0 +1,75 @@
+/* Controls guide: same look as the menus (warm dark glass, cream italic titles with the purple drop, accent gold). */
+.guide {
+  --g-text: #fff2d6; --g-muted: #c9ae93; --g-accent: #f7c47c; --g-line: rgba(255, 242, 214, 0.12);
+  --g-card: rgba(255, 242, 214, 0.05); --g-ink: #1a0d0a;
+  position: fixed; inset: 0; z-index: 900; display: flex; justify-content: center; color: var(--g-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background:
+    radial-gradient(90% 60% at 85% -10%, rgba(255, 182, 107, 0.22), transparent 65%),
+    radial-gradient(70% 50% at -10% 110%, rgba(255, 61, 127, 0.12), transparent 60%),
+    rgba(18, 10, 8, 0.94);
+  backdrop-filter: blur(10px);
+  touch-action: auto; user-select: none;
+}
+.guide-inner { width: min(1120px, 100%); display: flex; flex-direction: column; min-height: 0; padding: 22px 24px 0; }
+.guide-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--g-line); }
+.guide-head h2 {
+  margin: 0; font: italic 900 clamp(30px, 4vw, 44px)/1 system-ui, sans-serif; letter-spacing: 2px; color: var(--g-text);
+  text-shadow: 0 0 24px rgba(255, 182, 107, 0.4), 0 4px 0 #4b2e83;
+}
+.guide-head p { margin: 8px 0 0; color: var(--g-muted); font-size: 14px; }
+.guide-close {
+  flex: none; width: 40px; height: 40px; border-radius: 12px; font-size: 18px; font-weight: 700;
+  background: rgba(255, 242, 214, 0.06); border: 1px solid var(--g-line); color: var(--g-text);
+}
+.guide-close:hover, .guide-close:focus-visible { border-color: var(--g-accent); color: var(--g-accent); outline: none; }
+.guide-scroll { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; padding: 4px 2px 28px; overscroll-behavior: contain; scrollbar-width: thin; }
+.guide-group h3 {
+  margin: 22px 0 10px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: 0.22em; text-transform: uppercase; color: var(--g-accent);
+}
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 12px; }
+.guide-card {
+  position: relative; display: grid; grid-template-rows: auto auto; gap: 8px 6px; grid-template-columns: 1fr auto; align-items: center;
+  padding: 8px 8px 10px; border-radius: 14px; text-align: left; color: var(--g-text);
+  background: var(--g-card); border: 1px solid var(--g-line);
+  transition: transform 90ms, border-color 120ms, background 120ms;
+}
+.guide-card:hover, .guide-card:focus-visible { transform: translateY(-2px); border-color: rgba(247, 196, 124, 0.6); background: rgba(255, 242, 214, 0.08); outline: none; }
+.guide-card .card-clip { grid-column: 1 / -1; }
+.card-name { font-weight: 800; font-size: 15px; line-height: 1.15; letter-spacing: 0.02em; padding-left: 2px; min-width: 0; overflow-wrap: anywhere; }
+
+/* A recorded clip (sprite sheet) at 16:10; a soft shimmer while it's still being recorded. */
+.clip { display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 10px; background-color: #2a1812; background-repeat: no-repeat; overflow: hidden; }
+.clip.loading {
+  background: linear-gradient(100deg, rgba(255, 242, 214, 0.03) 30%, rgba(255, 242, 214, 0.1) 50%, rgba(255, 242, 214, 0.03) 70%) 0 0 / 300% 100%, #2a1812;
+  animation: clip-shimmer 1.4s linear infinite;
+}
+@keyframes clip-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+
+/* Input tags: one colour per kind of input */
+.input-tag {
+  justify-self: end; padding: 3px 7px; border-radius: 6px; font: 900 10px/1 system-ui, sans-serif; letter-spacing: 0.08em; white-space: nowrap;
+  color: var(--g-ink); background: var(--g-accent);
+}
+.input-tag.tilt { background: #7fd6c2; }
+.input-tag.tap { background: #ffb15a; }
+.input-tag.swipe { background: #ff8aa8; }
+.input-tag.arc { background: #c3a3ff; }
+.input-tag.stick { background: #8fc7ff; }
+
+/* Phone page: full screen, smaller cards, two columns */
+.guide.phone .guide-inner { padding: max(14px, env(safe-area-inset-top)) 14px 0; }
+.guide.phone .guide-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.guide.phone .card-name { font-size: 13.5px; }
+@media (max-width: 520px) {
+  .guide-inner { padding: 14px 14px 0; }
+  .guide-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .guide-card { grid-template-columns: 1fr; padding: 6px 6px 9px; }
+  .guide-card .input-tag { justify-self: start; }
+  .card-name { font-size: 13.5px; }
+}
+
+/* "Every control as a list" (laptop): the old text list, folded away at the bottom */
+.guide-list { margin-top: 26px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--g-line); background: rgba(255, 242, 214, 0.03); }
+.guide-list summary { cursor: pointer; font-weight: 700; color: var(--g-muted); }
+.guide-list[open] summary { margin-bottom: 12px; color: var(--g-text); }

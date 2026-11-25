@@ -387,3 +387,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .tap-btn.miss { animation: tap-btn-miss 0.45s ease-out; }
 @keyframes tap-btn-good { 0% { background: #3cc24a; box-shadow: 0 0 0 6px #3cc24a, 0 0 40px #3cc24a; } }
 @keyframes tap-btn-miss { 0% { background: #e8341c; box-shadow: 0 0 0 6px #e8341c, 0 0 40px #e8341c; transform: translateX(-6px); } 30% { transform: translateX(6px); } }
+
+/* Phone start screen: open the Controls guide */
+.ctrl .guide-open { padding: 13px; border-radius: 14px; font-size: 15px; font-weight: 800; letter-spacing: 0.02em; }
+/* Narrow phones: room for Controls and Settings (the screens count goes) */
+@media (max-width: 430px) { .ctrl-head .pill.muted { display: none; } .ctrl-head .pill.guide-pill { margin-left: auto; } }
