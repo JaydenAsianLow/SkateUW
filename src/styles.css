@@ -256,7 +256,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .balance-bar {
   height: 100%; border-radius: 7px;
-  background: linear-gradient(90deg, #e8341c 0%, #f47b20 10%, #f6c61d 20%, #9fd33a 32%, #3cc24a 42%, #3cc24a 58%, #9fd33a 68%, #f6c61d 80%, #f47b20 90%, #e8341c 100%);
+  position: relative; overflow: hidden;
+  background: linear-gradient(90deg, #e8341c 0%, #f47b20 12%, #c9541f 50%, #f47b20 88%, #e8341c 100%);
   box-shadow: inset 0 2px 3px rgba(255,255,255,0.45), inset 0 -3px 4px rgba(0,0,0,0.25);
 }
 .balance-needle {
@@ -264,6 +265,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 30px solid #fff;
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.7)); transition: left 60ms linear;
 }
+.balance-zone {
+  position: absolute; top: 0; bottom: 0; border-radius: 6px;
+  background: linear-gradient(90deg, #f6c61d, #3cc24a 25%, #3cc24a 75%, #f6c61d); box-shadow: 0 0 10px rgba(60, 194, 74, 0.6);
+}
+.balance-zone.out { animation: zone-out 0.18s steps(2) infinite; }
+@keyframes zone-out { 50% { filter: brightness(1.6) saturate(0.4); } }
+.balance-info { text-align: center; margin-top: 16px; font: 800 13px/1 system-ui, sans-serif; letter-spacing: 1px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+.hud-btn.score { color: var(--accent); font-weight: 800; }
 .balance-ends { display: flex; justify-content: space-between; margin-top: 14px; font: 800 10px/1 system-ui, sans-serif; letter-spacing: 2px; color: #fff2d6; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 
 /* ---------- Laptop menus (main menu, pairing, phone lost) ---------- */

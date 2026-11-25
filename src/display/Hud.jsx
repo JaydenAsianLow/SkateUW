@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { board } from '../state.js';
 import { SettingsPanel } from './Menus.jsx';
+import { manualPoints } from './tuning.js';
 import { urlParams } from './util.js';
 
 // ?clean hides the overlay (for screenshots against the DESIGN.md reference).
@@ -11,6 +12,7 @@ export default function Hud({ onMenu }) {
   const [trick, setTrick] = useState(null);
   const [open, setOpen] = useState(false);
   const [foot, setFoot] = useState('ride'); // board.view.mode: walking back to the board after a fall?
+  const [score, setScore] = useState(0);
 
   // Poll the shared mutable state at 10Hz for the trick callout.
   useEffect(() => {
@@ -18,6 +20,7 @@ export default function Hud({ onMenu }) {
       const t = board.trick && performance.now() - board.trick.at < 1400 ? board.trick : null;
       setTrick((cur) => (cur?.at === t?.at ? cur : t));
       setFoot(board.view.mode ?? 'ride');
+      setScore(board.score);
     }, 100);
     return () => clearInterval(id);
   }, []);
@@ -39,6 +42,7 @@ export default function Hud({ onMenu }) {
         <button className="hud-btn" onClick={blur(onMenu)}>
           Main menu
         </button>
+        {score > 0 && <span className="hud-btn score">{score.toLocaleString()} pts</span>}
       </div>
       {open && (
         <div className="hud-panel">
@@ -52,16 +56,20 @@ export default function Hud({ onMenu }) {
 }
 
 // Manual meter (top centre, styled like a game "accuracy" bar): the needle follows how far the phone is leant
-// back. Middle green = keep manualing, yellow = getting close, left end = front wheels drop, right end = bail.
+// back; the green zone drifts and the needle has to stay in it (it flashes red while you're outside). Left end =
+// front wheels drop, right end = bail. Under it: seconds held and the points so far.
 // Hides straight away on a push (which ends the manual), otherwise lingers a moment after the wheels come down.
 function BalanceMeter() {
   const wrap = useRef(null);
   const needle = useRef(null);
+  const zone = useRef(null);
+  const info = useRef(null);
   useEffect(() => {
     let raf;
     let shownUntil = 0;
     let shown = null;
     let meter = null;
+    let text = '';
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const a = board.anim;
@@ -79,6 +87,15 @@ function BalanceMeter() {
         meter = m;
         needle.current.style.left = `${m * 100}%`;
       }
+      const z = a.zone;
+      if (z && zone.current) {
+        zone.current.style.left = `${(z.c - z.w) * 100}%`;
+        zone.current.style.width = `${z.w * 200}%`;
+        zone.current.classList.toggle('out', z.out > 0);
+      }
+      const t = a.manualT ?? 0;
+      const s = t > 0 ? `${t.toFixed(1)}s · ${manualPoints(t)}` : text;
+      if (info.current && s !== text) info.current.textContent = text = s;
     };
     tick();
     return () => cancelAnimationFrame(raf);
@@ -87,9 +104,12 @@ function BalanceMeter() {
     <div ref={wrap} className="balance">
       <div className="balance-label">★ MANUAL ★</div>
       <div className="balance-frame">
-        <div className="balance-bar" />
+        <div className="balance-bar">
+          <div ref={zone} className="balance-zone" />
+        </div>
         <div ref={needle} className="balance-needle" />
       </div>
+      <div ref={info} className="balance-info" />
       <div className="balance-ends">
         <span>WHEELS DOWN</span>
         <span>BAIL</span>

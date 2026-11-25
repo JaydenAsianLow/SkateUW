@@ -9,9 +9,10 @@ import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
 import Rider from './RiderModel.jsx';
 import { mocap, runTopSpeed } from './mocap.js';
-import { clamp01, damp, urlParams, wrapAngle } from './util.js';
+import { clamp, clamp01, damp, urlParams, wrapAngle } from './util.js';
 import {
-  ASSIST_MAX, AUTO_GRAB, BAIL_FAST, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_CALLOUT, MANUAL_FALL, MANUAL_IN,
+  ASSIST_MAX, AUTO_GRAB, BAIL_FAST, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_BAIL_AT, MANUAL_CALLOUT, MANUAL_DIFFICULTY, MANUAL_DRIFT_GROW, MANUAL_IN, MANUAL_LET_GO,
+  MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
   TURN_RATE,
@@ -565,6 +566,8 @@ export default function Skateboard() {
         manual: 0,
         balance: -1,
         meter: 0,
+        zone: null,
+        manualT: 0,
       });
       return;
     }
@@ -612,33 +615,53 @@ export default function Skateboard() {
       }
     }
 
-    // --- Manuals: balance on the back wheels while the phone is leant back.
+    // --- Manuals: balance on the back wheels while the phone is leant back. A green zone drifts along the meter
+    // (faster the longer you hold it); keep the marker in it by tilting the phone (tuning.js MANUAL_*).
     let inManual = false;
-    let balance = 0; // 0 at the start of the balance zone .. 1 at the falling edge
-    if (grounded && st.popT < 0 && !st.revert && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED) {
-      const back = -leanIn;
-      if (back > MANUAL_FALL && st.manualT > 0) {
+    let balance = 0; // where the marker is across the zone: 0 front edge .. 0.5 middle .. 1 back edge
+    const back = -leanIn;
+    let marker = clamp01(back); // HUD marker, 0..1 along the bar
+    if (back < MANUAL_IN) st.manualLock = false; // after a lost manual, level the phone before the next one
+    const holding = st.manualT > 0 ? back > MANUAL_LET_GO : back > MANUAL_IN && !st.manualLock;
+    if (grounded && st.popT < 0 && !st.revert && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED && holding) {
+      const diff = MANUAL_DIFFICULTY[settings.manual] ?? MANUAL_DIFFICULTY.medium;
+      const lo = MANUAL_ZONE_MID - diff.swing;
+      const hi = MANUAL_ZONE_MID + diff.swing;
+      if (st.manualT === 0) st.bal = { t: 0, start: clamp(marker, lo, hi), out: 0, ph: [0, 1, 2, 3].map(() => Math.random() * 6.28) };
+      const b = st.bal;
+      b.t += dt * diff.drift * (1 + MANUAL_DRIFT_GROW * st.manualT);
+      const wave = (f1, p1, f2, p2) => 0.6 * Math.sin(f1 * b.t + p1) + 0.4 * Math.sin(f2 * b.t + p2);
+      b.centre = clamp(b.start + diff.swing * (wave(1, b.ph[0], 2.3, b.ph[1]) - wave(0, b.ph[0], 0, b.ph[1])), lo, hi);
+      if (!live) marker = b.centre; // keyboard S has one fixed lean, so it balances by itself (phone: by hand)
+      marker = clamp01(marker + diff.sway * (0.3 + speed / MAX_SPEED) * wave(1.7, b.ph[2], 3.1, b.ph[3]));
+      const off = marker - b.centre;
+      if (marker >= MANUAL_BAIL_AT) {
         // Leaned too far back: the board shoots out and you fall backwards.
         startBail(rb, 'back', speed);
         return;
-      } else if (back > MANUAL_IN) {
-        inManual = true;
-        balance = Math.min(1, (back - MANUAL_IN) / (MANUAL_FALL - MANUAL_IN));
       }
+      b.out = Math.abs(off) > diff.zone ? b.out + dt : 0;
+      if (b.out < diff.tolerance) {
+        inManual = true;
+        balance = clamp01(0.5 + off / (2 * diff.zone));
+      } else st.manualLock = true; // lost it: the front wheels drop
+      st.zone = { c: b.centre, w: diff.zone, out: b.out / diff.tolerance };
     }
     if (inManual) {
       st.manualT += dt; // no slowdown while manualing (rolling friction is skipped below)
     } else if (st.manualT > 0) {
       if (st.manualT > MANUAL_CALLOUT && st.popT < 0) {
-        board.trick = { name: `MANUAL ${st.manualT.toFixed(1)}s`, at: performance.now() };
+        const t = st.manualT;
+        const pts = manualPoints(t);
+        board.score += pts;
+        board.trick = { name: `MANUAL ${t.toFixed(1)}s +${pts}`, at: performance.now() };
       }
       st.manualT = 0;
     }
     st.manualBalance = inManual ? balance : -1;
-    // Meter needle (0..1 across the bar): 0.2..0.8 is the manual zone (yellow edges, green middle); left of it the
-    // front wheels drop, right of it you bail.
-    st.meter = Math.max(0, Math.min(1, 0.2 + ((-leanIn - MANUAL_IN) / (MANUAL_FALL - MANUAL_IN)) * 0.6));
-    const manualPitch = inManual ? MANUAL_PITCH_MIN + (MANUAL_PITCH_MAX - MANUAL_PITCH_MIN) * balance : 0;
+    st.meter = marker;
+    // The nose rises the further back the marker is.
+    const manualPitch = inManual ? MANUAL_PITCH_MIN + (MANUAL_PITCH_MAX - MANUAL_PITCH_MIN) * clamp01((marker - MANUAL_IN) / (MANUAL_BAIL_AT - MANUAL_IN)) : 0;
     st.manual = damp(st.manual, manualPitch / MANUAL_PITCH_MAX, 10, dt);
     if (grounded) {
       if (!inManual) speed *= 1 - ROLL_DRAG * dt;
@@ -788,8 +811,10 @@ export default function Skateboard() {
       steer: st.steer,
       fall: 0,
       manual: st.manual, // 0..1 nose-up amount (rider leans back over the tail)
-      balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 through the green zone
-      meter: st.meter ?? 0, // needle position on the HUD meter
+      balance: st.manualBalance ?? -1, // -1 not in a manual, 0..1 across the green zone
+      meter: st.meter ?? 0, // marker position on the HUD meter (0..1)
+      zone: st.manualBalance >= 0 ? st.zone : null, // the drifting green zone { c, w, out } for the HUD
+      manualT: st.manualT,
     });
   }, -1); // before the rider (and camera), so they see this frame's pose
 

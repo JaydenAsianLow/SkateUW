@@ -23,6 +23,7 @@ export const net = { connected: false, controllers: 0 };
 
 export const board = {
   speed: 0, x: 0, y: 0, z: 0, heading: 0, steer: 0, lean: 0, source: 'none', trick: null, fakie: false,
+  score: 0, // points this session (manuals, caveman)
   mirror: 1, // -1 = the rider is mirrored (goofy, or riding switch): right foot forward
   // Where the board is drawn this frame ({ x, y, z }): x/y/z above are the latest physics step, while the drawn
   // position is interpolated between steps. The camera follows this so the skater never shivers on >60 Hz screens.
