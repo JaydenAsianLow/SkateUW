@@ -46,7 +46,7 @@ export default function Hud({ onMenu }) {
       </div>
       {open && (
         <div className="hud-panel">
-          <SettingsPanel inGame />
+          <SettingsPanel />
         </div>
       )}
       {foot === 'find' && <div className="foot-hint">Walk to your board to pick it up</div>}

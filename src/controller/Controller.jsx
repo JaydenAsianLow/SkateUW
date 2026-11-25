@@ -14,7 +14,7 @@ const SEND_HZ = 50;
 // Tilt: steering is only the difference from the calibrated neutral pose (phone flat like a deck, top pointing
 // forward). Uses gamma (left/right roll) and beta (nose up/down) in the phone's own frame, never alpha (the compass
 // heading drifts), and never the screen rotation: the axes stay fixed to the phone even if the page rotates.
-// A ±5° dead zone means a steady hand rides straight; then Truck sensitivity and the response curve (steering.js).
+// A ±5° dead zone means a steady hand rides straight; then Truck sensitivity and a gentle curve (steering.js).
 const SMOOTH = 0.18; // per-sample low-pass at 50 Hz (~0.1 s)
 const CAL_MS = 500; // calibration: average the pose over this long
 
@@ -108,7 +108,7 @@ export default function Controller() {
       const o = offset.current;
       const cfg = sharedRef.current;
       const deg = o && !c ? r.gamma - o.gamma : 0;
-      const steerT = tiltToSteer(deg, cfg?.truck ?? 1, cfg?.response);
+      const steerT = tiltToSteer(deg, cfg?.truck ?? 1);
       // lean < 0 = leaning back (top of the phone tilted up toward you) = manual. Verified on a real phone:
       // beta rises as the top edge comes up, so negate.
       const leanT = o && !c ? tiltToLean(-(r.beta - o.beta)) : 0;
@@ -575,10 +575,16 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
     buzz(15);
   };
 
+  // Spawn point: To spawn teleports back to it (on the laptop: the level's start until you set one).
   const reset = () => {
     socketRef.current?.emit('reset');
     buzz([40, 40, 40]);
-    setFlash({ label: 'RESET', key: performance.now() });
+    setFlash({ label: 'TO SPAWN', key: performance.now() });
+  };
+  const setSpawn = () => {
+    socketRef.current?.emit('setSpawn');
+    buzz(20);
+    setFlash({ label: 'SPAWN SET', key: performance.now() });
   };
 
   return (
@@ -654,8 +660,11 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
         <button className="secondary small-btn" onClick={cycleView} disabled={!shared}>
           View
         </button>
+        <button className="secondary small-btn" onClick={setSpawn}>
+          Set spawn
+        </button>
         <button className="reset-btn" onClick={reset}>
-          Reset
+          To spawn
         </button>
       </div>
       {error && <p className="error">{error}</p>}

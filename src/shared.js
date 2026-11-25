@@ -7,7 +7,6 @@ import { TRUCK_MAX, TRUCK_MIN } from './display/tuning.js';
 export const CHOICES = {
   stance: ['regular', 'goofy'],
   camera: ['behind', 'shoulder', 'side'],
-  response: ['softer', 'linear'],
   ragdoll: ['on', 'off'],
 };
 
@@ -20,7 +19,6 @@ export const RANGE_UI = [['truck', 'Truck sensitivity', 'How far the board turns
 // How the Settings menus (laptop and phone) show them: [key, label, { value: button text }, hint].
 export const CHOICE_UI = [
   ['stance', 'Stance', { regular: 'Regular', goofy: 'Goofy' }, 'Goofy rides right foot forward.'],
-  ['response', 'Steering response', { softer: 'Softer', linear: 'Linear' }, 'Softer = less turn for small tilts (as before).'],
   ['ragdoll', 'Ragdoll falls', { on: 'On', off: 'Off' }, 'Bails with physics (On) or the animated falls (Off).'],
   ['camera', 'Camera', { behind: 'Behind', shoulder: 'Shoulder', side: 'Side' }, 'Behind, over the shoulder, or from the side.'],
 ];

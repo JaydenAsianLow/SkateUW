@@ -1,5 +1,5 @@
-// Player settings for the display: airtime, the custom spawn point, the rebindable spawn keys, and the shared ones
-// (shared.js: stance, camera, manual, truck sensitivity, ...).
+// Player settings for the display: airtime, the custom spawn point (set from the phone; keyboard P / Space), and the shared ones
+// (shared.js: stance, camera, ragdoll, truck sensitivity).
 // Saved per browser in localStorage (best effort: private mode just forgets them on reload).
 
 import { SHARED_DEFAULTS, sharedOnly } from './shared.js';
@@ -17,14 +17,6 @@ const DEFAULTS = {
   ...SHARED_DEFAULTS, // stance, ... (shared.js: also changeable from the phone)
 };
 
-// Keys the fixed keyboard controls already use (Display.jsx keyMap). Spawn keys can't take these.
-export const RESERVED_KEYS = {
-  KeyW: 'push', ArrowUp: 'push', KeyS: 'manual', ArrowDown: 'manual',
-  KeyA: 'steer left', ArrowLeft: 'steer left', KeyD: 'steer right', ArrowRight: 'steer right',
-  ShiftLeft: 'ollie', ShiftRight: 'ollie', KeyF: 'kickflip', KeyG: 'varial flip', KeyT: 'tre flip',
-  KeyV: 'pop shove-it', KeyE: 'frontside 180', KeyQ: 'revert', KeyB: 'get off / on', KeyN: 'nollie', Escape: 'cancel',
-};
-
 export const settings = { ...DEFAULTS };
 try {
   const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null');
@@ -36,6 +28,7 @@ settings.airtime = Math.min(AIRTIME_MAX, Math.max(AIRTIME_MIN, Number(settings.a
 Object.assign(settings, sharedOnly(settings));
 delete settings.character; // old option (the restyled Mixamo body was removed)
 delete settings.leanBack; // old option (lean back is always a manual now)
+delete settings.response; // old option (one steering curve now)
 delete settings.manual; // old option (one manual difficulty now)
 delete settings.sensitivity; // old phone preset, replaced by Truck sensitivity
 
@@ -62,4 +55,4 @@ export function keyLabel(code) {
 }
 
 // One-shot commands from keys / HUD buttons, consumed by the skateboard each frame.
-export const commands = { toSpawn: false, setSpawn: false, clearSpawn: false, rebinding: false };
+export const commands = { toSpawn: false, setSpawn: false, clearSpawn: false };

@@ -5,7 +5,7 @@ import SteerPreview from '../SteerPreview.jsx';
 import { phone } from '../state.js';
 import { CHOICE_UI, RANGES, RANGE_UI } from '../shared.js';
 import { displayRoom } from '../socket.js';
-import { AIRTIME_MAX, AIRTIME_MIN, RESERVED_KEYS, commands, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
+import { AIRTIME_MAX, AIRTIME_MIN, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
 
 // Laptop screens around the game: main menu, phone pairing, settings, controls and the phone-lost overlay.
 
@@ -207,52 +207,18 @@ export function ControlsList() {
   );
 }
 
-// Tilt the phone: what the board gets (truck sensitivity and response are applied on the phone).
+// Tilt the phone: what the board gets (truck sensitivity is applied on the phone).
 const readPhoneSteer = () => ({ steer: phone.steer });
 
-// Shared settings, airtime and the spawn keys. inGame adds the "set spawn here" buttons.
-export function SettingsPanel({ inGame }) {
+// Shared settings (also on the phone) and airtime. Spawn is set from the phone (Set spawn / To spawn).
+export function SettingsPanel() {
   const [cfg, setCfg] = useState({ ...settings });
-  const [binding, setBinding] = useState(null); // 'returnKey' | 'setSpawnKey' | null
-  const [note, setNote] = useState('');
   useEffect(() => onSettings(setCfg), []);
-
-  // Waiting for a key: the next key press becomes the binding (Esc cancels).
-  useEffect(() => {
-    commands.rebinding = !!binding;
-    if (!binding) return;
-    const other = binding === 'returnKey' ? 'setSpawnKey' : 'returnKey';
-    const onKey = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.code === 'Escape') return setBinding(null);
-      if (RESERVED_KEYS[e.code]) return setNote(`${keyLabel(e.code)} is already ${RESERVED_KEYS[e.code]}. Pick another key.`);
-      if (e.code === settings[other]) return setNote(`${keyLabel(e.code)} is already the other spawn key.`);
-      updateSettings({ [binding]: e.code });
-      setNote('');
-      setBinding(null);
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => {
-      window.removeEventListener('keydown', onKey, true);
-      commands.rebinding = false;
-    };
-  }, [binding]);
-
   const btn = (label, onClick, extra = '') => (
     <button className={`chip ${extra}`} onClick={blurAfter(onClick)}>
       {label}
     </button>
   );
-  const keyBtn = (field) =>
-    btn(
-      binding === field ? 'Press a key…' : keyLabel(cfg[field]),
-      () => {
-        setNote(binding === field ? '' : 'Press the new key (Esc to cancel).');
-        setBinding(binding === field ? null : field);
-      },
-      binding === field ? 'on' : '',
-    );
 
   return (
     <div className="ctl">
@@ -295,24 +261,6 @@ export function SettingsPanel({ inGame }) {
         />
         <span className="ctl-val">{cfg.airtime.toFixed(1)}×</span>
       </label>
-      <div className="ctl-row">
-        <span>Back to spawn key</span>
-        {keyBtn('returnKey')}
-      </div>
-      <div className="ctl-row">
-        <span>Set spawn key</span>
-        {keyBtn('setSpawnKey')}
-      </div>
-      {inGame && (
-        <div className="ctl-row">
-          <span className="muted">{cfg.spawn ? 'Custom spawn' : 'Default spawn'}</span>
-          <span className="ctl-btns">
-            {btn('Set here', () => (commands.setSpawn = true))}
-            {cfg.spawn && btn('Use default', () => (commands.clearSpawn = true))}
-          </span>
-        </div>
-      )}
-      {note && <div className="hud-small muted">{note}</div>}
     </div>
   );
 }

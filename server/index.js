@@ -129,6 +129,7 @@ io.on('connection', (socket) => {
   relay('reset', () => ({}));
   relay('carry', () => ({}));
   relay('jump', () => ({})); // on foot, board in hand
+  relay('setSpawn', () => ({})); // make where you are the spawn point
 
   // Deck rotation from the display, mirrored by the phone's 3D board.
   socket.on('board', (d) => {

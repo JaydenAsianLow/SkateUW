@@ -114,6 +114,7 @@ export default function Display() {
     s.on('reset', () => (phone.resetQueued = true));
     s.on('carry', () => (phone.carryQueued = true));
     s.on('jump', () => (phone.jumpQueued = true));
+    s.on('setSpawn', () => (commands.setSpawn = true));
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
       // Only while actually playing, so a second laptop tab (menu, paused) never contradicts the game's state.
@@ -138,7 +139,7 @@ export default function Display() {
   // Rebindable spawn keys (settings.js; change them in Settings). Only while riding.
   useEffect(() => {
     const onKey = (e) => {
-      if (commands.rebinding || e.repeat || !game.running) return;
+      if (e.repeat || !game.running) return;
       if (e.code === 'Space' && board.view.mode === 'carry') return; // Space jumps on foot (board in hand)
       if (e.code === settings.returnKey) commands.toSpawn = true;
       else if (e.code === settings.setSpawnKey) commands.setSpawn = true;

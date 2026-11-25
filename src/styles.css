@@ -207,7 +207,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .onoff-row { display: flex; gap: 10px; }
 .ctrl .onoff-btn.jump { flex: 0 0 38%; background: linear-gradient(180deg, #fff1cf, #f7d38b 60%, #e8b45a); color: var(--ink); text-shadow: none; box-shadow: 0 6px 0 #9a6a26, 0 12px 28px rgba(255, 200, 100, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.7); }
 /* Footer: ghost pills, Reset in warning red */
-.deck-foot { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.deck-foot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .ctrl .small-btn, .ctrl .reset-btn {
   padding: 12px 6px; border-radius: 12px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
   white-space: nowrap; transition: transform 70ms, background 120ms;
