@@ -162,7 +162,7 @@ export const GRIND_SNAP_TIME = 0.15;
 // handrails (0.9 m) need the lift. Rolling off something (no pop) only catches lines within GRIND_DROP_IN below.
 export const GRIND_REACH = 0.55;
 export const GRIND_DROP_IN = 0.4;
-export const GRIND_MAX_ANGLE = 55; // degrees between your travel and the line; more square-on than this doesn't lock
+export const GRIND_SQUARE_KEEP = 0.7; // share of your speed kept when you hit a rail square-on (any angle locks on; along it keeps all of it)
 export const GRIND_MIN_ENTRY = 1.0; // m/s along the line needed to lock on
 // The trick is picked in this window after locking on (s): no gesture = 50-50, a half circle = boardslide, a half
 // circle started but not finished = bail. A half circle drawn up to GRIND_PRE s before locking on also counts.

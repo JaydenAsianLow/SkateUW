@@ -113,7 +113,9 @@ export function GrindTest() {
           const back = mode === 'curb' ? 1.0 : 2.5;
           const o = Number(offs), an = (Number(ang) * Math.PI) / 180;
           const dx = hx * Math.cos(an) - sx * Math.sin(an), dz = hz * Math.cos(an) - sz * Math.sin(an);
-          const x = a[0] + hx * (0.6 - back) + sx * o, z = a[2] + hz * (0.6 - back) + sz * o;
+          // aim so the path crosses the line `cross` m along it (0.6 when head-on, the middle when angled)
+          const cross = an === 0 ? 0.6 : Math.min(3, line.length / 2);
+          const x = a[0] + hx * cross - dx * back + sx * o * (an === 0 ? 1 : 0), z = a[2] + hz * cross - dz * back + sz * o * (an === 0 ? 1 : 0);
           const y = a[1] - line.height + 0.1;
           window.__skate.place({ x, y, z, heading: Math.atan2(-dx, -dz), vx: dx * v, vy: 0, vz: dz * v, popped: false });
           if (mode === 'ollie') setTimeout(() => (phone.popQueued = 1), Number(popAt) * 1000);

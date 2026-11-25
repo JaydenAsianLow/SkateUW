@@ -12,7 +12,7 @@
 import { clamp01 } from '../util.js';
 import {
   GRAVITY, GRIND_BALANCE, GRIND_BOARDSLIDE_DRAG, GRIND_CORNER, GRIND_CORNER_KEEP, GRIND_CORNER_TURN, GRIND_CURB_ANGLE,
-  GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_ANGLE, GRIND_MAX_SPEED, GRIND_MIN_ENTRY,
+  GRIND_CURB_MAX, GRIND_CURB_TOWARD, GRIND_DRAG, GRIND_DROP_IN, GRIND_MAX_SPEED, GRIND_MIN_ENTRY, GRIND_SQUARE_KEEP,
   GRIND_MIN_SPEED, GRIND_NEAR, GRIND_PRE, GRIND_REACH, GRIND_SLOPE, GRIND_SNAP, GRIND_SNAP_TIME, GRIND_STUCK, GRIND_WINDOW,
 } from '../tuning.js';
 
@@ -54,7 +54,6 @@ export function findEntry(lines, b, skip) {
   const sp = Math.hypot(b.vx, b.vz);
   if (sp < GRIND_MIN_ENTRY) return null;
   const ux = b.vx / sp, uz = b.vz / sp;
-  const cosMax = Math.cos((GRIND_MAX_ANGLE * Math.PI) / 180);
   const reach = GRIND_SNAP + sp * 0.06; // a little lead at speed so the board locks before its nose hits a ledge
   let best = null;
   for (const line of lines) {
@@ -67,13 +66,15 @@ export function findEntry(lines, b, skip) {
     if (dy < 0 && b.vy < -1.5) continue; // already falling past it from below
     const { t } = at(line, n.s);
     const th = Math.hypot(t[0], t[2]) || 1;
+    // Any approach angle locks on (ollie across a rail, or along it). Which way you go: the way you were heading;
+    // coming in square-on, the longer way; if that way has no room, the other.
     const c = (ux * t[0] + uz * t[2]) / th;
-    if (Math.abs(c) < cosMax) continue;
-    const dir = c > 0 ? 1 : -1;
-    const left = dir > 0 ? line.length - n.s : n.s;
+    let dir = c > 0 ? 1 : -1;
+    if (Math.abs(c) < 0.25) dir = line.length - n.s >= n.s ? 1 : -1;
+    let left = dir > 0 ? line.length - n.s : n.s;
+    if (left < 0.4) (dir = -dir), (left = dir > 0 ? line.length - n.s : n.s);
     if (left < 0.4) continue;
-    const along = sp * Math.abs(c);
-    if (along < GRIND_MIN_ENTRY) continue;
+    const along = sp * Math.max(Math.abs(c), GRIND_SQUARE_KEEP); // a square-on entry keeps most of its speed
     const score = n.d + Math.abs(dy) * 0.5;
     if (!best || score < best.score) best = { line, s: n.s, dir, along, score };
   }
