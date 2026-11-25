@@ -92,8 +92,8 @@ export default function Display() {
 
   useEffect(() => {
     const s = connect('display', displayRoom);
-    // Phone settings picked on the laptop (sensitivity) go to the phone; the server caches them for late joiners.
-    const sendConfig = () => s.emit('config', { sensitivity: settings.sensitivity, ...sharedOnly(settings) });
+    // Shared settings (stance, truck sensitivity, ...) go to the phone; the server caches them for late joiners.
+    const sendConfig = () => s.emit('config', sharedOnly(settings));
     const offSettings = onSettings(sendConfig);
     s.on('connect', () => ((net.connected = true), sendConfig()));
     s.on('disconnect', () => (net.connected = false));

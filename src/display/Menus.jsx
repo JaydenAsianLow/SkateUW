@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { MOVES } from '../moves.js';
-import { SENSITIVITY } from '../sensitivity.js';
-import { CHOICE_UI } from '../shared.js';
+import SteerPreview from '../SteerPreview.jsx';
+import { phone } from '../state.js';
+import { CHOICE_UI, RANGES, RANGE_UI } from '../shared.js';
 import { displayRoom } from '../socket.js';
 import { AIRTIME_MAX, AIRTIME_MIN, RESERVED_KEYS, commands, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
 
@@ -206,7 +207,10 @@ export function ControlsList() {
   );
 }
 
-// Sensitivity, airtime and the spawn keys. inGame adds the "set spawn here" buttons.
+// Tilt the phone: what the board gets (truck sensitivity and response are applied on the phone).
+const readPhoneSteer = () => ({ steer: phone.steer });
+
+// Shared settings, airtime and the spawn keys. inGame adds the "set spawn here" buttons.
 export function SettingsPanel({ inGame }) {
   const [cfg, setCfg] = useState({ ...settings });
   const [binding, setBinding] = useState(null); // 'returnKey' | 'setSpawnKey' | null
@@ -262,15 +266,22 @@ export function SettingsPanel({ inGame }) {
           </span>
         </div>
       ))}
-      <div className="ctl-row">
-        <span>Phone sensitivity</span>
-        <span className="ctl-btns">
-          {SENSITIVITY.map((p, i) => (
-            <span key={p.label}>{btn(p.label, () => updateSettings({ sensitivity: i }), cfg.sensitivity === i ? 'on' : '')}</span>
-          ))}
-        </span>
-      </div>
-      <div className="hud-small muted">Higher = less tilt for full steering, shorter swipes count.</div>
+      {RANGE_UI.map(([key, label, hint]) => (
+        <label className="ctl-row" key={key} title={hint}>
+          <span>{label}</span>
+          <input
+            type="range"
+            min={RANGES[key].min}
+            max={RANGES[key].max}
+            step={RANGES[key].step}
+            value={cfg[key]}
+            onChange={(e) => updateSettings({ [key]: Number(e.target.value) })}
+            onPointerUp={(e) => e.currentTarget.blur()}
+          />
+          <span className="ctl-val">{cfg[key].toFixed(2)}×</span>
+        </label>
+      ))}
+      <SteerPreview read={readPhoneSteer} />
       <label className="ctl-row">
         <span>Airtime</span>
         <input

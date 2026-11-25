@@ -5,22 +5,18 @@ import PhoneSettings from './PhoneSettings.jsx';
 import { buzz, playHaptic, setVibrate, supported as canVibrate, vibrateOn } from './haptics.js';
 import { CHOICES, CHOICE_UI } from '../shared.js';
 import { MOVES } from '../moves.js';
-import { SENSITIVITY, clampSensitivity } from '../sensitivity.js';
+import { tiltToLean, tiltToSteer } from '../steering.js';
+import SteerPreview from '../SteerPreview.jsx';
+import { SWIPE_MIN } from '../display/tuning.js';
 
 const SEND_HZ = 50;
 
 // Tilt: steering is only the difference from the calibrated neutral pose (phone flat like a deck, top pointing
 // forward). Uses gamma (left/right roll) and beta (nose up/down) in the phone's own frame, never alpha (the compass
 // heading drifts), and never the screen rotation: the axes stay fixed to the phone even if the page rotates.
-// A ±5° dead zone means a steady hand rides straight; full lock at the preset's range (Normal: 30°).
-const DEADZONE_DEG = 5;
-const CURVE = 1.25; // a little gentler near the centre
+// A ±5° dead zone means a steady hand rides straight; then Truck sensitivity and the response curve (steering.js).
 const SMOOTH = 0.18; // per-sample low-pass at 50 Hz (~0.1 s)
 const CAL_MS = 500; // calibration: average the pose over this long
-const shape = (deg, range) => {
-  const over = Math.max(0, Math.abs(deg) - DEADZONE_DEG) / Math.max(1, range - DEADZONE_DEG);
-  return Math.sign(deg) * Math.min(1, over) ** CURVE;
-};
 
 const clamp = (v, lo = -1, hi = 1) => Math.min(hi, Math.max(lo, v));
 
@@ -41,12 +37,11 @@ export default function Controller() {
   const [started, setStarted] = useState(false);
   const [error, setError] = useState(null);
   const tilt = useRef({ steer: 0, lean: 0 }); // latest shaped tilt, read every frame by the on-screen board
-  const [sens, setSens] = useState(0); // sensitivity preset, set from the laptop's Settings
   const [shared, setShared] = useState(null); // shared settings from the laptop (shared.js), null until it sends them
   const [showSettings, setShowSettings] = useState(false);
   const [vibrate, setVib] = useState(vibrateOn());
-  const tiltRange = useRef(SENSITIVITY[sens].tilt);
-  tiltRange.current = SENSITIVITY[sens].tilt;
+  const sharedRef = useRef(null); // the same, for the 50 Hz tilt loop
+  sharedRef.current = shared;
 
   // Tint the phone's browser bar to match the controller background.
   useEffect(() => {
@@ -66,7 +61,6 @@ export default function Controller() {
     });
     s.on('haptic', (d) => playHaptic(d?.type));
     s.on('config', (c) => {
-      setSens(clampSensitivity(c?.sensitivity));
       setShared(c ?? null);
     });
     // Closing the tab: tell the server right away instead of waiting for its heartbeat.
@@ -112,18 +106,19 @@ export default function Controller() {
         }
       }
       const o = offset.current;
-      const range = tiltRange.current;
-      const steerT = o && !c ? shape(r.gamma - o.gamma, range) : 0;
+      const cfg = sharedRef.current;
+      const deg = o && !c ? r.gamma - o.gamma : 0;
+      const steerT = tiltToSteer(deg, cfg?.truck ?? 1, cfg?.response);
       // lean < 0 = leaning back (top of the phone tilted up toward you) = manual. Verified on a real phone:
       // beta rises as the top edge comes up, so negate.
-      const leanT = o && !c ? shape(-(r.beta - o.beta), range) : 0;
+      const leanT = o && !c ? tiltToLean(-(r.beta - o.beta)) : 0;
       sm.steer += (steerT - sm.steer) * SMOOTH;
       sm.lean += (leanT - sm.lean) * SMOOTH;
       const steer = clamp(Math.abs(sm.steer) < 0.01 ? 0 : sm.steer);
       const lean = clamp(Math.abs(sm.lean) < 0.01 ? 0 : sm.lean);
       const packet = { steer, lean, beta: r.beta, gamma: r.gamma, jx: stick.current.x, jy: stick.current.y };
       socketRef.current?.volatile.emit('tilt', packet);
-      tilt.current = { steer, lean };
+      tilt.current = { steer, lean, deg };
     }, 1000 / SEND_HZ);
     return () => clearInterval(id);
   }, [started]);
@@ -236,6 +231,7 @@ export default function Controller() {
       </header>
       {showSettings && (
         <PhoneSettings shared={shared} socketRef={socketRef} onClose={() => setShowSettings(false)}>
+          {started && offset.current && <SteerPreview read={() => tilt.current} />}
           {canVibrate ? (
             <div className="psheet-row">
               <span>Vibration</span>
@@ -315,7 +311,6 @@ export default function Controller() {
           tiltRef={tilt}
           calibrating={calState === 'measuring'}
           onCalibrate={calibrate}
-          sens={sens}
           shared={shared}
           onDisconnect={disconnect}
           error={error}
@@ -356,7 +351,7 @@ const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
 
 // The phone screen as a skateboard deck. Swipes on it are read as pushes and tricks.
-function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, shared, onDisconnect, error }) {
+function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, onDisconnect, error }) {
   const deckRef = useRef(null); // the touch surface (fixed; the 3D board moves underneath it)
   const canvasRef = useRef(null);
   const boardRef = useRef(null);
@@ -429,9 +424,9 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, sh
       createStrokeTracker({
         onSegment: (ev) => reader.current.segment(ev),
         onArc: (ev) => reader.current.arc(ev),
-        minSegPx: Math.max(16, window.innerHeight * SENSITIVITY[sens].swipe),
+        minSegPx: Math.max(16, window.innerHeight * SWIPE_MIN),
       }),
-    [sens],
+    [],
   );
 
   // Draw the finger trails and holding fingers.

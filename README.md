@@ -39,7 +39,7 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
    - **iPhone (Safari):** *Show Details → visit this website → Visit Website*
    - **Android (Chrome):** *Advanced → Proceed to 10.x.x.x (unsafe)*
 4. Tap **Tap to start**. On iPhone, tap **Allow** when it asks for motion access.
-5. Hold the phone flat-ish in portrait. The pose you're holding when you start is "neutral". Press **Calibrate tilt** to reset it, and **Sensitivity** to cycle Normal / High / Max (how far you tilt for full steering and how short a swipe still counts; remembered on the phone).
+5. Hold the phone flat-ish in portrait. The pose you're holding when you start is "neutral". Press **Recalibrate** to reset it. **Settings** (top right on the phone, or in game on the laptop) has Truck sensitivity (0.5x-2x: how far the board turns for a tilt), the steering response, stance, camera view, manual difficulty and vibration.
 
 | Move | Gesture on the deck |
 |---|---|
@@ -57,7 +57,7 @@ npm run dev        # starts the Socket.IO server (3001) and Vite (5173) together
 
 Land before a trick finishes rotating and you bail. Ollies pop about 0.3–0.6 m depending on how hard you swipe.
 
-The laptop opens on the **Skate UW** main menu. **Play** shows a QR code; scan it, tap Start on the phone, and the game begins. Sensitivity and airtime are in **Settings** (main menu, or the Settings button in game). If the phone drops out mid-game the laptop pauses with a red *Reconnect phone* card and carries on as soon as it's back; the phone's **Disconnect** button does the same on purpose. If the game closes, the phone shows a red *Reconnect device* card until it's open again.
+The laptop opens on the **Skate UW** main menu. **Play** shows a QR code; scan it, tap Start on the phone, and the game begins. Truck sensitivity, stance, camera and airtime are in **Settings** (main menu, or the Settings button in game). If the phone drops out mid-game the laptop pauses with a red *Reconnect phone* card and carries on as soon as it's back; the phone's **Disconnect** button does the same on purpose. If the game closes, the phone shows a red *Reconnect device* card until it's open again.
 
 ## Troubleshooting
 

@@ -1,4 +1,5 @@
-import { CHOICE_UI } from '../shared.js';
+import { useState } from 'react';
+import { CHOICE_UI, RANGES, RANGE_UI } from '../shared.js';
 import { buzz } from './haptics.js';
 
 // The phone's Settings sheet. Shared settings (shared.js) live on the laptop: a tap sends 'setting', the laptop saves
@@ -30,9 +31,36 @@ export default function PhoneSettings({ shared, socketRef, onClose, children }) 
             {hint && <small className="muted">{hint}</small>}
           </div>
         ))}
+        {RANGE_UI.map(([key, label, hint]) => (
+          <Slider key={key} name={key} label={label} hint={hint} value={shared?.[key]} onChange={(v) => set(key, v)} />
+        ))}
         {children}
         {!shared && <small className="muted">Open the game on the laptop to change these.</small>}
       </div>
     </div>
+  );
+}
+
+// A shared number setting. Shows the dragged value at once (the laptop's echo comes back a moment later).
+function Slider({ name, label, hint, value, onChange }) {
+  const [draft, setDraft] = useState(null);
+  const r = RANGES[name];
+  const v = draft ?? value ?? r.def;
+  return (
+    <label className="psheet-row">
+      <span>{label}</span>
+      <span>{v.toFixed(2)}×</span>
+      <input
+        type="range"
+        min={r.min}
+        max={r.max}
+        step={r.step}
+        value={v}
+        disabled={value == null}
+        onChange={(e) => (setDraft(Number(e.target.value)), onChange(Number(e.target.value)))}
+        onPointerUp={() => setDraft(null)}
+      />
+      {hint && <small className="muted">{hint}</small>}
+    </label>
   );
 }

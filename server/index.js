@@ -151,11 +151,11 @@ io.on('connection', (socket) => {
     if (HAPTIC_TYPES.has(d?.type)) toControllers().emit('haptic', { type: d.type }); // not volatile (see Display.jsx)
   });
 
-  // Phone settings chosen on the laptop (sensitivity preset). Cached so a phone that joins later gets them too.
+  // Phone settings chosen on the laptop (shared.js). Cached so a phone that joins later gets them too.
   socket.on('config', (d) => {
     if (socket.data.role !== 'display' || !d) return;
     const st = roomState(socket.data.room);
-    st.config = { sensitivity: Math.round(num(d.sensitivity, 0, 2)), ...sharedOnly(d) };
+    st.config = sharedOnly(d);
     toControllers().emit('config', st.config);
   });
 

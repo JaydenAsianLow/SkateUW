@@ -274,6 +274,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .balance-zone.out { animation: zone-out 0.18s steps(2) infinite; }
 @keyframes zone-out { 50% { filter: brightness(1.6) saturate(0.4); } }
 .balance-info { text-align: center; margin-top: 16px; font: 800 13px/1 system-ui, sans-serif; letter-spacing: 1px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+.steer-preview { display: grid; gap: 4px; }
+.steer-track { position: relative; height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.steer-fill { position: absolute; top: 0; bottom: 0; background: var(--accent); }
+.steer-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, 0.5); }
+.psheet-row input[type='range'] { grid-column: 1 / -1; }
 .hud-btn.score { color: var(--accent); font-weight: 800; }
 .balance-ends { display: flex; justify-content: space-between; margin-top: 14px; font: 800 10px/1 system-ui, sans-serif; letter-spacing: 2px; color: #fff2d6; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 

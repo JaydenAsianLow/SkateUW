@@ -124,3 +124,14 @@ export const HAPTICS = {
   manualWarn: { pattern: 8, gap: 0.2 }, // marker outside the green zone
   bail: { pattern: [90, 50, 180], gap: 1.5 },
 };
+
+// ---------- Phone tilt -> steering (steering.js, used on the phone) ----------
+// Dead zone, then full lock TILT_RANGE_DEG from neutral at Truck sensitivity 1 (the old 'Normal' preset).
+// Truck sensitivity (Settings, TRUCK_MIN..TRUCK_MAX) scales the tilt past the dead zone: 2 = full lock at 17.5°,
+// 0.5 = at 55°. Response: 'softer' = the original curve (less turn for small tilts), 'linear' = straight.
+export const TILT_DEADZONE_DEG = 5;
+export const TILT_RANGE_DEG = 30;
+export const STEER_CURVES = { softer: 1.25, linear: 1 };
+export const TRUCK_MIN = 0.5;
+export const TRUCK_MAX = 2;
+export const SWIPE_MIN = 0.04; // shortest swipe that counts, as a fraction of the screen height

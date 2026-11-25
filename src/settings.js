@@ -1,7 +1,7 @@
-// Player settings for the display: airtime, phone sensitivity, the custom spawn point and the rebindable spawn keys.
+// Player settings for the display: airtime, the custom spawn point, the rebindable spawn keys, and the shared ones
+// (shared.js: stance, camera, manual, truck sensitivity, ...).
 // Saved per browser in localStorage (best effort: private mode just forgets them on reload).
 
-import { clampSensitivity } from './sensitivity.js';
 import { SHARED_DEFAULTS, sharedOnly } from './shared.js';
 
 const STORE_KEY = 'skate.settings.v1';
@@ -11,7 +11,6 @@ export const AIRTIME_MAX = 2.5;
 
 const DEFAULTS = {
   airtime: 1.7, // hang-time multiplier for popped jumps (1 = the original real-ish ollie)
-  sensitivity: 0, // index into SENSITIVITY (sensitivity.js), sent to the phone
   returnKey: 'Space', // teleport back to the spawn point
   setSpawnKey: 'KeyP', // make the current spot the spawn point
   spawn: null, // { x, y, z, heading } or null for the level's default spawn
@@ -34,10 +33,10 @@ try {
   /* unreadable or blocked storage: use defaults */
 }
 settings.airtime = Math.min(AIRTIME_MAX, Math.max(AIRTIME_MIN, Number(settings.airtime) || DEFAULTS.airtime));
-settings.sensitivity = clampSensitivity(settings.sensitivity);
 Object.assign(settings, sharedOnly(settings));
 delete settings.character; // old option (the restyled Mixamo body was removed)
 delete settings.leanBack; // old option (lean back is always a manual now)
+delete settings.sensitivity; // old phone preset, replaced by Truck sensitivity
 
 const listeners = new Set();
 export const onSettings = (fn) => (listeners.add(fn), () => listeners.delete(fn));
