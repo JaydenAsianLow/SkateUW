@@ -141,7 +141,7 @@ function GrindDebug() {
           return (
             <Html key={l.id} position={[(a[0] + b[0]) / 2, a[1] + 0.3, (a[2] + b[2]) / 2]} center zIndexRange={[10, 0]}>
               <div style={{ background: GRIND_COLORS[l.type], color: '#111', font: 'bold 10px sans-serif', padding: '0 3px', borderRadius: 3, whiteSpace: 'nowrap', opacity: 0.92 }}>
-                {l.id} {l.long ? 'long' : 'short'}
+                {l.id} {l.long ? 'LONG' : 'short'}
               </div>
             </Html>
           );

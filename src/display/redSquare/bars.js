@@ -1,6 +1,6 @@
 // Round iron bars: the stair handrails (Ground.jsx) and the free-standing rails (Rails.jsx) share their look and
 // their collider style.
-import { CylinderGeometry, Euler, Quaternion, SphereGeometry, Vector3 } from 'three';
+import { BoxGeometry, CylinderGeometry, Euler, Quaternion, SphereGeometry, Vector3 } from 'three';
 
 export const RAIL_R = 0.07; // bar radius (14 cm thick: reads from the chase camera; also the collider half-size)
 export const POST_R = 0.05;
@@ -23,11 +23,11 @@ export const joint = (p, r) => new SphereGeometry(r, 8, 6).translate(p.x, p.y, p
 
 // A solid wall under a bar, from `bottom` up to the bar (so nothing rolls or walks through or under it). Straight
 // segment a-b in plan; returns { args, position, rotation } like barCollider. Invisible: the bar and posts are the look.
-export function wallCollider(a, b, bottom) {
+export function wallCollider(a, b, bottom, halfWidth = RAIL_R) {
   const len = Math.hypot(b.x - a.x, b.z - a.z);
   const top = Math.min(a.y, b.y);
   return {
-    args: [RAIL_R, Math.max(0.05, (top - bottom) / 2), len / 2 + 0.02],
+    args: [halfWidth, Math.max(0.05, (top - bottom) / 2), len / 2 + 0.02],
     position: [(a.x + b.x) / 2, bottom + (top - bottom) / 2, (a.z + b.z) / 2],
     rotation: [0, Math.atan2(b.x - a.x, b.z - a.z), 0],
   };
@@ -41,4 +41,35 @@ export function barCollider(a, b) {
     position: a.clone().lerp(b, 0.5).add(_up.set(0, -0.02, 0)).toArray(),
     rotation: _e.setFromQuaternion(_q).toArray().slice(0, 3),
   };
+}
+
+// --- The big box rails (layout.js RAILS style 'box'): a wide steel box section, its centre on the line a-b (flat),
+// on paired square legs. BOX_H / 2 is close to RAIL_R, so the board sits on its top like on a round bar.
+export const BOX_W = 0.24; // wider than the deck's trucks
+export const BOX_H = 0.13;
+const yawOf = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
+
+// The box itself, from a to b (Vector3s at its centre line).
+export function boxBar(a, b) {
+  const len = Math.hypot(b.x - a.x, b.z - a.z);
+  return new BoxGeometry(BOX_W, BOX_H, len).rotateY(yawOf(a, b)).translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+}
+// One support at p (on the centre line) down to `base`, across the direction yaw: two square legs splayed wider than
+// the box, a cross piece under it, foot plates.
+export function boxLegs(p, base, yaw) {
+  const parts = [];
+  const top = p.y - BOX_H / 2;
+  const cx = Math.cos(yaw), cz = -Math.sin(yaw); // across the rail, in plan
+  for (const sg of [-1, 1]) {
+    const x = p.x + cx * sg * 0.17, z = p.z + cz * sg * 0.17;
+    parts.push(new BoxGeometry(0.05, top - base, 0.05).rotateY(yaw).translate(x, base + (top - base) / 2, z));
+    parts.push(new BoxGeometry(0.13, 0.012, 0.13).rotateY(yaw).translate(x, base + 0.006, z));
+  }
+  parts.push(new BoxGeometry(0.4, 0.05, 0.06).rotateY(yaw).translate(p.x, top - 0.025, p.z));
+  return parts;
+}
+// Solid collider matching the box.
+export function boxCollider(a, b) {
+  const len = Math.hypot(b.x - a.x, b.z - a.z);
+  return { args: [BOX_W / 2, BOX_H / 2, len / 2], position: [(a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2], rotation: [0, yawOf(a, b), 0] };
 }

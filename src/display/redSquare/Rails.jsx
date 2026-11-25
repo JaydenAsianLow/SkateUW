@@ -3,14 +3,15 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import { Vector3 } from 'three';
 import { materials, merge } from '../look.js';
 import { grindLines } from './Glb.jsx';
-import { POST_R, RAIL_R, barCollider, joint, tube, wallCollider } from './bars.js';
+import { BOX_W, POST_R, RAIL_R, barCollider, boxBar, boxCollider, boxLegs, joint, tube, wallCollider } from './bars.js';
 import { RAILS } from './layout.js';
 
 // The free-standing rails (layout.js RAILS): iron bars on posts, like the stair handrails, with the same thin
-// colliders. A rail can bend: each corner is rounded off (BEND_R) so a grind follows it smoothly. Each rail is one
+// colliders; and the big box rails (style 'box') for long timing-bar grinds: wide steel box sections on paired legs. A rail can bend: each corner is rounded off (BEND_R) so a grind follows it smoothly. Each rail is one
 // grind line along its whole (rounded) path.
 const BEND_R = 1.2; // m, radius of the rounded corners
 const POST_GAP = 2.6; // m, at most this far between posts
+const BOX_GAP = 3.2; // m, between the big box rails' supports (grind line along the box's centre: BOX_H / 2 ~ RAIL_R)
 
 // Replace each corner of a path with a short arc of radius r (points every ~0.25 m).
 export function roundCorners(pts, r = BEND_R) {
@@ -47,6 +48,18 @@ export default function Rails() {
     const lines = [];
     for (const r of RAILS) {
       const y = r.base + r.h;
+      if (r.style === 'box') {
+        // Big box rail: straight, wide steel box on paired legs, solid box collider + a wall under it.
+        const [a, b] = r.pts.map(([x, z]) => new Vector3(x, y, z));
+        parts.push(boxBar(a, b));
+        colliders.push(boxCollider(a, b), wallCollider(a, b, r.base, BOX_W / 2 - 0.02));
+        const L = a.distanceTo(b);
+        const n = Math.ceil(L / BOX_GAP);
+        const yaw = Math.atan2(b.x - a.x, b.z - a.z);
+        for (let k = 0; k <= n; k++) parts.push(...boxLegs(a.clone().lerp(b, Math.min(1 - 0.3 / L, Math.max(0.3 / L, k / n))), r.base, yaw));
+        lines.push({ name: r.name, pts: [a.toArray(), b.toArray()] });
+        continue;
+      }
       const path = roundCorners(r.pts.map(([x, z]) => new Vector3(x, y, z)));
       for (let i = 0; i < path.length - 1; i++) {
         parts.push(tube(path[i], path[i + 1], RAIL_R));

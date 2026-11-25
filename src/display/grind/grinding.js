@@ -53,6 +53,7 @@ export function nearest(line, x, z) {
   return best;
 }
 
+const GRIND_NOSE = 0.45; // m from the board's centre to its nose
 // Look for a line to lock onto. b = { x, z, bottom (y of the board's underside), vx, vy, vz, popped }.
 export function findEntry(lines, b, skip) {
   const sp = Math.hypot(b.vx, b.vz);
@@ -62,7 +63,9 @@ export function findEntry(lines, b, skip) {
   let best = null;
   for (const line of lines) {
     if (skip && skip(line)) continue;
-    const n = nearest(line, b.x, b.z);
+    // The board's centre, or its nose: ollying at a rail's end, the nose gets there first (and would hit the end).
+    let n = nearest(line, b.x, b.z);
+    if (n.d > reach) n = nearest(line, b.x + ux * GRIND_NOSE, b.z + uz * GRIND_NOSE);
     if (n.d > reach) continue;
     const dy = b.bottom - n.y; // + above the line
     if (dy > (b.popped ? 0.6 : GRIND_DROP_IN)) continue;

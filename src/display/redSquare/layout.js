@@ -186,4 +186,8 @@ export const RAILS = [
   { name: 'kane_flat', pts: [kaneAt(10, 14), kaneAt(18, 14)], base: KANE_WALK, h: 0.4 }, // 8 m on Kane's walkway
   { name: 'kane_kink', pts: [kaneAt(28, 12), kaneAt(38, 12), kaneAt(42, 17)], base: KANE_WALK, h: 0.4 }, // ~16 m, one bend
   { name: 'plaza_short', pts: [[18, 10], [24.5, 12.5]], base: 0, h: 0.4 }, // 7 m in the open plaza south of the spawn
+  // Big box rails for long timing-bar grinds (wide steel box, top 0.5 m up), on open flat brick with room all round:
+  { name: 'big_plaza', pts: [[14, 50], [38, 40]], base: 0, h: 0.435, style: 'box' }, // 26 m, south-east plaza
+  { name: 'big_west', pts: [[-41, 40], [-33, 58]], base: 0, h: 0.435, style: 'box' }, // 19.7 m, between the Meany rail and the pads
+  { name: 'big_east', pts: [[47, 37], [44, 55]], base: 0, h: 0.435, style: 'box' }, // 18.2 m, on from the Suzzallo-side rail
 ];
