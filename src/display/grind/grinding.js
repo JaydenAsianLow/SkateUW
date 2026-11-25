@@ -4,8 +4,8 @@
 // One set of rules for every surface (rail, ledge, curb):
 //  - Lock on from the air (an ollie, or rolling off something) when the board is close to a line (GRIND_SNAP) and
 //    at any angle (across a rail locks on too). It eases onto the line over GRIND_SNAP_TIME.
-//  - The trick is picked in the first GRIND_WINDOW seconds: no gesture = 50-50, a half circle = boardslide,
-//    a half circle started but not finished = bail.
+//  - No gesture = 50-50, a half circle (any time on the line) = boardslide, a half circle started but not
+//    finished in the first GRIND_WINDOW seconds = bail.
 //  - Short lines (< GRIND_LONG) ride to the end by themselves. Long ones need balancing (tilt the phone) and get the
 //    side camera.
 //  - At the end you pop off and land rolling; an ollie gets you out early.
@@ -171,17 +171,16 @@ export function stepGrind(g, dt, inp, half) {
   // Never trapped: if the board can't follow the line (something in the way) for GRIND_STUCK seconds, let go.
   g.far = inp.gap > 0.5 ? (g.far ?? 0) + dt : 0;
   if (g.far > GRIND_STUCK) return { end: 'stall' };
-  // Trick choice in the window.
-  if (!g.decided) {
-    const since = g.lockAt - GRIND_PRE * 1000;
-    if (inp.arcAt >= since) {
-      g.kind = 'boardslide';
-      g.slideSign = inp.arcDir < 0 ? -1 : 1;
-      g.decided = true;
-      g.changed = true;
-    } else if (inp.partialAt >= since) {
-      return { end: 'bail' };
-    } else if (g.t >= GRIND_WINDOW) g.decided = true;
+  // Trick choice. A half circle at any time on the line (or just before locking on) makes it a boardslide: drawing
+  // one after an ollie takes about as long as the ollie, so it can't be limited to the first moments. A half circle
+  // given up halfway bails only in the first GRIND_WINDOW seconds (later it is just a stray swipe).
+  const since = g.lockAt - GRIND_PRE * 1000;
+  if (g.kind !== 'boardslide' && inp.arcAt >= since) {
+    g.kind = 'boardslide';
+    g.slideSign = inp.arcDir < 0 ? -1 : 1;
+    g.changed = true;
+  } else if (g.kind !== 'boardslide' && g.t < GRIND_WINDOW && inp.partialAt >= since) {
+    return { end: 'bail' };
   }
   // Speed: surface drag, and gravity along the slope.
   const here = at(line, g.s);

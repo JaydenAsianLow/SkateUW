@@ -17,10 +17,10 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE, GRIND_EXIT_LIFT, COMBO_BONUS, COMBO_WINDOW, grindPoints,
+  TURN_RATE, GRIND_EXIT_LIFT, GRIND_CHAIN_CORNERS, GRIND_COOL, GRIND_COOL_R, COMBO_BONUS, COMBO_WINDOW, grindPoints,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
-import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, startGrind, stepGrind } from './grind/grinding.js';
+import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, nearest, startGrind, stepGrind } from './grind/grinding.js';
 import { bailTrack, cavemanTrack, dismountTrack, evalTrack, finish, mountTrack, pickupTrack, rootAt, runDismountTrack, runMountTrack, trackWeight, jumpPose, walkPose, walkRate } from './choreo.js';
 
 // Airtime setting A (settings.js): popped jumps hang A× longer. Pop speed ∝ A^-¼ and gravity ∝ A^-1¼,
@@ -188,7 +188,8 @@ export default function Skateboard() {
     board.grind = null;
     rb.collider(0)?.setCollisionGroups(PLAYER_GROUPS);
     rb.setGravityScale(1, true);
-    st.grindSkip = { line: g.line, until: performance.now() + 450 };
+    const lp = rb.translation();
+    st.grindSkip = { x: lp.x, z: lp.z, until: performance.now() + GRIND_COOL * 1000 }; // no re-grab of lines near here
     const chain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t, startMs: g.lockAt }];
     st.grindChain = [];
     if (!end) return;
@@ -217,8 +218,7 @@ export default function Skateboard() {
     let total = 0;
     let mult = 1;
     for (const leg of chain) ({ pts: leg.pts, mult } = scoreGrind(leg)), (total += leg.pts), comboEnd();
-    callout = chain.map((c) => `${c.kind === 'boardslide' ? 'BOARDSLIDE' : '50-50'} ${c.dist.toFixed(1)}m`).join(' + ') + ` +${total}`;
-    if (mult > 1) callout += ` · COMBO x${st.combo}`;
+    callout = `${chain[0].kind === 'boardslide' ? 'BOARDSLIDE' : '50-50'} ${total}`; // just the score
     board.trick = { name: callout, at: performance.now() };
     haptic('land');
   };
@@ -750,7 +750,7 @@ export default function Skateboard() {
         st.trick = null; // the half circle was for the slide, not a 180
         haptic('trick');
       }
-      if (r.end === 'off') {
+      if (r.end === 'off' && GRIND_CHAIN_CORNERS) {
         // Round a corner onto the next line (a pad's next edge): a combo, no landing in between.
         const next = findCorner(nearby(grind, p.x, p.z), g);
         if (next) {
@@ -795,7 +795,7 @@ export default function Skateboard() {
         pushT: -1, popT: -1, flip: -1, air: false, pitch, steer: st.steer, fall: 0, manual: 0,
         balance: b?.balance ?? -1, meter: b?.marker ?? 0, zone: b?.zone ?? null, manualT: 0,
         balanceLabel: `★ ${grindName(g)} ★`, balanceEnds: ['BAIL', 'BAIL'],
-        balanceInfo: `${Math.abs(g.s - g.s0).toFixed(1)}m · ${grindPoints(g.line.type, g.kind, Math.abs(g.s - g.s0), g.t)}`,
+        balanceInfo: `${grindPoints(g.line.type, g.kind, Math.abs(g.s - g.s0), g.t)}`,
       });
       return;
     }
@@ -815,9 +815,9 @@ export default function Skateboard() {
     const trickBusy = st.revert || (st.trick && st.trick.t / st.trick.def.time < LAND_OK && !(st.trick.def.spin && !st.trick.def.flip && !st.trick.def.shove));
     // On the ground: riding up to a curb's edge at a shallow angle locks on too (no ollie needed for a curb).
     if (grind.ready && !trickBusy && (!grounded || st.popT < 0)) {
-      const skip = st.grindSkip && nowMs < st.grindSkip.until ? st.grindSkip.line : null;
+      const cool = st.grindSkip && nowMs < st.grindSkip.until ? st.grindSkip : null;
       const b = { x: p.x, z: p.z, bottom: p.y - HALF.y, vx: v.x, vy: v.y, vz: v.z, popped: st.popT >= 0 };
-      const skipFn = skip && ((l) => l === skip);
+      const skipFn = cool && ((l) => nearest(l, cool.x, cool.z).d < GRIND_COOL_R);
       const near = nearby(grind, p.x, p.z); // only the lines within ~5 m (grid lookup)
       const hit = grounded ? findCurbEntry(near, b, skipFn) : findEntry(near, b, skipFn);
       if (hit) {
@@ -906,7 +906,7 @@ export default function Skateboard() {
         const mult = comboLink(nowMs - t * 1000); // a manual straight out of a grind (or into one) is a combo link
         const pts = Math.round(manualPoints(t) * mult);
         board.score += pts;
-        board.trick = { name: `MANUAL ${t.toFixed(1)}s +${pts}${mult > 1 ? ` · COMBO x${st.combo}` : ''}`, at: performance.now() };
+        board.trick = { name: `MANUAL ${pts}`, at: performance.now() };
         comboEnd();
       }
       st.manualT = 0;

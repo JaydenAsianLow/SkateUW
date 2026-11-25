@@ -5,7 +5,7 @@ import { groundMask, groundMaskBounds, materials, merge } from '../look.js';
 import { edgeBox, edgeRotY, edges, flatPolygon, worldUv } from './geo.js';
 import { BoxColliders } from './Footprints.jsx';
 import { grindLines } from './Glb.jsx';
-import { POST_R, RAIL_R, barCollider, tube } from './bars.js';
+import { POST_R, RAIL_R, barCollider, tube, wallCollider } from './bars.js';
 import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS, stairCorners } from './layout.js';
 
 // The plaza deck (y = 0) with holes where the ground drops to LOW, the lower ground, retaining walls,
@@ -132,6 +132,9 @@ export default function Ground() {
           rails.push(tube(new Vector3(p.x, p.y - RAIL_H, p.z), p, POST_R));
         }
         railColliders.push(barCollider(a, b));
+        // A solid wall from the lower ground up to the sloped bar, in 0.4 m pieces that follow the slope.
+        const pieces = Math.ceil(a.distanceTo(b) / 0.4);
+        for (let k = 0; k < pieces; k++) railColliders.push(wallCollider(a.clone().lerp(b, k / pieces), a.clone().lerp(b, (k + 1) / pieces), LOW));
         lines.push({ name: `${s.key}_rail_${side < 0 ? 'left' : 'right'}`, a: a.toArray(), b: b.toArray() });
       }
     }

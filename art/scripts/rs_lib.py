@@ -13,9 +13,9 @@ import sys
 import bpy
 import bmesh
 
-RAIL_R = 0.045    # handrail bar radius (chunky enough to read from the chase camera)
-POST_R = 0.035    # handrail post radius
-RAIL_COL = 0.09   # handrail collider thickness
+RAIL_R = 0.07     # handrail bar radius (14 cm thick: reads from the chase camera)
+POST_R = 0.05     # handrail post radius
+RAIL_COL = 0.14   # handrail collider thickness (also the width of the solid wall under it)
 from mathutils import Vector
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # art/
@@ -221,6 +221,18 @@ class Builder:
             zm = (z_bot + z_top) / 2
             self.tube('M_metal', (x, ym, zm), (x, ym, zm + h), POST_R)
         self.rail(name, a, b)
+        # Solid wall under the bar, in 0.4 m pieces that follow the slope (from the floor up to the bar), so nothing
+        # walks or rolls through or under the handrail.
+        n = max(1, int(math.hypot(b[1] - a[1], b[2] - a[2]) / 0.4))
+        floor = lambda y: z_bot + (z_top - z_bot) * max(0.0, min(1.0, (y - y_bot) / ((y_top - y_bot) or 1.0)))
+        bar = lambda y: a[2] + (b[2] - a[2]) * (y - a[1]) / ((b[1] - a[1]) or 1.0)
+        for k in range(n):
+            y0 = a[1] + (b[1] - a[1]) * k / n
+            y1 = a[1] + (b[1] - a[1]) * (k + 1) / n
+            lo = min(floor(y0), floor(y1)) - 0.1
+            hi = min(bar(y0), bar(y1))
+            if hi - lo > 0.05:
+                self.collider(f'{name}_wall{k}', x - RAIL_COL / 2, x + RAIL_COL / 2, y0, y1, lo, hi)
         L = math.hypot(b[1] - a[1], b[2] - a[2])
         self.col_center(name + 'col', (x, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2 - 0.02),
                         (RAIL_COL, L, RAIL_COL), (math.atan2(b[2] - a[2], b[1] - a[1]), 0, 0))

@@ -3,7 +3,7 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import { Vector3 } from 'three';
 import { materials, merge } from '../look.js';
 import { grindLines } from './Glb.jsx';
-import { POST_R, RAIL_R, barCollider, joint, tube } from './bars.js';
+import { POST_R, RAIL_R, barCollider, joint, tube, wallCollider } from './bars.js';
 import { RAILS } from './layout.js';
 
 // The free-standing rails (layout.js RAILS): iron bars on posts, like the stair handrails, with the same thin
@@ -51,7 +51,7 @@ export default function Rails() {
       for (let i = 0; i < path.length - 1; i++) {
         parts.push(tube(path[i], path[i + 1], RAIL_R));
         if (i > 0) parts.push(joint(path[i], RAIL_R));
-        colliders.push(barCollider(path[i], path[i + 1]));
+        colliders.push(barCollider(path[i], path[i + 1]), wallCollider(path[i], path[i + 1], r.base)); // bar + solid wall under it
       }
       // posts: both ends, and evenly in between at most POST_GAP apart (measured along the path)
       const cum = [0];

@@ -134,6 +134,8 @@ export function GrindTest() {
         if (gesture === 'arc') phone.revertQueued = 1;
         if (gesture === 'partial') phone.partialQueued = true;
         if (gesture === 'ollieout') setTimeout(() => (phone.popQueued = 1), 1000);
+        // a half circle drawn after landing on the line, as the phone sends it in the air (a 180) after 0.9 s
+        if (gesture === 'arclate') setTimeout(() => (phone.trickQueued = { type: 'fs180', side: 1 }), 900);
         out();
       }
       if (phase === 'grind') {

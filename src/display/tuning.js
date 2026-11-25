@@ -166,7 +166,7 @@ export const GRIND_SQUARE_KEEP = 0.7; // share of your speed kept when you hit a
 export const GRIND_MIN_ENTRY = 1.0; // m/s along the line needed to lock on
 // The trick is picked in this window after locking on (s): no gesture = 50-50, a half circle = boardslide, a half
 // circle started but not finished = bail. A half circle drawn up to GRIND_PRE s before locking on also counts.
-export const GRIND_WINDOW = 0.5;
+export const GRIND_WINDOW = 0.8;
 export const GRIND_PRE = 0.35;
 // Slowing down on each surface (fraction of speed lost per second): waxed rails slide best, ledges and curbs grab more.
 export const GRIND_DRAG = { rail: 0.06, ledge: 0.1, curb: 0.13 };
@@ -192,6 +192,9 @@ export const GRIND_CURB_TOWARD = 0.25; // m/s toward the edge needed (so riding 
 export const GRIND_CORNER = 0.5;
 export const GRIND_CORNER_TURN = 110;
 export const GRIND_CORNER_KEEP = 0.92;
+export const GRIND_CHAIN_CORNERS = false; // true: at the end of a pad edge carry on round the corner onto the next edge (combo)
+export const GRIND_COOL = 0.6; // s after leaving a line: no locking onto lines near where you left (so popping off a pad's end doesn't grab the next edge)
+export const GRIND_COOL_R = 2.5; // m: how near counts
 export const GRIND_STUCK = 1.0; // s: a board that can't follow its line this long is let go (never trapped)
 export const GRIND_NEAR = 5; // m: lines further than this from the skater aren't checked (grid lookup, grid cell = this)
 // Scoring: points grow with the distance ground and the time on the line (balanced, on long ones). Rails pay more
