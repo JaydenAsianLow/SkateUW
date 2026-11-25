@@ -12,6 +12,10 @@ import sys
 
 import bpy
 import bmesh
+
+RAIL_R = 0.045    # handrail bar radius (chunky enough to read from the chase camera)
+POST_R = 0.035    # handrail post radius
+RAIL_COL = 0.09   # handrail collider thickness
 from mathutils import Vector
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # art/
@@ -209,17 +213,17 @@ class Builder:
         collider so the board can land on / bump the rail."""
         a = (x, y_bot - 0.3, z_bot + h)
         b = (x, y_top + 0.3, z_top + h)
-        self.tube('M_metal', a, b, 0.024)
+        self.tube('M_metal', a, b, RAIL_R)
         if posts:
-            self.tube('M_metal', (x, a[1], z_bot), a, 0.022)
-            self.tube('M_metal', (x, b[1], z_top), b, 0.022)
+            self.tube('M_metal', (x, a[1], z_bot), a, POST_R)
+            self.tube('M_metal', (x, b[1], z_top), b, POST_R)
             ym = (y_bot + y_top) / 2
             zm = (z_bot + z_top) / 2
-            self.tube('M_metal', (x, ym, zm), (x, ym, zm + h), 0.022)
+            self.tube('M_metal', (x, ym, zm), (x, ym, zm + h), POST_R)
         self.rail(name, a, b)
         L = math.hypot(b[1] - a[1], b[2] - a[2])
         self.col_center(name + 'col', (x, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2 - 0.02),
-                        (0.05, L, 0.05), (math.atan2(b[2] - a[2], b[1] - a[1]), 0, 0))
+                        (RAIL_COL, L, RAIL_COL), (math.atan2(b[2] - a[2], b[1] - a[1]), 0, 0))
 
     def mesh(self, m, verts, faces):
         """Raw polygons: verts = [(x, y, z)], faces = [(i, j, k, ...)]."""
@@ -308,7 +312,8 @@ def export(name):
     path = os.path.join(OUT, name + '.glb')
     bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=False, export_yup=True,
                               export_apply=True, export_image_format='JPEG', export_jpeg_quality=88,
-                              export_cameras=False, export_lights=False)
+                              export_cameras=False, export_lights=False,
+                              use_mesh_edges=True)  # the RAIL_* grind lines are loose edges
     tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == 'MESH' and not o.name.startswith(('COL_', 'RAIL_', 'COLMESH_')))
     print(f'EXPORT {path}  ({os.path.getsize(path) // 1024} KB, ~{tris} tris)')
 

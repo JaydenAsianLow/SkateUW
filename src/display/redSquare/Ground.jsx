@@ -15,6 +15,8 @@ const WALL_T = 0.5; // retaining wall collider thickness
 const TRIMESH_FIX_INTERNAL_EDGES = 144;
 const RAIL_H = 0.9; // handrail height above the stair line
 const RAIL_INSET = 0.35; // handrail distance in from each side of a stair set
+const RAIL_R = 0.045; // handrail bar radius (chunky enough to read from the chase camera; also the collider half-size)
+const POST_R = 0.035;
 
 const _up = new Vector3();
 const _d = new Vector3();
@@ -138,14 +140,14 @@ export default function Ground() {
         const at = (w, y) => new Vector3(s.top[0] + right[0] * u + s.dir[0] * w, y, s.top[1] + right[1] * u + s.dir[1] * w);
         const a = at(-0.3, RAIL_H);
         const b = at(run + 0.3, LOW + RAIL_H);
-        rails.push(tube(a, b, 0.024));
+        rails.push(tube(a, b, RAIL_R));
         for (const t of [0, 0.5, 1]) {
           const p = a.clone().lerp(b, t);
-          rails.push(tube(new Vector3(p.x, p.y - RAIL_H, p.z), p, 0.022));
+          rails.push(tube(new Vector3(p.x, p.y - RAIL_H, p.z), p, POST_R));
         }
         _q.setFromUnitVectors(_up.set(0, 1, 0), _d.subVectors(b, a).normalize());
         railColliders.push({
-          args: [0.025, a.distanceTo(b) / 2, 0.025],
+          args: [RAIL_R, a.distanceTo(b) / 2, RAIL_R],
           position: a.clone().lerp(b, 0.5).add(_up.set(0, -0.02, 0)).toArray(),
           rotation: _e.setFromQuaternion(_q).toArray().slice(0, 3),
         });

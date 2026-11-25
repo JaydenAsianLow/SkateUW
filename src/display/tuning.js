@@ -148,3 +148,10 @@ export const STEER_CURVE = 1.25;
 export const TRUCK_MIN = 0.5;
 export const TRUCK_MAX = 2;
 export const SWIPE_MIN = 0.04; // shortest swipe that counts, as a fraction of the screen height
+
+// --- Grinding (src/display/grind/). Grind lines are built once when the level loads.
+export const GRIND_LONG = 10; // m: lines at least this long are "long" (balance bar + side camera); shorter ones auto-complete
+export const GRIND_MIN_LEN = 1.5; // m: scanned edges shorter than this are not grindable
+export const GRIND_MIN_DROP = 0.1; // m: a scanned edge must stand at least this far above the ground beside it ...
+export const GRIND_MAX_DROP = 0.65; // m: ... and at most this far (taller = a wall, not a ledge)
+export const GRIND_CURB_MAX = 0.3; // m: scanned edges up to this height are curbs, higher ones ledges

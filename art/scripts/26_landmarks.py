@@ -160,7 +160,7 @@ fpts.sort(key=lambda q: q[1])                      # north corner (top of the st
 fx = max(ax_, bx_) + 0.09
 top_z, bot_z = az_ + 0.25, bz_ - 0.15
 ra, rb = (fx, -top_z, H + 0.9), (fx, -bot_z, 0.9)
-b.tube('M_metal', ra, rb, 0.022)
+b.tube('M_metal', ra, rb, RAIL_R)
 for zz, hh in ((top_z, H + 0.9), (bot_z, 0.9)):
     b.tube('M_metal', (fx, -zz, hh), (fx - 0.09, -zz, hh), 0.018)          # return into the wall
 for f in (0.25, 0.75):
@@ -218,7 +218,7 @@ for fi, (fname, nr) in enumerate((('lower', OS['lower']), ('upper', OS['upper'])
         b.collider(f'od_{fname}{k}', x0, x1, y, y + OS['tread'], 0.0, z)
         y += OS['tread']
     rail_pts.append(((x0 + 0.22, y_start - 0.3, z_start + 0.85), (x0 + 0.22, y + 0.3, z + 0.85)))
-    b.handrail(f'od_{fname}_east', x1 - 0.22, y_start, z_start, y, z, h=0.85)  # open (monolith) side, on posts
+    b.handrail(f'od_{fname}_east_rail', x1 - 0.22, y_start, z_start, y, z, h=0.85)  # open (monolith) side, on posts
     if fi == 0:  # landing
         b.box('M_paverbrick', x0, x1, y, y + OS['landing'], 0.0, z)
         b.collider('od_landing', x0, x1, y, y + OS['landing'], 0.0, z)
@@ -228,7 +228,7 @@ y_foot = -OS['footZ']
 b.prism_x('M_brick', [(y_foot, 0.0), (y + 0.4, 0.0), (y + 0.4, H + 0.95), (y_foot + 1.0, rise * OS['lower'] + 0.95), (y_foot, 0.95)], x0 - 0.45, x0)
 b.collider('od_wall', x0 - 0.45, x0, y_foot, y + 0.4, 0.0, H + 0.95)
 for i, (ra, rb) in enumerate(rail_pts):
-    b.tube('M_metal', ra, rb, 0.022)
+    b.tube('M_metal', ra, rb, RAIL_R)
     b.rail(f'od_handrail{i}', ra, rb)
 
 # --- Broken Obelisk at the top of the sloped aggregate edge of the kane_east level (photos, tour photo)
@@ -342,6 +342,8 @@ for i, quad in enumerate(SK['pads']):
         b.col_center(f'pad{i}_{k}', ((e0[0] + e1[0]) / 2, (e0[1] + e1[1]) / 2, SH / 2), (ln, thick / NS, SH), (0, 0, ang))
     b.rail(f'pad{i}_edge', (*O0, SH), (*O1, SH))
     b.rail(f'pad{i}_back', (*I1, SH - 0.02), (*I0, SH - 0.02))
+    b.rail(f'pad{i}_end0', (*I0, SH - 0.01), (*O0, SH - 0.01))   # the two angled ends: every side of a pad is grindable
+    b.rail(f'pad{i}_end1', (*O1, SH - 0.01), (*I1, SH - 0.01))
 
 b.finish('landmarks')
 export('landmarks')
