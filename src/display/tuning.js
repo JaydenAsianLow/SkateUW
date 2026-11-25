@@ -194,3 +194,14 @@ export const GRIND_CORNER_TURN = 110;
 export const GRIND_CORNER_KEEP = 0.92;
 export const GRIND_STUCK = 1.0; // s: a board that can't follow its line this long is let go (never trapped)
 export const GRIND_NEAR = 5; // m: lines further than this from the skater aren't checked (grid lookup, grid cell = this)
+// Scoring: points grow with the distance ground and the time on the line (balanced, on long ones). Rails pay more
+// than ledges, ledges more than curbs; a boardslide more than a 50-50.
+export const GRIND_POINTS = { perMetre: 12, perSecond: 25 };
+export const GRIND_SURFACE_POINTS = { rail: 1.5, ledge: 1.2, curb: 1.0 };
+export const GRIND_TRICK_POINTS = { '5050': 1.0, boardslide: 1.4 };
+export const grindPoints = (type, kind, metres, seconds) =>
+  Math.round((GRIND_POINTS.perMetre * metres + GRIND_POINTS.perSecond * seconds) * GRIND_SURFACE_POINTS[type] * GRIND_TRICK_POINTS[kind]);
+// Combos: a grind or manual started within COMBO_WINDOW seconds of the last one ending (rounding a corner counts)
+// scores (1 + COMBO_BONUS x links so far) times its points. A bail ends the combo.
+export const COMBO_WINDOW = 1.5;
+export const COMBO_BONUS = 0.5;

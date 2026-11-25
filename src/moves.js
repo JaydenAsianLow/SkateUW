@@ -12,6 +12,7 @@ export const MOVES = [
   ['Frontside 180', '↓ ↑, then left finger half-circles down while the right half-circles up'],
   ['Steer', 'tilt left / right'],
   ['Manual', 'tilt the top of the phone up; keep the arrow in the green'],
+  ['Grind', 'ollie onto a rail, ledge or curb (or ride into a curb at a shallow angle). Nothing = 50-50, a half circle = boardslide, a half circle you stop halfway = bail. On long ones tilt left / right to keep the arrow in the green'],
   ['Get off / on', 'tap Get off (the board goes in your hand), use the joystick to walk / run, tap Get on to drop in. After a fall, walk to the board to pick it up'],
   ['Jump', 'on foot with the board in hand: tap Jump'],
   ['Caveman', 'jump, then tap Get on in the air just before you land: the board drops under your feet'],

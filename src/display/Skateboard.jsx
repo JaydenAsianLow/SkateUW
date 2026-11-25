@@ -17,7 +17,7 @@ import {
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
-  TURN_RATE, GRIND_EXIT_LIFT,
+  TURN_RATE, GRIND_EXIT_LIFT, COMBO_BONUS, COMBO_WINDOW, grindPoints,
 } from './tuning.js';
 import { grind } from './grind/lines.js';
 import { addScuff, at, continueGrind, findCorner, findCurbEntry, findEntry, grindName, nearby, startGrind, stepGrind } from './grind/grinding.js';
@@ -163,6 +163,22 @@ export default function Skateboard() {
     return [x * c + z * sn, -x * sn + z * c];
   };
 
+  // --- Combos: a grind or manual that starts within COMBO_WINDOW of the last one ending is the next link. Returns
+  // the points multiplier for a move that started at `startMs`, and counts the link. A bail clears it (startBail).
+  const comboLink = (startMs) => {
+    const st = s.current;
+    st.combo = startMs <= (st.comboUntil ?? -1) ? (st.combo ?? 0) + 1 : 1;
+    return 1 + COMBO_BONUS * (st.combo - 1);
+  };
+  const comboEnd = () => (s.current.comboUntil = performance.now() + COMBO_WINDOW * 1000);
+  // Score one grind (or one leg of a grind that rounded corners): its points with the combo multiplier.
+  const scoreGrind = (leg) => {
+    const mult = comboLink(leg.startMs);
+    const pts = Math.round(grindPoints(leg.type, leg.kind, leg.dist, leg.t) * mult);
+    board.score += pts;
+    return { pts, mult };
+  };
+
   // --- Grinding (grind/grinding.js): leave the line. end = 'off' (end of the line: pop off), 'ollie' (popped out),
   // 'stall' (too slow: drop off the side), 'bail', or null (reset: just let go).
   const endGrind = (rb, end) => {
@@ -173,11 +189,11 @@ export default function Skateboard() {
     rb.collider(0)?.setCollisionGroups(PLAYER_GROUPS);
     rb.setGravityScale(1, true);
     st.grindSkip = { line: g.line, until: performance.now() + 450 };
-    const chain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t }];
+    const chain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t, startMs: g.lockAt }];
     st.grindChain = [];
     if (!end) return;
     addScuff(g.line, g.s0, g.s);
-    const callout = chain.map((c) => `${c.kind === 'boardslide' ? 'BOARDSLIDE' : '50-50'} ${c.dist.toFixed(1)}m`).join(' + ');
+    let callout = '';
     if (end === 'bail') {
       board.trick = { name: `${grindName(g)} BAIL`, at: performance.now() };
       startBail(rb, 'side', g.speed);
@@ -197,6 +213,12 @@ export default function Skateboard() {
     if (end === 'stall' && g.line.inner) (vx -= g.line.inner[0] * 1.2), (vz -= g.line.inner[1] * 1.2); // off the open side
     setVelocity(rb, vx, vy, vz);
     st.slideYaw = 0;
+    // Score each leg (a corner carry-on is the next combo link), then open the window for the next link.
+    let total = 0;
+    let mult = 1;
+    for (const leg of chain) ({ pts: leg.pts, mult } = scoreGrind(leg)), (total += leg.pts), comboEnd();
+    callout = chain.map((c) => `${c.kind === 'boardslide' ? 'BOARDSLIDE' : '50-50'} ${c.dist.toFixed(1)}m`).join(' + ') + ` +${total}`;
+    if (mult > 1) callout += ` · COMBO x${st.combo}`;
     board.trick = { name: callout, at: performance.now() };
     haptic('land');
   };
@@ -208,6 +230,8 @@ export default function Skateboard() {
     const k = kind === 'side' && sev > SLAM_AT ? 'slam' : kind;
     st.mode = 'bail';
     st.modeT = 0;
+    st.combo = 0;
+    st.comboUntil = -1;
     st.track = bailTrack(k, sev);
     st.offSpeed = speed * (k === 'back' ? 0.45 : k === 'slam' ? 0.6 : 0.3);
     st.offDrag = k === 'slam' ? 1.5 : k === 'back' ? 2.2 : 3;
@@ -731,7 +755,7 @@ export default function Skateboard() {
         const next = findCorner(nearby(grind, p.x, p.z), g);
         if (next) {
           addScuff(g.line, g.s0, g.s);
-          st.grindChain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t }];
+          st.grindChain = [...(st.grindChain ?? []), { kind: g.kind, type: g.line.type, dist: Math.abs(g.s - g.s0), t: g.t, startMs: g.lockAt }];
           st.grind = continueGrind(g, next, [p.x, p.y, p.z], HALF.y, nowMs);
           haptic('trick');
           return;
@@ -770,7 +794,8 @@ export default function Skateboard() {
       Object.assign(board.anim, {
         pushT: -1, popT: -1, flip: -1, air: false, pitch, steer: st.steer, fall: 0, manual: 0,
         balance: b?.balance ?? -1, meter: b?.marker ?? 0, zone: b?.zone ?? null, manualT: 0,
-        balanceLabel: `★ ${grindName(g)} ★`, balanceInfo: `${Math.abs(g.s - g.s0).toFixed(1)}m`, balanceEnds: ['BAIL', 'BAIL'],
+        balanceLabel: `★ ${grindName(g)} ★`, balanceEnds: ['BAIL', 'BAIL'],
+        balanceInfo: `${Math.abs(g.s - g.s0).toFixed(1)}m · ${grindPoints(g.line.type, g.kind, Math.abs(g.s - g.s0), g.t)}`,
       });
       return;
     }
@@ -878,9 +903,11 @@ export default function Skateboard() {
     } else if (st.manualT > 0) {
       if (st.manualT > MANUAL_CALLOUT && st.popT < 0) {
         const t = st.manualT;
-        const pts = manualPoints(t);
+        const mult = comboLink(nowMs - t * 1000); // a manual straight out of a grind (or into one) is a combo link
+        const pts = Math.round(manualPoints(t) * mult);
         board.score += pts;
-        board.trick = { name: `MANUAL ${t.toFixed(1)}s +${pts}`, at: performance.now() };
+        board.trick = { name: `MANUAL ${t.toFixed(1)}s +${pts}${mult > 1 ? ` · COMBO x${st.combo}` : ''}`, at: performance.now() };
+        comboEnd();
       }
       st.manualT = 0;
     }
