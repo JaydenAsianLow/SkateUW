@@ -7,6 +7,7 @@
 //  2. createComboReader: turns segments, arcs and held fingers into skate moves:
 //       D                                   -> push
 //       D, U                                -> ollie (fires immediately)
+//       U, D                                -> nollie (pops off the nose; no push)
 //       D, U, UR (or UL)                    -> kickflip (UL spins it the other way)
 //       D, U, then UR + DL with two fingers -> varial flip
 //       D, U, hold, DL                      -> tre flip. The hold is the same finger resting a moment at the top of
@@ -153,7 +154,7 @@ const power = (speed) => clamp(0.8 + (speed - 0.3) * 0.4, 0.75, 1.3);
 
 // pointers() -> [{ id, holding }] for every finger currently on the deck (holding = resting still).
 export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, pointers }) {
-  let stage = 'idle'; // 'idle' | 'down' | 'pop'
+  let stage = 'idle'; // 'idle' | 'down' | 'up' | 'pop'
   let lastT = -Infinity;
   let popT = -Infinity;
   let trickSent = false;
@@ -238,7 +239,12 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, p
       }
       if (t - lastT > COMBO_GAP_MS) stage = 'idle';
       lastT = t;
-      if (ev.dir === 'D') {
+      if (ev.dir === 'D' && stage === 'up') {
+        onPop(power(ev.speed), true); // nollie
+        popT = t;
+        trickSent = false;
+        setStage('pop');
+      } else if (ev.dir === 'D') {
         onPush(power(ev.speed));
         setStage('down');
       } else if (ev.dir === 'U' && stage === 'down') {
@@ -249,7 +255,7 @@ export function createComboReader({ onPush, onPop, onTrick, onRevert, onStage, p
       } else if (ev.dir !== 'U') {
         setStage('idle');
         queueFlick(ev); // maybe half of a two-finger pop shove-it
-      } else setStage('idle');
+      } else setStage('up'); // maybe the start of a nollie
     },
     arc(ev) {
       arcs.push(ev);

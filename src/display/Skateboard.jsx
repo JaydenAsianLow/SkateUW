@@ -31,7 +31,17 @@ const START = [SPAWN.position[0], HALF.y + 0.05, SPAWN.position[1]];
 const PIVOT = DECK_TOP - 0.035; // flips spin around the middle of the board, not the ground
 
 const KEY_TRICKS = ['kickflip', 'varial', 'tre', 'shove', 'fs180'];
-const EDGE_KEYS = ['forward', 'pop', 'revert', 'carry', ...KEY_TRICKS];
+const EDGE_KEYS = ['forward', 'pop', 'nollie', 'revert', 'carry', ...KEY_TRICKS];
+
+// Goofy (setting) and riding switch both mirror the rider across the board (x -> -x in rider space): right foot
+// forward, facing the other edge. -1 = mirrored. Rider space is mirrored, the world (steering, travel) is not.
+const mirrorOf = (st) => (settings.stance === 'goofy' ? -1 : 1) * (st.swap ? -1 : 1);
+// Fakie + switch is the natural stance with the board turned round (the board's ends look alike): call it natural.
+const normalizeStance = (st) => {
+  if (st.stance === 1 && st.swap) (st.stance = 0), (st.swap = false);
+};
+// Trick name prefix from how it was popped.
+const stancePrefix = (st) => (st.popSwitch ? 'SWITCH ' : '') + (st.popFakie ? 'FAKIE ' : '') + (st.popNose ? 'NOLLIE ' : '');
 const _q = new Quaternion();
 const _v = new Vector3();
 const DROP = new Vector3(0, -HALF.y, 0);
@@ -98,8 +108,11 @@ export default function Skateboard() {
     popT: -1, // seconds since pop, -1 when not in a trick
     trick: null, // { def, side, t }
     revert: null, // { dir, t }
-    stance: 0, // 0 regular, 1 fakie (rider + board turned 180° to the travel direction)
+    stance: 0, // 0 forward, 1 fakie (rider + board turned 180° to the travel direction)
+    swap: false, // riding switch: feet the other way round from the Stance setting (a half shove-it from fakie)
     popFakie: false,
+    popSwitch: false,
+    popNose: false, // this pop was a nollie
     air: false,
     airT: 0,
     pushT: -1, // seconds since the current push stroke started (rider animation)
@@ -134,6 +147,7 @@ export default function Skateboard() {
     const y = yawS(st);
     const c = Math.cos(y);
     const sn = Math.sin(y);
+    x *= mirrorOf(st);
     return [x * c + z * sn, -x * sn + z * c];
   };
 
@@ -260,7 +274,10 @@ export default function Skateboard() {
     for (const w of looseWheels.current) if (w) w.rotation.x = -L.spin;
   };
   const resetBoardVisuals = () => {
-    if (stanceG.current) stanceG.current.rotation.y = s.current.stance * Math.PI;
+    if (stanceG.current) {
+      stanceG.current.rotation.y = s.current.stance * Math.PI;
+      stanceG.current.scale.x = mirrorOf(s.current);
+    }
     if (shoveG.current) {
       shoveG.current.rotation.y = 0;
       shoveG.current.position.y = -HALF.y;
@@ -298,7 +315,8 @@ export default function Skateboard() {
     const sn = Math.sin(y);
     const dx = L.x - p.x;
     const dz = L.z - p.z;
-    const b = { x: dx * c - dz * sn, y: Math.max(0, L.y - (p.y - HALF.y)), z: dx * sn + dz * c, yaw: wrapAngle(L.yaw - y) };
+    const m = mirrorOf(st);
+    const b = { x: (dx * c - dz * sn) * m, y: Math.max(0, L.y - (p.y - HALF.y)), z: dx * sn + dz * c, yaw: wrapAngle(L.yaw - y) * m };
     // With the mocap pick-up clip, follow its timing (sped up to about 1.3 s) so the hand closes when the clip's does.
     const pc = mocap.clips.pickup;
     st.pickRate = pc ? Math.max(1, pc.dur / 1.3) : 1;
@@ -356,7 +374,7 @@ export default function Skateboard() {
 
     // Paused (menu, pairing, phone disconnected): freeze, and drop moves sent meanwhile so nothing fires on resume.
     if (!game.running) {
-      Object.assign(phone, { pushQueued: 0, popQueued: 0, trickQueued: null, revertQueued: 0, resetQueued: false, carryQueued: false });
+      Object.assign(phone, { pushQueued: 0, popQueued: 0, popNose: false, trickQueued: null, revertQueued: 0, resetQueued: false, carryQueued: false });
       for (const k of EDGE_KEYS) st.held[k] = keys[k];
       return;
     }
@@ -366,6 +384,7 @@ export default function Skateboard() {
     let targetLean = 0;
     let push = 0;
     let pop = 0;
+    let nose = false; // nollie
     let trickReq = null;
     let revertReq = 0;
     let leanIn = 0; // -1 leaning back (top of the phone up) .. 1 leaning forward
@@ -380,13 +399,14 @@ export default function Skateboard() {
       board.source = keys.forward || keys.back || keys.left || keys.right ? 'keyboard' : 'none';
     }
     if (phone.pushQueued) (push = phone.pushQueued), (phone.pushQueued = 0);
-    if (phone.popQueued) (pop = phone.popQueued), (phone.popQueued = 0);
+    if (phone.popQueued) (pop = phone.popQueued), (nose = phone.popNose), (phone.popQueued = 0);
     if (phone.trickQueued) (trickReq = phone.trickQueued), (phone.trickQueued = null);
     if (phone.revertQueued) (revertReq = phone.revertQueued), (phone.revertQueued = 0);
     let carryReq = phone.carryQueued;
     phone.carryQueued = false;
     if (pressed('forward')) push += 1; // tap W = one push
     if (pressed('pop')) pop = 1;
+    if (pressed('nollie')) (pop = 1), (nose = true);
     for (const k of KEY_TRICKS) if (pressed(k)) trickReq = { type: k, side: 1 };
     if (pressed('revert')) revertReq = 1;
     if (pressed('carry')) carryReq = true;
@@ -413,7 +433,7 @@ export default function Skateboard() {
       rb.setTranslation({ x: sp.x, y: sp.y + 0.05, z: sp.z }, true);
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rb.setGravityScale(1, true);
-      Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, air: false, airT: 0, pushT: -1 });
+      Object.assign(st, { heading: sp.heading, steer: 0, pushLeft: 0, popT: -1, trick: null, revert: null, stance: 0, swap: false, air: false, airT: 0, pushT: -1 });
       Object.assign(st, { mode: 'ride', modeT: 0, track: null, loose: null, offSpeed: 0, walkSpeed: 0 });
       board.pose = null;
       return;
@@ -532,7 +552,7 @@ export default function Skateboard() {
       else if (st.mode === 'dismount' || (st.mode === 'walk' && !st.loose)) offMode = 'carry';
       else if (st.mode === 'walk' || st.mode === 'pickup') offMode = 'find';
       Object.assign(board.view, { roll: 0, pitch: 0, yaw: 0, spin: 0, lift: 0, height: 0, mode: offMode });
-      Object.assign(board, { speed: fwdSpeed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: false, mode: st.mode, loose: st.loose });
+      Object.assign(board, { speed: fwdSpeed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: 0, fakie: false, mirror: mirrorOf(st), mode: st.mode, loose: st.loose });
       Object.assign(board.anim, {
         pushT: -1,
         popT: -1,
@@ -634,12 +654,14 @@ export default function Skateboard() {
 
     // --- Tricks.
     const air = airPhysics();
-    const doPop = (power) => {
+    const doPop = (power, fromNose = false) => {
       vy = air.pop * Math.sqrt(power);
       st.popT = 0;
       st.trick = null;
       st.pushLeft = 0;
       st.popFakie = st.stance === 1;
+      st.popSwitch = st.swap;
+      st.popNose = fromNose;
     };
     const startTrick = (type, side) => {
       const def = TRICKS[type];
@@ -651,7 +673,7 @@ export default function Skateboard() {
       if (left < need) vy = Math.min(vy + ASSIST_MAX, (air.g * need) / 2 - heightAbove / need);
     };
     const canPop = grounded && st.popT < 0 && !st.revert;
-    if (pop && canPop) doPop(pop);
+    if (pop && canPop) doPop(pop, nose);
     if (revertReq && st.popT >= 0 && st.popT < air.window && !st.trick) {
       trickReq = { type: revertReq > 0 ? 'fs180' : 'bs180', side: 1 }; // a half-circle in the air is a 180
       revertReq = 0;
@@ -674,6 +696,7 @@ export default function Skateboard() {
       st.revert.t += dt;
       if (st.revert.t >= REVERT_TIME) {
         st.stance ^= 1;
+        normalizeStance(st);
         st.revert = null;
         speed *= 0.92;
         board.trick = { name: 'REVERT', at: performance.now() };
@@ -696,7 +719,10 @@ export default function Skateboard() {
         return;
       }
       if (tr?.def.spin) st.stance ^= 1;
-      if (popped || tr) board.trick = { name: (st.popFakie ? 'FAKIE ' : '') + (tr ? tr.def.name : 'OLLIE'), at: performance.now() };
+      // A half shove-it turns the board round under you: the other end leads, so fakie <-> switch.
+      if ((tr?.def.shove ?? 0) % 1 === 0.5) (st.stance ^= 1), (st.swap = !st.swap);
+      normalizeStance(st);
+      if (popped || tr) board.trick = { name: (stancePrefix(st) + (tr ? tr.def.name : 'OLLIE')).replace('NOLLIE OLLIE', 'NOLLIE'), at: performance.now() };
     }
     // A pop that never left the ground (e.g. under a ledge) shouldn't lock tricks forever.
     if (st.popT > 1.5 && grounded) (st.popT = -1), (st.trick = null);
@@ -713,13 +739,19 @@ export default function Skateboard() {
     let spinYaw = 0;
     if (tr?.def.spin) spinYaw = tr.def.dir * tr.def.spin * ease * Math.PI * 2;
     if (st.revert) spinYaw = st.revert.dir * Math.PI * Math.min(1, st.revert.t / REVERT_TIME);
-    if (stanceG.current) stanceG.current.rotation.y = st.stance * Math.PI + spinYaw;
+    const mir = mirrorOf(st);
+    spinYaw *= mir; // a goofy frontside 180 turns the other way round
+    if (stanceG.current) {
+      stanceG.current.rotation.y = st.stance * Math.PI + spinYaw;
+      stanceG.current.scale.x = mir;
+    }
 
     const boardTrick = tr && (tr.def.flip || tr.def.shove);
     let pitch = st.lean * 0.12 + st.manual * MANUAL_PITCH_MAX;
     if (st.popT >= 0) {
       const t = st.popT;
-      pitch += t < 0.08 ? (t / 0.08) * 0.5 : 0.5 * Math.exp(-(t - 0.08) * 8); // tail snap, then level out
+      const snap = t < 0.08 ? (t / 0.08) * 0.5 : 0.5 * Math.exp(-(t - 0.08) * 8); // tail snap, then level out
+      pitch += st.popNose ? -snap : snap; // nollie: the nose snaps down instead
     }
     if (boardTrick) pitch *= 1 - Math.sin(Math.PI * u); // level the board while it rotates
     st.pitchNow = pitch;
@@ -729,12 +761,13 @@ export default function Skateboard() {
     }
     if (deck.current) {
       deck.current.rotation.x = pitch;
-      deck.current.rotation.z = -st.steer * 0.12 + (boardTrick ? tr.side * (tr.def.flip ?? 0) * ease * Math.PI * 2 : 0);
+      deck.current.rotation.z = -st.steer * 0.12 * mir + (boardTrick ? tr.side * (tr.def.flip ?? 0) * ease * Math.PI * 2 : 0);
     }
     Object.assign(board.view, {
-      roll: deck.current?.rotation.z ?? 0, // carve tilt + flip roll
+      // World-space values (the rider group may be mirrored): carve tilt + flip roll, shove-it.
+      roll: (deck.current?.rotation.z ?? 0) * mir,
       pitch,
-      yaw: shoveG.current?.rotation.y ?? 0, // shove-it
+      yaw: (shoveG.current?.rotation.y ?? 0) * mir,
       spin: spinYaw, // 180s / reverts (not the fakie stance itself)
       lift: shoveG.current ? shoveG.current.position.y + HALF.y : 0, // board rising off the feet in flips
       height: grounded ? 0 : Math.min(2, heightAbove),
@@ -743,10 +776,11 @@ export default function Skateboard() {
     st.wheelSpin += (speed / 0.028) * dt;
     for (const w of wheels.current) if (w) w.rotation.x = -st.wheelSpin;
 
-    Object.assign(board, { speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: st.lean, fakie: st.stance === 1, mode: 'ride', loose: null });
+    Object.assign(board, { speed, x: p.x, y: p.y, z: p.z, heading: st.heading, steer: st.steer, lean: st.lean, fakie: st.stance === 1, mirror: mir, mode: 'ride', loose: null });
     Object.assign(board.anim, {
       pushT: st.pushT,
       popT: st.popT,
+      nollie: st.popNose,
       flip: boardTrick ? u : -1,
       air: !grounded && (st.popT >= 0 || st.airT > 0.12),
       pitch,

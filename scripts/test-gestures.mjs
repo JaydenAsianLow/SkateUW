@@ -11,7 +11,7 @@ function rig() {
   const reader = createComboReader({
     pointers: () => [...fingers.entries()].map(([id, f]) => ({ id, ...f })),
     onPush: () => out.push('push'),
-    onPop: () => out.push('pop'),
+    onPop: (power, nose) => out.push(nose ? 'nollie' : 'pop'),
     onTrick: (type, side) => out.push(`${type}${side < 0 ? '-' : ''}`),
     onRevert: (dir) => out.push(`revert${dir < 0 ? '-' : '+'}`),
   });
@@ -54,6 +54,11 @@ const D = Math.PI / 180;
 
 const tests = {
   'push': async ({ finger }) => finger(1, line(200, 300, 200, 420)),
+  'nollie (↑ then ↓)': async ({ finger }) => finger(1, chain(line(200, 420, 200, 300), line(200, 300, 200, 420))),
+  'nollie kickflip': async ({ finger }) => {
+    await finger(1, chain(line(200, 420, 200, 300), line(200, 300, 200, 420)));
+    await finger(2, line(200, 300, 260, 240));
+  },
   'ollie (sharp zig-zag)': async ({ finger }) => finger(1, chain(line(200, 300, 200, 420), line(200, 420, 200, 320))),
   'ollie (rounded hairpin)': async ({ finger }) =>
     finger(1, chain(line(200, 300, 200, 420), arc(212, 420, 12, 180 * D, 0 * D, 4), line(224, 420, 224, 320))),
@@ -129,6 +134,8 @@ const expect = {
   'revert, big half circle (r=130)': 'revert+',
   'sloppy diagonal flick after ollie (curved 20°)': 'push pop kickflip-',
   'push': 'push',
+  'nollie (↑ then ↓)': 'nollie',
+  'nollie kickflip': 'nollie kickflip',
   'ollie (sharp zig-zag)': 'push pop',
   'ollie (rounded hairpin)': 'push pop',
   'ollie (two separate swipes)': 'push pop',

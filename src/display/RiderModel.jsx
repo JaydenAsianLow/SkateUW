@@ -460,7 +460,7 @@ function RiderModel({ boardRef }) {
     const edge = (a.balance ?? -1) >= 0 ? Math.abs(a.balance - 0.5) * 2 : 0;
     const balance = m * 0.6; // arms out to balance a manual
     s.armOut = damp(s.armOut, fall > 0 ? 1.4 : a.air ? 1.0 : 0.25 + Math.abs(a.steer) * 0.35 + (a.flip >= 0 ? 0.3 : 0) + balance, 8, dt);
-    s.lean = damp(s.lean, a.steer, 6, dt);
+    s.lean = damp(s.lean, a.steer * (board.mirror ?? 1), 6, dt); // rider space may be mirrored (goofy / switch)
 
     // Whole rider rolls into turns with the deck; on a bail topples off the toe side (+X), pivoting at the feet.
     // Balancing a manual: small side-to-side sway, bigger near the edges of the meter.
@@ -471,7 +471,9 @@ function RiderModel({ boardRef }) {
 
     // --- Feet on the deck (follow nose/tail pitch, lift off for flips).
     const flipW = a.flip >= 0 ? Math.sin(Math.PI * a.flip) : 0;
-    const drag = popT >= 0 && popT < 0.3 ? Math.sin((Math.PI * popT) / 0.3) : 0; // front foot slides up the board
+    const slide = popT >= 0 && popT < 0.3 ? Math.sin((Math.PI * popT) / 0.3) : 0; // the leading foot slides along the board
+    const drag = a.nollie ? 0 : slide; // ollie: the front foot slides up toward the nose
+    const dragBack = a.nollie ? slide : 0; // nollie: the back foot slides back toward the tail
     const lift = flipW * 0.22 + drag * 0.04;
     const sp = Math.sin(a.pitch);
     const ankleY = (z) => DECK_TOP + rig.ankleH - z * sp + lift;
@@ -479,7 +481,7 @@ function RiderModel({ boardRef }) {
     const [front, back] = w.ankle;
     front.set(FOOT_X + flipW * 0.12, ankleY(zf) + drag * 0.03, zf); // flips: front foot flicks out to the toe side
     yawDir(-0.45 - s.open * 0.95, w.footDir[0]);
-    back.set(FOOT_X, ankleY(BACK_Z), BACK_Z);
+    back.set(FOOT_X, ankleY(BACK_Z + dragBack * 0.08) + dragBack * 0.03, BACK_Z + dragBack * 0.08);
     let backAng = 0.15;
     if (pushU >= 0) {
       // Back foot: off the tail -> plant beside the front truck -> sweep back along the ground -> back on the tail.

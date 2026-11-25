@@ -39,7 +39,7 @@ export default function CameraRig() {
       return updateSunView(camera);
     }
     // Manual: swing round toward the toe side (a slight side angle) so you can see the board on its back wheels.
-    const side = board.fakie ? -1 : 1;
+    const side = (board.fakie ? -1 : 1) * (board.mirror ?? 1); // goofy / switch: the toe side is the other side
     angle.current += ((board.anim.manual ?? 0) * 0.75 * side - angle.current) * (1 - Math.exp(-3 * dt));
     const fx = -Math.sin(board.heading);
     const fz = -Math.cos(board.heading);

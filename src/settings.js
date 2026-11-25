@@ -2,6 +2,7 @@
 // Saved per browser in localStorage (best effort: private mode just forgets them on reload).
 
 import { clampSensitivity } from './sensitivity.js';
+import { SHARED_DEFAULTS, sharedOnly } from './shared.js';
 
 const STORE_KEY = 'skate.settings.v1';
 
@@ -14,6 +15,7 @@ const DEFAULTS = {
   returnKey: 'Space', // teleport back to the spawn point
   setSpawnKey: 'KeyP', // make the current spot the spawn point
   spawn: null, // { x, y, z, heading } or null for the level's default spawn
+  ...SHARED_DEFAULTS, // stance, ... (shared.js: also changeable from the phone)
 };
 
 // Keys the fixed keyboard controls already use (Display.jsx keyMap). Spawn keys can't take these.
@@ -21,7 +23,7 @@ export const RESERVED_KEYS = {
   KeyW: 'push', ArrowUp: 'push', KeyS: 'manual', ArrowDown: 'manual',
   KeyA: 'steer left', ArrowLeft: 'steer left', KeyD: 'steer right', ArrowRight: 'steer right',
   ShiftLeft: 'ollie', ShiftRight: 'ollie', KeyF: 'kickflip', KeyG: 'varial flip', KeyT: 'tre flip',
-  KeyV: 'pop shove-it', KeyE: 'frontside 180', KeyQ: 'revert', KeyB: 'get off / on', Escape: 'cancel',
+  KeyV: 'pop shove-it', KeyE: 'frontside 180', KeyQ: 'revert', KeyB: 'get off / on', KeyN: 'nollie', Escape: 'cancel',
 };
 
 export const settings = { ...DEFAULTS };
@@ -33,6 +35,7 @@ try {
 }
 settings.airtime = Math.min(AIRTIME_MAX, Math.max(AIRTIME_MIN, Number(settings.airtime) || DEFAULTS.airtime));
 settings.sensitivity = clampSensitivity(settings.sensitivity);
+Object.assign(settings, sharedOnly(settings));
 delete settings.character; // old option (the restyled Mixamo body was removed)
 delete settings.leanBack; // old option (lean back is always a manual now)
 

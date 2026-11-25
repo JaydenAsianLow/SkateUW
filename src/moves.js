@@ -2,6 +2,8 @@
 export const MOVES = [
   ['Push', 'swipe ↓'],
   ['Ollie', '↓ then ↑'],
+  ['Nollie', '↑ then ↓ (pops off the nose; any trick swipe after it)'],
+  ['Switch', 'from fakie, a pop shove-it lands you switch (the other foot forward); another one takes you back'],
   ['Kickflip', '↓ ↑ then ↗'],
   ['Varial flip', '↓ ↑ then ↗ and ↙ together (two fingers)'],
   ['Tre flip', '↓ ↑, hold a moment, then ↙ (or rest another finger anywhere and ↓ ↑ ↙)'],
