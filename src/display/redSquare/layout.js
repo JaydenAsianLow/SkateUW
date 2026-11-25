@@ -168,3 +168,22 @@ export const TREES = [
   // West lawn around George Washington
   { p: [-130, -20], y: LOW, v: 1, s: 1.0 }, { p: [-175, 2.5], y: LOW, v: 3, s: 1.1 },
 ];
+
+// --- Free-standing rails (Rails.jsx): low flat bars (an ollie reaches ~0.45 m), clear of the walking lines.
+// pts = [x, z] corners (bends are rounded off), base = the ground height there, h = bar height above it.
+// A point on Kane's raised walkway: t metres along the front from its east end, o metres out toward the plaza.
+const KF = FACADES.kane;
+const kl = Math.hypot(KF.b[0] - KF.a[0], KF.b[1] - KF.a[1]);
+const ke = [(KF.b[0] - KF.a[0]) / kl, (KF.b[1] - KF.a[1]) / kl];
+const kn = [-ke[1], ke[0]];
+const kaneN = kn[1] < 0 ? [-kn[0], -kn[1]] : kn; // Kane's front faces south, toward the plaza
+const kaneAt = (t, o) => [KF.a[0] + ke[0] * t + kaneN[0] * o, KF.a[1] + ke[1] * t + kaneN[1] * o];
+export const KANE_WALK = 1.05; // the walkway's height (21_kane.py FLOOR)
+export const RAILS = [
+  { name: 'meany_long', pts: [[-52, 4], [-52, 32]], base: 0, h: 0.4 }, // 28 m along the Meany side, east of the lamps
+  { name: 'suzzallo_side', pts: [[54, 14], [51.3, 30]], base: 0, h: 0.4 }, // 16 m, parallel to Suzzallo's terrace
+  { name: 'vista_landing', pts: [[64.2, 80.4], [69.3, 91.3]], base: LOW, h: 0.4 }, // 12 m beside the Rainier Vista path
+  { name: 'kane_flat', pts: [kaneAt(10, 14), kaneAt(18, 14)], base: KANE_WALK, h: 0.4 }, // 8 m on Kane's walkway
+  { name: 'kane_kink', pts: [kaneAt(28, 12), kaneAt(38, 12), kaneAt(42, 17)], base: KANE_WALK, h: 0.4 }, // ~16 m, one bend
+  { name: 'plaza_short', pts: [[18, 10], [24.5, 12.5]], base: 0, h: 0.4 }, // 7 m in the open plaza south of the spawn
+];

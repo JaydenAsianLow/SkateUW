@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { CuboidCollider, RigidBody, TrimeshCollider } from '@react-three/rapier';
-import { CanvasTexture, CylinderGeometry, Euler, LinearFilter, PlaneGeometry, Quaternion, Vector3 } from 'three';
+import { CanvasTexture, LinearFilter, PlaneGeometry, Vector3 } from 'three';
 import { groundMask, groundMaskBounds, materials, merge } from '../look.js';
 import { edgeBox, edgeRotY, edges, flatPolygon, worldUv } from './geo.js';
 import { BoxColliders } from './Footprints.jsx';
 import { grindLines } from './Glb.jsx';
+import { POST_R, RAIL_R, barCollider, tube } from './bars.js';
 import { BOUNDS, HOLES, LOW, PAVED, RISER, STAIRS, stairCorners } from './layout.js';
 
 // The plaza deck (y = 0) with holes where the ground drops to LOW, the lower ground, retaining walls,
@@ -15,21 +16,6 @@ const WALL_T = 0.5; // retaining wall collider thickness
 const TRIMESH_FIX_INTERNAL_EDGES = 144;
 const RAIL_H = 0.9; // handrail height above the stair line
 const RAIL_INSET = 0.35; // handrail distance in from each side of a stair set
-const RAIL_R = 0.045; // handrail bar radius (chunky enough to read from the chase camera; also the collider half-size)
-const POST_R = 0.035;
-
-const _up = new Vector3();
-const _d = new Vector3();
-const _q = new Quaternion();
-const _e = new Euler();
-
-// A round bar from a to b (Vector3s).
-function tube(a, b, r) {
-  const d = _d.subVectors(b, a);
-  const g = new CylinderGeometry(r, r, d.length(), 8, 1);
-  g.applyQuaternion(_q.setFromUnitVectors(_up.set(0, 1, 0), d.normalize()));
-  return g.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
-}
 
 function paintMask() {
   const [x0, z0, w, d] = groundMaskBounds.value;
@@ -145,12 +131,7 @@ export default function Ground() {
           const p = a.clone().lerp(b, t);
           rails.push(tube(new Vector3(p.x, p.y - RAIL_H, p.z), p, POST_R));
         }
-        _q.setFromUnitVectors(_up.set(0, 1, 0), _d.subVectors(b, a).normalize());
-        railColliders.push({
-          args: [RAIL_R, a.distanceTo(b) / 2, RAIL_R],
-          position: a.clone().lerp(b, 0.5).add(_up.set(0, -0.02, 0)).toArray(),
-          rotation: _e.setFromQuaternion(_q).toArray().slice(0, 3),
-        });
+        railColliders.push(barCollider(a, b));
         lines.push({ name: `${s.key}_rail_${side < 0 ? 'left' : 'right'}`, a: a.toArray(), b: b.toArray() });
       }
     }

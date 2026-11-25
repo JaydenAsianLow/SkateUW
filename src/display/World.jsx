@@ -2,6 +2,7 @@ import Atmosphere from './Atmosphere.jsx';
 import { Benches, LampPosts } from './Props.jsx';
 import { Trees } from './Trees.jsx';
 import Ground from './redSquare/Ground.jsx';
+import Rails from './redSquare/Rails.jsx';
 import { Backdrop, MidBuilding } from './redSquare/Footprints.jsx';
 import { Drumheller, GeorgeWashington, MountRainier } from './redSquare/Landmarks.jsx';
 import { BACKDROP, BENCHES, LAMPS, MID, TREES } from './redSquare/layout.js';
@@ -19,6 +20,7 @@ export default function World() {
     <>
       <Atmosphere />
       <Ground />
+      <Rails />
 
       {/* The building masses (OSM footprints), with the plaza fronts modelled in Blender on top */}
       {MID.map(({ b, style }) => (

@@ -171,7 +171,7 @@ export const GRIND_PRE = 0.35;
 // Slowing down on each surface (fraction of speed lost per second): waxed rails slide best, ledges and curbs grab more.
 export const GRIND_DRAG = { rail: 0.06, ledge: 0.1, curb: 0.13 };
 export const GRIND_BOARDSLIDE_DRAG = 1.3; // boardslides scrub this much more than 50-50s
-export const GRIND_SLOPE = 0.7; // share of gravity along a sloped line (handrails speed you up going down)
+export const GRIND_SLOPE = 0.35; // share of gravity along a sloped line (handrails speed you up a little going down)
 export const GRIND_MIN_SPEED = 0.6; // m/s: slower than this you stall and drop off
 export const GRIND_MAX_SPEED = 9; // m/s
 export const GRIND_EXIT_LIFT = 1.4; // m/s up when you pop off the end of a line (or ollie out)

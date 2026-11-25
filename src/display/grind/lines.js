@@ -47,7 +47,7 @@ function segDist(x, z, a, b) {
 const SKIP_AUTHORED = /hill_crest|balustrade/;
 
 function authoredType(piece, name) {
-  if (piece === 'stairs' || /rail/i.test(name)) return RAIL;
+  if (piece === 'stairs' || piece === 'rails' || /rail/i.test(name)) return RAIL;
   if (/curb/i.test(name)) return CURB;
   return LEDGE;
 }
@@ -97,10 +97,12 @@ export function buildGrindLines(world, rapier) {
   };
   // 1. authored lines from the level pieces
   for (const [piece, list] of grindLines) {
-    for (const { name, a, b } of list) {
+    for (const item of list) {
+      const { name } = item;
+      const pts = item.pts ?? [item.a, item.b]; // a path (rails with bends), or a straight a-b line
+      const a = pts[0], b = pts[pts.length - 1];
       if (SKIP_AUTHORED.test(name)) continue;
       if (noGrind(a[0], a[2]) && noGrind(b[0], b[2])) continue;
-      const pts = [a, b];
       const type = authoredType(piece, name);
       const { height, inner } = measure(snap, pts);
       add({ name: `${piece}/${name}`, type, pts, height, inner: type === RAIL ? null : inner, source: 'authored' });
@@ -120,7 +122,7 @@ export function buildGrindLines(world, rapier) {
     const a = e.a.toArray(), b = e.b.toArray();
     // Already an authored line: both ends within 0.8 m of it in plan, at about the same height, and parallel.
     const dup = authored.some((l) => {
-      const [p, q] = l.pts;
+      const [p, q] = [l.pts[0], l.pts[l.pts.length - 1]];
       const near = (u) => distToSeg([u[0], p[1], u[2]], p, [q[0], p[1], q[2]]) < 0.8 && Math.abs(u[1] - (p[1] + q[1]) / 2) < 0.15;
       const lx = q[0] - p[0], lz = q[2] - p[2], ex = b[0] - a[0], ez = b[2] - a[2];
       const par = Math.abs(lx * ex + lz * ez) / ((Math.hypot(lx, lz) * Math.hypot(ex, ez)) || 1) > 0.98;
