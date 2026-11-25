@@ -1,3 +1,5 @@
+import { HAPTICS } from './display/tuning.js';
+
 // Mutable state shared between the socket handlers, the 3D scene and the HUD.
 // Kept outside React so 30-60Hz updates never trigger re-renders.
 export const phone = {
@@ -46,3 +48,13 @@ export const phoneIsLive = () => performance.now() - phone.lastUpdate < PHONE_TI
 // Whether the game is actually running (not on a menu, not paused waiting for the phone).
 // keyboard = the player chose "Play with keyboard" on the pairing screen, so no phone is required.
 export const game = { running: false, keyboard: false };
+
+// Haptic events for the phone ('push', 'land', ... in tuning.js HAPTICS), throttled per type. Display.jsx sends them.
+export const haptics = [];
+const lastHaptic = {};
+export function haptic(type) {
+  const now = performance.now();
+  if (!HAPTICS[type] || now - (lastHaptic[type] ?? -1e9) < HAPTICS[type].gap * 1000) return;
+  lastHaptic[type] = now;
+  if (haptics.length < 8) haptics.push(type);
+}

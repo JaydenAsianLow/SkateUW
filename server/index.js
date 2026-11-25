@@ -144,6 +144,13 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Vibration events from the game (push, land, bail, ...) for the phone.
+  const HAPTIC_TYPES = new Set(['push', 'land', 'trick', 'manual', 'manualWarn', 'bail']);
+  socket.on('haptic', (d) => {
+    if (socket.data.role !== 'display' || socket.id !== roomState(socket.data.room).activeDisplay) return;
+    if (HAPTIC_TYPES.has(d?.type)) toControllers().emit('haptic', { type: d.type }); // not volatile (see Display.jsx)
+  });
+
   // Phone settings chosen on the laptop (sensitivity preset). Cached so a phone that joins later gets them too.
   socket.on('config', (d) => {
     if (socket.data.role !== 'display' || !d) return;

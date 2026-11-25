@@ -112,3 +112,15 @@ export const SIDE_LOOK_AHEAD = 0.6; // look a little ahead of the rider so there
 export const CAM_CLIP_PAD = 0.2;
 export const CAM_CLEAR_FROM = [1.2, 0.4]; // m above the board: rays to the camera from the head and the knees
 export const CAM_MIN_DISTANCE = 0.6;
+
+// ---------- Phone vibration (haptics) ----------
+// Events the game sends to the phone. pattern: ms on (or [on, off, on, ...]) for navigator.vibrate;
+// gap: at most one of that event per this many seconds (checked on the laptop and again on the phone).
+export const HAPTICS = {
+  push: { pattern: 12, gap: 0.15 },
+  land: { pattern: 30, gap: 0.25 }, // an ollie / jump landed
+  trick: { pattern: [20, 30, 45], gap: 0.3 }, // a flip / shove-it / 180 / caveman landed
+  manual: { pattern: [10, 30, 10], gap: 0.5 }, // front wheels up
+  manualWarn: { pattern: 8, gap: 0.2 }, // marker outside the green zone
+  bail: { pattern: [90, 50, 180], gap: 1.5 },
+};

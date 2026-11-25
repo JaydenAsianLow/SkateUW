@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { KeyboardControls } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import { connect, displayRoom } from '../socket.js';
-import { board, game, phone, net, phoneIsLive } from '../state.js';
+import { board, game, haptics, phone, net, phoneIsLive } from '../state.js';
 import { commands, onSettings, settings, updateSettings } from '../settings.js';
 import { cleanSetting, sharedOnly } from '../shared.js';
 import World from './World.jsx';
@@ -43,7 +43,7 @@ const CLEAN = import.meta.env.DEV && urlParams.has('clean');
 const LOST_GRACE_MS = 2000; // phone silent this long mid-game -> pause and show "Reconnect phone"
 
 // Dev-only handle for poking at the live state from the browser console.
-if (import.meta.env.DEV) window.__skate = { board, phone };
+if (import.meta.env.DEV) window.__skate = { board, phone, haptics, net, game };
 
 // Poll the shared mutable phone/server state at 10 Hz for the menus.
 function usePhoneStatus() {
@@ -117,7 +117,11 @@ export default function Display() {
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
       // Only while actually playing, so a second laptop tab (menu, paused) never contradicts the game's state.
-      if (net.connected && net.controllers > 0 && game.running) s.volatile.emit('board', board.view);
+      if (net.connected && net.controllers > 0 && game.running) {
+        s.volatile.emit('board', board.view);
+        for (const type of haptics) s.emit('haptic', { type }); // not volatile: it would be dropped right after 'board'
+      }
+      haptics.length = 0;
     }, 33);
     // Closing the tab: say goodbye straight away so the phone shows "Reconnect device" at once
     // (otherwise the server only notices on its heartbeat timeout).

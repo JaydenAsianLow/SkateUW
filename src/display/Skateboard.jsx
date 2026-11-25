@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier';
 import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Quaternion, Shape, Vector3 } from 'three';
-import { board, game, phone, phoneIsLive } from '../state.js';
+import { board, game, haptic, phone, phoneIsLive } from '../state.js';
 import { commands, settings, updateSettings } from '../settings.js';
 import { BOARD_HALF_Y, DECK_TOP, PUSH_ANIM, materials, merge } from './look.js';
 import { LOW, SPAWN } from './redSquare/layout.js';
@@ -169,6 +169,7 @@ export default function Skateboard() {
     st.offDrag = k === 'slam' ? 1.5 : k === 'back' ? 2.2 : 3;
     Object.assign(st, { pushLeft: 0, pushT: -1, popT: -1, trick: null, revert: null, air: false, manualT: 0, manual: 0 });
     board.trick = { name: k === 'slam' ? 'SLAM' : 'BAIL', at: performance.now() };
+    haptic('bail');
     const p = rb.translation();
     const fx = -Math.sin(st.heading);
     const fz = -Math.cos(st.heading);
@@ -550,6 +551,7 @@ export default function Skateboard() {
               st.caveman = false;
               board.score += CAVEMAN_POINTS;
               board.trick = { name: `CAVEMAN +${CAVEMAN_POINTS}`, at: performance.now() };
+              haptic('trick');
             }
           }
           st.modeT = 0;
@@ -653,6 +655,7 @@ export default function Skateboard() {
       st.pushAccel = (PUSH_GAIN * push) / PUSH_TIME;
       st.pushLeft = PUSH_TIME;
       if (st.pushT < 0 || st.pushT > PUSH_ANIM * 0.7) st.pushT = 0;
+      haptic('push');
     }
     if (st.pushT >= 0) {
       st.pushT += dt;
@@ -691,6 +694,8 @@ export default function Skateboard() {
         return;
       }
       b.out = Math.abs(off) > diff.zone ? b.out + dt : 0;
+      if (st.manualT === 0) haptic('manual');
+      else if (b.out > 0) haptic('manualWarn');
       if (b.out < diff.tolerance) {
         inManual = true;
         balance = clamp01(0.5 + off / (2 * diff.zone));
@@ -796,6 +801,7 @@ export default function Skateboard() {
       // A half shove-it turns the board round under you: the other end leads, so fakie <-> switch.
       if ((tr?.def.shove ?? 0) % 1 === 0.5) (st.stance ^= 1), (st.swap = !st.swap);
       normalizeStance(st);
+      if (popped || tr) haptic(tr ? 'trick' : 'land');
       if (popped || tr) board.trick = { name: (stancePrefix(st) + (tr ? tr.def.name : 'OLLIE')).replace('NOLLIE OLLIE', 'NOLLIE'), at: performance.now() };
     }
     // A pop that never left the ground (e.g. under a ledge) shouldn't lock tricks forever.

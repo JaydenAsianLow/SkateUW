@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { connect, controllerRoom } from '../socket.js';
 import { createComboReader, createStrokeTracker } from './gestures.js';
 import PhoneSettings from './PhoneSettings.jsx';
+import { buzz, playHaptic, setVibrate, supported as canVibrate, vibrateOn } from './haptics.js';
 import { CHOICES, CHOICE_UI } from '../shared.js';
 import { MOVES } from '../moves.js';
 import { SENSITIVITY, clampSensitivity } from '../sensitivity.js';
@@ -43,6 +44,7 @@ export default function Controller() {
   const [sens, setSens] = useState(0); // sensitivity preset, set from the laptop's Settings
   const [shared, setShared] = useState(null); // shared settings from the laptop (shared.js), null until it sends them
   const [showSettings, setShowSettings] = useState(false);
+  const [vibrate, setVib] = useState(vibrateOn());
   const tiltRange = useRef(SENSITIVITY[sens].tilt);
   tiltRange.current = SENSITIVITY[sens].tilt;
 
@@ -62,6 +64,7 @@ export default function Controller() {
       setDisplays(st.displays);
       setStatusKnown(true);
     });
+    s.on('haptic', (d) => playHaptic(d?.type));
     s.on('config', (c) => {
       setSens(clampSensitivity(c?.sensitivity));
       setShared(c ?? null);
@@ -105,7 +108,7 @@ export default function Controller() {
           cal.current = null;
           sm.steer = sm.lean = 0;
           setCalState('done');
-          navigator.vibrate?.(30);
+          buzz(30);
         }
       }
       const o = offset.current;
@@ -180,14 +183,14 @@ export default function Controller() {
   function calibrate() {
     cal.current = { until: performance.now() + CAL_MS, beta: 0, gamma: 0, n: 0 };
     setCalState('measuring');
-    navigator.vibrate?.(15);
+    buzz(15);
   }
 
   // Disconnect on purpose: drop the socket (the laptop pauses and asks for the phone) until Reconnect is tapped.
   function disconnect() {
     setLeftOnPurpose(true);
     socketRef.current?.disconnect();
-    navigator.vibrate?.(20);
+    buzz(20);
   }
   function reconnect() {
     setLeftOnPurpose(false);
@@ -231,7 +234,29 @@ export default function Controller() {
           Settings
         </button>
       </header>
-      {showSettings && <PhoneSettings shared={shared} socketRef={socketRef} onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <PhoneSettings shared={shared} socketRef={socketRef} onClose={() => setShowSettings(false)}>
+          {canVibrate ? (
+            <div className="psheet-row">
+              <span>Vibration</span>
+              <span className="psheet-btns">
+                {[true, false].map((on) => (
+                  <button
+                    key={String(on)}
+                    className={`chip ${vibrate === on ? 'on' : ''}`}
+                    onClick={() => (setVibrate(on), setVib(on), buzz(30))}
+                  >
+                    {on ? 'On' : 'Off'}
+                  </button>
+                ))}
+              </span>
+              <small className="muted">Pushes, landings, manuals and bails. Saved on this phone.</small>
+            </div>
+          ) : (
+            <small className="muted">Vibration isn't supported in this browser (iPhone Safari has no vibration).</small>
+          )}
+        </PhoneSettings>
+      )}
 
       {!controllerRoom ? (
         <div className="ctrl-start">
@@ -381,9 +406,9 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, sh
   // Gesture pipeline: pointers -> segments / arcs -> moves -> socket.
   const reader = useRef(null);
   if (!reader.current) {
-    const send = (event, data, label, buzz) => {
+    const send = (event, data, label, pattern) => {
       socketRef.current?.emit(event, data);
-      navigator.vibrate?.(buzz);
+      buzz(pattern);
       setFlash({ label, key: performance.now() });
     };
     reader.current = createComboReader({
@@ -535,7 +560,7 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, sh
   // Get off / Get on (one button). The laptop decides whether it happens (not mid-air, close enough to the board).
   const getOnOff = () => {
     socketRef.current?.emit('carry');
-    navigator.vibrate?.(25);
+    buzz(25);
     if (mode === 'find') setFlash({ label: 'WALK TO YOUR BOARD', key: performance.now() });
   };
 
@@ -545,19 +570,19 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, sh
   const cycleView = () => {
     const next = views[(views.indexOf(shared?.camera) + 1) % views.length];
     socketRef.current?.emit('setting', { key: 'camera', value: next });
-    navigator.vibrate?.(10);
+    buzz(10);
     setFlash({ label: `VIEW: ${viewName[next].toUpperCase()}`, key: performance.now() });
   };
 
   // Jump (on foot, board in hand). Get on while in the air = caveman.
   const jump = () => {
     socketRef.current?.emit('jump');
-    navigator.vibrate?.(15);
+    buzz(15);
   };
 
   const reset = () => {
     socketRef.current?.emit('reset');
-    navigator.vibrate?.([40, 40, 40]);
+    buzz([40, 40, 40]);
     setFlash({ label: 'RESET', key: performance.now() });
   };
 
