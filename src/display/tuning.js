@@ -30,8 +30,8 @@ export const TRICKS = {
 
 // Manuals: tilt the top of the phone up (lean back) to lift the front wheels and ride on the back two.
 // The meter bar runs 0..1 with the phone's lean back (1 = full lean). Past MANUAL_IN a manual starts; then a green
-// zone drifts along the bar (Settings → Manual: Easy / Medium / Hard) and you keep the marker in it by tilting.
-// Out of the zone for `tolerance` s: the front wheels drop. Marker at MANUAL_BAIL_AT: you fall backwards.
+// zone drifts along the bar and you keep the marker in it by tilting.
+// Out of the zone for `tolerance` s (a second to get back into the green): the front wheels drop. Marker at MANUAL_BAIL_AT: you fall backwards.
 // Phone back to level (below MANUAL_LET_GO): the front wheels drop at once.
 export const MANUAL_IN = 0.25;
 export const MANUAL_LET_GO = 0.1;
@@ -40,11 +40,7 @@ export const MANUAL_ZONE_MID = 0.55; // the zone drifts around here (the old fix
 export const MANUAL_DRIFT_GROW = 0.12; // the drift gets this much faster per second held
 // drift: how fast the zone wanders, swing: how far it wanders from the middle, zone: half-width of the green,
 // tolerance: s outside the zone before the wheels drop, sway: how much the marker itself wanders (x speed).
-export const MANUAL_DIFFICULTY = {
-  easy: { drift: 0.6, swing: 0.12, zone: 0.15, tolerance: 0.8, sway: 0.04 },
-  medium: { drift: 1.0, swing: 0.18, zone: 0.12, tolerance: 0.5, sway: 0.07 },
-  hard: { drift: 1.5, swing: 0.22, zone: 0.09, tolerance: 0.35, sway: 0.1 },
-};
+export const MANUAL_BALANCE = { drift: 1.0, swing: 0.18, zone: 0.12, tolerance: 1.0, sway: 0.07 };
 // Points: MANUAL_POINTS per second, and the rate grows by MANUAL_POINTS_GROW per second held (2 s = 300, 5 s = 1125).
 export const MANUAL_POINTS = 100;
 export const MANUAL_POINTS_GROW = 0.25;

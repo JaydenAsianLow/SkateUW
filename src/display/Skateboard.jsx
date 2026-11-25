@@ -13,7 +13,7 @@ import { mocap, runTopSpeed } from './mocap.js';
 import { clamp, clamp01, damp, urlParams, wrapAngle } from './util.js';
 import {
   ASSIST_MAX, AUTO_GRAB, BAIL_FAST, CAVEMAN_MAX_LEAD, CAVEMAN_MIN_LEAD, CAVEMAN_POINTS, FOOT_AIR_CONTROL, FOOT_JUMP_SPEED,
-  FOOT_LAND_TIME, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_BAIL_AT, MANUAL_CALLOUT, MANUAL_DIFFICULTY, MANUAL_DRIFT_GROW, MANUAL_IN, MANUAL_LET_GO,
+  FOOT_LAND_TIME, BAIL_SLOW, BOARD_DRAG, GRAVITY, LAND_OK, MANUAL_BAIL_AT, MANUAL_CALLOUT, MANUAL_BALANCE, MANUAL_DRIFT_GROW, MANUAL_IN, MANUAL_LET_GO,
   MANUAL_ZONE_MID, manualPoints,
   MANUAL_MIN_SPEED, MANUAL_PITCH_MAX, MANUAL_PITCH_MIN, MAX_SPEED, ON_THE_MOVE, POP_VELOCITY, PUSH_GAIN, PUSH_TIME,
   REVERT_TIME, ROLL_DRAG, RUN_SPEED, SLAM_AT, STEER_RESPONSE, STICK_DEAD, STICK_SMOOTH, TRICKS, TRICK_WINDOW, TURN_MAX,
@@ -699,7 +699,7 @@ export default function Skateboard() {
     if (back < MANUAL_IN) st.manualLock = false; // after a lost manual, level the phone before the next one
     const holding = st.manualT > 0 ? back > MANUAL_LET_GO : back > MANUAL_IN && !st.manualLock;
     if (grounded && st.popT < 0 && !st.revert && !push && st.pushT < 0 && speed > MANUAL_MIN_SPEED && holding) {
-      const diff = MANUAL_DIFFICULTY[settings.manual] ?? MANUAL_DIFFICULTY.medium;
+      const diff = MANUAL_BALANCE;
       const lo = MANUAL_ZONE_MID - diff.swing;
       const hi = MANUAL_ZONE_MID + diff.swing;
       if (st.manualT === 0) st.bal = { t: 0, start: clamp(marker, lo, hi), out: 0, ph: [0, 1, 2, 3].map(() => Math.random() * 6.28) };

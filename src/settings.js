@@ -36,6 +36,7 @@ settings.airtime = Math.min(AIRTIME_MAX, Math.max(AIRTIME_MIN, Number(settings.a
 Object.assign(settings, sharedOnly(settings));
 delete settings.character; // old option (the restyled Mixamo body was removed)
 delete settings.leanBack; // old option (lean back is always a manual now)
+delete settings.manual; // old option (one manual difficulty now)
 delete settings.sensitivity; // old phone preset, replaced by Truck sensitivity
 
 const listeners = new Set();
