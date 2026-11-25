@@ -2,9 +2,10 @@ import { Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { KeyboardControls } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
-import { connect } from '../socket.js';
+import { connect, displayRoom } from '../socket.js';
 import { board, game, phone, net, phoneIsLive } from '../state.js';
-import { commands, onSettings, settings } from '../settings.js';
+import { commands, onSettings, settings, updateSettings } from '../settings.js';
+import { cleanSetting, sharedOnly } from '../shared.js';
 import World from './World.jsx';
 import Skateboard from './Skateboard.jsx';
 import RayCheck from './RayCheck.jsx';
@@ -23,6 +24,7 @@ const keyMap = [
   { name: 'left', keys: ['ArrowLeft', 'KeyA'] },
   { name: 'right', keys: ['ArrowRight', 'KeyD'] },
   { name: 'pop', keys: ['ShiftLeft', 'ShiftRight'] }, // Space is the default return-to-spawn key
+  { name: 'nollie', keys: ['KeyN'] },
   { name: 'kickflip', keys: ['KeyF'] },
   { name: 'varial', keys: ['KeyG'] },
   { name: 'tre', keys: ['KeyT'] },
@@ -88,9 +90,9 @@ export default function Display() {
   };
 
   useEffect(() => {
-    const s = connect('display');
+    const s = connect('display', displayRoom);
     // Phone settings picked on the laptop (sensitivity) go to the phone; the server caches them for late joiners.
-    const sendConfig = () => s.emit('config', { sensitivity: settings.sensitivity });
+    const sendConfig = () => s.emit('config', { sensitivity: settings.sensitivity, ...sharedOnly(settings) });
     const offSettings = onSettings(sendConfig);
     s.on('connect', () => ((net.connected = true), sendConfig()));
     s.on('disconnect', () => (net.connected = false));
@@ -101,7 +103,11 @@ export default function Display() {
       phone.packets++;
     });
     s.on('push', (d) => (phone.pushQueued = Math.min(3, phone.pushQueued + (d?.power ?? 1))));
-    s.on('pop', (d) => (phone.popQueued = d?.power ?? 1));
+    s.on('pop', (d) => ((phone.popQueued = d?.power ?? 1), (phone.popNose = d?.nose === true)));
+    s.on('setting', (d) => {
+      const value = cleanSetting(d?.key, d?.value);
+      if (value !== undefined) updateSettings({ [d.key]: value });
+    });
     s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
     s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
     s.on('reset', () => (phone.resetQueued = true));

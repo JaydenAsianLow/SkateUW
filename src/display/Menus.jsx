@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { MOVES } from '../moves.js';
 import { SENSITIVITY } from '../sensitivity.js';
+import { CHOICE_UI } from '../shared.js';
+import { displayRoom } from '../socket.js';
 import { AIRTIME_MAX, AIRTIME_MIN, RESERVED_KEYS, commands, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
 
 // Laptop screens around the game: main menu, phone pairing, settings, controls and the phone-lost overlay.
@@ -104,19 +106,29 @@ export function PhoneLost({ status, onMenu }) {
   );
 }
 
-// QR code for the phone controller page on this laptop's LAN address.
+// Opened from localhost or an IP address (dev on the LAN), not from the public site's domain.
+const ON_LAN = /^(localhost|\d+\.\d+\.\d+\.\d+|\[.*\])$/.test(window.location.hostname);
+
+// QR code for the phone controller page, with this tab's pairing code. On the public site it's the site's own
+// address; in development it's this laptop's LAN address.
 export function QrCode({ small }) {
   const [addresses, setAddresses] = useState([]);
   const [pick, setPick] = useState(0);
   const [qr, setQr] = useState(null);
   useEffect(() => {
+    if (!ON_LAN) return;
     fetch('/api/info')
       .then((r) => r.json())
       .then((d) => setAddresses(d.addresses ?? []))
       .catch(() => setAddresses([]));
   }, []);
   const port = window.location.port || '443';
-  const url = addresses[pick] ? `https://${addresses[pick].address}:${port}/controller` : null;
+  const path = `/controller?room=${displayRoom}`;
+  const url = !ON_LAN
+    ? window.location.origin + path
+    : addresses[pick]
+      ? `https://${addresses[pick].address}:${port}${path}`
+      : null;
   useEffect(() => {
     if (url) QRCode.toDataURL(url, { margin: 1, width: 360, color: { dark: '#0b0d12', light: '#ffffff' } }).then(setQr);
   }, [url]);
@@ -139,7 +151,7 @@ export function QrCode({ small }) {
           ))}
         </div>
       )}
-      {!small && <div className="qr-note">Accept the certificate warning on the phone.</div>}
+      {!small && ON_LAN && <div className="qr-note">Accept the certificate warning on the phone.</div>}
       {!small && <div className="qr-note">After scanning, you’ll be asked to hold your phone flat like a skateboard to calibrate.</div>}
     </div>
   );
@@ -150,6 +162,7 @@ const KEYBOARD = [
   ['Steer', 'A D / ← →'],
   ['Manual', 'S / ↓'],
   ['Ollie', 'Shift'],
+  ['Nollie', 'N (then a trick key for a nollie flip)'],
   ['Kickflip', 'F'],
   ['Varial flip', 'G'],
   ['Tre flip', 'T'],
@@ -238,6 +251,16 @@ export function SettingsPanel({ inGame }) {
 
   return (
     <div className="ctl">
+      {CHOICE_UI.map(([key, label, names, hint]) => (
+        <div className="ctl-row" key={key} title={hint}>
+          <span>{label}</span>
+          <span className="ctl-btns">
+            {Object.entries(names).map(([v, text]) => (
+              <span key={v}>{btn(text, () => updateSettings({ [key]: v }), cfg[key] === v ? 'on' : '')}</span>
+            ))}
+          </span>
+        </div>
+      ))}
       <div className="ctl-row">
         <span>Phone sensitivity</span>
         <span className="ctl-btns">

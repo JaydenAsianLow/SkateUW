@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
-import { connect } from '../socket.js';
+import { connect, controllerRoom } from '../socket.js';
 import { createComboReader, createStrokeTracker } from './gestures.js';
+import PhoneSettings from './PhoneSettings.jsx';
 import { MOVES } from '../moves.js';
 import { SENSITIVITY, clampSensitivity } from '../sensitivity.js';
 
@@ -39,6 +40,8 @@ export default function Controller() {
   const [error, setError] = useState(null);
   const tilt = useRef({ steer: 0, lean: 0 }); // latest shaped tilt, read every frame by the on-screen board
   const [sens, setSens] = useState(0); // sensitivity preset, set from the laptop's Settings
+  const [shared, setShared] = useState(null); // shared settings from the laptop (shared.js), null until it sends them
+  const [showSettings, setShowSettings] = useState(false);
   const tiltRange = useRef(SENSITIVITY[sens].tilt);
   tiltRange.current = SENSITIVITY[sens].tilt;
 
@@ -49,7 +52,7 @@ export default function Controller() {
 
   // Socket connection + latency ping.
   useEffect(() => {
-    const s = connect('controller');
+    const s = connect('controller', controllerRoom);
     socketRef.current = s;
     s.on('connect', () => setConn('connected'));
     s.on('disconnect', () => setConn('disconnected'));
@@ -58,7 +61,10 @@ export default function Controller() {
       setDisplays(st.displays);
       setStatusKnown(true);
     });
-    s.on('config', (c) => setSens(clampSensitivity(c?.sensitivity)));
+    s.on('config', (c) => {
+      setSens(clampSensitivity(c?.sensitivity));
+      setShared(c ?? null);
+    });
     // Closing the tab: tell the server right away instead of waiting for its heartbeat.
     const bye = () => s.disconnect();
     window.addEventListener('pagehide', bye);
@@ -220,9 +226,18 @@ export default function Controller() {
         <span className="pill muted">
           {displays > 0 ? `${displays} screen${displays > 1 ? 's' : ''}` : 'no screen open'}
         </span>
+        <button className="pill gear" onClick={() => setShowSettings(true)}>
+          Settings
+        </button>
       </header>
+      {showSettings && <PhoneSettings shared={shared} socketRef={socketRef} onClose={() => setShowSettings(false)} />}
 
-      {leftOnPurpose ? (
+      {!controllerRoom ? (
+        <div className="ctrl-start">
+          <h1>Scan the code</h1>
+          <p>Open the game on a laptop, then scan the QR code on its screen with this phone. The code links this phone to that game.</p>
+        </div>
+      ) : leftOnPurpose ? (
         <div className="ctrl-start">
           <h1>Disconnected</h1>
           <p>The game is paused on the laptop until you reconnect.</p>
@@ -308,7 +323,7 @@ const LOCAL_YAW = 0.14; // nose swings into the turn
 const LOCAL_MANUAL = 0.42; // nose up on the tail
 const LOCAL_NOSE_MANUAL = 0.25; // nose down
 const LOCAL_FOLLOW = 0.2; // per frame
-const STAGE_PIPS = { idle: 0, down: 1, pop: 2, trick: 3 };
+const STAGE_PIPS = { idle: 0, down: 1, up: 1, pop: 2, trick: 3 };
 const TRAIL_MS = 350;
 const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
@@ -372,7 +387,7 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, sens, on
     reader.current = createComboReader({
       pointers,
       onPush: (power) => send('push', { power }, 'PUSH', 12),
-      onPop: (power) => send('pop', { power }, 'OLLIE', 30),
+      onPop: (power, nose = false) => send('pop', { power, nose }, nose ? 'NOLLIE' : 'OLLIE', 30),
       onTrick: (type, side) => send('trick', { type, side }, TRICK_LABEL[type] ?? type, [15, 30, 15]),
       onRevert: (dir) => send('revert', { dir }, 'REVERT', [10, 20, 10]),
       onStage: (stage) => {

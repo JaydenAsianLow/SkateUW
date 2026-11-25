@@ -101,3 +101,12 @@ src/display/CameraRig.jsx  Chase camera
 src/display/Effects.jsx    Bloom, tone mapping, vignette, SMAA
 src/display/Hud.jsx        Status overlay + QR code
 ```
+
+## Put it online
+
+`npm run build` then `NODE_ENV=production npm start` runs the whole site (game, phone page and Socket.IO) from one Node server on `$PORT`. Any host that runs a Node web service with WebSockets works (Render, Railway, Fly.io); the host provides the real HTTPS certificate, so there are no warnings and no shared-Wi-Fi requirement.
+
+- Build command: `npm ci && npm run build`
+- Start command: `npm start` with `NODE_ENV=production`
+
+Each laptop tab makes its own pairing code and puts it in the QR link (`/controller?room=CODE`), so every player's phone only controls their own game.
