@@ -355,6 +355,34 @@ const LOCAL_MANUAL = 0.42; // nose up on the tail
 const LOCAL_NOSE_MANUAL = 0.25; // nose down
 const LOCAL_FOLLOW = 0.2; // per frame
 export const STAGE_PIPS = { idle: 0, down: 1, up: 1, pop: 2, trick: 3 };
+
+// The phone's own tilt, played out bigger on the on-screen board (see drawBoard below).
+export const localTilt = (steer, lean) => ({
+  roll: -steer * LOCAL_ROLL,
+  yaw: steer * LOCAL_YAW,
+  pitch: lean < 0 ? -lean * LOCAL_MANUAL : -lean * LOCAL_NOSE_MANUAL,
+});
+
+// CSS transforms for the on-screen board and its shadow: sh = the deck's rotation from the laptop
+// ({ roll, pitch, yaw, spin, lift, height }), lo = the local tilt (localTilt), h = the board's height in px.
+// Also draws the phone in the Controls guide (guide/PhoneMock.jsx).
+export function deckTransforms(sh, lo, h) {
+  const pxPerM = h / 0.8; // the deck is 0.8 m long
+  const up = (sh.lift + Math.min(sh.height, 1.2)) * pxPerM * 0.25; // rises toward you in the air
+  const pivot = Math.sign(lo.pitch) * h * 0.4; // nose up pivots on the tail (bottom), nose down on the nose
+  const yaw = -(sh.spin + sh.yaw) + lo.yaw;
+  const roll = sh.roll + lo.roll;
+  const board =
+    `translate(-50%, -50%) rotateZ(${yaw}rad) translateZ(${up}px) ` +
+    `translateY(${pivot}px) rotateX(${-lo.pitch}rad) translateY(${-pivot}px) ` +
+    `rotateX(${-sh.pitch}rad) rotateY(${-roll}rad)`;
+  const k = 1 / (1 + up / 400);
+  const slide = pivot * (1 - Math.cos(lo.pitch)); // a tipped board's footprint shrinks toward its pivot
+  const shadow =
+    `translate(-50%, -50%) translate(${up * 0.25 - roll * 30}px, ${up * 0.35 + slide}px) rotateZ(${yaw}rad) ` +
+    `scale(${k * Math.max(0.15, Math.abs(Math.cos(roll)))}, ${k * Math.max(0.3, Math.abs(Math.cos(sh.pitch + lo.pitch)))})`;
+  return { board, shadow, shadowOpacity: String(0.55 * k) };
+}
 const TRAIL_MS = 350;
 const HOLD_MS = 90; // a finger resting this long counts as holding
 const HOLD_SLOP_PX = 14;
@@ -518,31 +546,12 @@ function Deck({ socketRef, stickRef, tiltRef, calibrating, onCalibrate, shared, 
         sh[k] = Math.abs(d) > 1.5 ? t[k] : sh[k] + d * 0.45;
       }
       const lo = m.local;
-      const want = {
-        roll: -tl.steer * LOCAL_ROLL,
-        yaw: tl.steer * LOCAL_YAW,
-        pitch: tl.lean < 0 ? -tl.lean * LOCAL_MANUAL : -tl.lean * LOCAL_NOSE_MANUAL,
-      };
+      const want = localTilt(tl.steer, tl.lean);
       for (const k of Object.keys(lo)) lo[k] += (want[k] - lo[k]) * LOCAL_FOLLOW;
-      const h = b.offsetHeight;
-      const pxPerM = h / 0.8; // the deck is 0.8 m long
-      const up = (sh.lift + Math.min(sh.height, 1.2)) * pxPerM * 0.25; // rises toward you in the air
-      const pivot = Math.sign(lo.pitch) * h * 0.4; // nose up pivots on the tail (bottom), nose down on the nose
-      const yaw = -(sh.spin + sh.yaw) + lo.yaw;
-      const roll = sh.roll + lo.roll;
-      b.style.transform =
-        `translate(-50%, -50%) rotateZ(${yaw}rad) translateZ(${up}px) ` +
-        `translateY(${pivot}px) rotateX(${-lo.pitch}rad) translateY(${-pivot}px) ` +
-        `rotateX(${-sh.pitch}rad) rotateY(${-roll}rad)`;
+      const tf = deckTransforms(sh, lo, b.offsetHeight);
+      b.style.transform = tf.board;
       const sd = shadowRef.current;
-      if (sd) {
-        const k = 1 / (1 + up / 400);
-        const slide = pivot * (1 - Math.cos(lo.pitch)); // a tipped board's footprint shrinks toward its pivot
-        sd.style.transform =
-          `translate(-50%, -50%) translate(${up * 0.25 - roll * 30}px, ${up * 0.35 + slide}px) rotateZ(${yaw}rad) ` +
-          `scale(${k * Math.max(0.15, Math.abs(Math.cos(roll)))}, ${k * Math.max(0.3, Math.abs(Math.cos(sh.pitch + lo.pitch)))})`;
-        sd.style.opacity = String(0.55 * k);
-      }
+      if (sd) (sd.style.transform = tf.shadow), (sd.style.opacity = tf.shadowOpacity);
     };
     draw();
     return () => cancelAnimationFrame(raf);

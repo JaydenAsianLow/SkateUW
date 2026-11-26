@@ -73,3 +73,121 @@
 .guide-list { margin-top: 26px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--g-line); background: rgba(255, 242, 214, 0.03); }
 .guide-list summary { cursor: pointer; font-weight: 700; color: var(--g-muted); }
 .guide-list[open] summary { margin-bottom: 12px; color: var(--g-text); }
+
+/* ---------- Demo window ---------- */
+.demo-view {
+  --g-text: #fff2d6; --g-muted: #c9ae93; --g-accent: #f7c47c; --g-ink: #1a0d0a;
+  position: fixed; inset: 0; z-index: 950; display: grid; place-items: center; padding: 18px; color: var(--g-text);
+  background: rgba(10, 5, 3, 0.72); backdrop-filter: blur(6px);
+}
+.demo-card {
+  width: min(1180px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 12px; padding: 16px 18px 16px;
+  background: linear-gradient(180deg, rgba(48, 26, 20, 0.97), rgba(28, 15, 12, 0.97)); border: 1px solid rgba(255, 242, 214, 0.14);
+  border-radius: 18px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+}
+.demo-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.demo-title { display: flex; align-items: center; gap: 12px; }
+.demo-title h2 { margin: 0; font: italic 900 clamp(24px, 3vw, 34px)/1 system-ui, sans-serif; letter-spacing: 1px; text-shadow: 0 3px 0 #4b2e83; }
+.demo-keys { font-size: 13px; color: var(--g-muted); display: flex; align-items: center; gap: 8px; }
+.demo-keys kbd {
+  font: 700 13px/1 ui-monospace, Consolas, monospace; color: var(--g-text); padding: 6px 9px; border-radius: 7px;
+  background: rgba(255, 242, 214, 0.08); border: 1px solid rgba(255, 242, 214, 0.25); border-bottom-width: 3px;
+}
+.demo-body { display: grid; grid-template-columns: minmax(240px, 0.46fr) 1fr; gap: 16px; height: min(62vh, 620px); min-height: 340px; }
+.demo-phone { position: relative; min-height: 0; }
+.demo-game { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.demo-pane {
+  position: relative; flex: 1; min-height: 0; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, #4a2a1f, #1c0f0b); border: 1px solid rgba(255, 242, 214, 0.1);
+}
+.demo-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--g-muted); font-size: 14px; animation: demo-pulse 1.2s ease-in-out infinite alternate; }
+@keyframes demo-pulse { from { opacity: 0.45; } to { opacity: 1; } }
+.demo-timeline { position: relative; height: 6px; border-radius: 3px; background: rgba(255, 242, 214, 0.1); flex: none; }
+.demo-progress { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--g-accent); }
+.demo-mark { position: absolute; top: -3px; width: 3px; height: 12px; margin-left: -1px; border-radius: 2px; background: rgba(255, 242, 214, 0.35); }
+.demo-mark.past { background: #fff2d6; }
+.demo-caption { min-height: 2.6em; display: grid; place-items: center; text-align: center; padding: 0 8px; }
+.demo-caption span {
+  font: italic 800 clamp(17px, 2.1vw, 24px)/1.25 system-ui, sans-serif; color: #fff2d6; letter-spacing: 0.01em;
+  text-shadow: 0 2px 0 #4b2e83; animation: caption-in 260ms ease-out;
+}
+@keyframes caption-in { from { opacity: 0; transform: translateY(6px); } }
+.demo-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.demo-controls button {
+  height: 38px; padding: 0 13px; border-radius: 10px; font-size: 14px; font-weight: 700; white-space: nowrap;
+  background: rgba(255, 242, 214, 0.06); color: var(--g-text); border: 1px solid rgba(255, 242, 214, 0.16);
+}
+.demo-controls button:hover, .demo-controls button:focus-visible { border-color: var(--g-accent); outline: none; }
+.demo-controls button.on { color: var(--g-ink); background: var(--g-accent); border-color: var(--g-accent); }
+.demo-controls button.extra { border-color: rgba(255, 120, 100, 0.5); color: #ffb3a6; }
+.demo-controls button.extra.on { background: rgba(255, 120, 100, 0.2); color: #ffd8d0; }
+.demo-controls button.close { background: var(--g-accent); color: var(--g-ink); border-color: var(--g-accent); }
+.demo-spacer { flex: 1; }
+.demo-controls .lbl { display: inline-block; max-width: 9em; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+
+/* Small screens (the phone page): stacked, the game on top, the phone under it */
+@media (max-width: 760px) {
+  .demo-view { padding: 0; }
+  .demo-card { border-radius: 0; height: 100%; align-content: start; padding: max(12px, env(safe-area-inset-top)) 12px 12px; gap: 8px; }
+  .demo-body { grid-template-columns: 1fr; height: auto; min-height: 0; }
+  .demo-game { order: -1; }
+  .demo-pane { flex: none; aspect-ratio: 16 / 10; }
+  .demo-phone { height: 40vh; }
+  .demo-controls button { height: 36px; padding: 0 10px; font-size: 13px; }
+  .demo-controls .lbl { display: none; }
+  .demo-spacer { display: none; }
+}
+
+/* ---------- The drawn phone ---------- */
+.phone-mock { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.pm-tilt { transition: transform 60ms linear; transform-style: preserve-3d; }
+.pm-body {
+  position: relative; border-radius: 34px; padding: 13px; box-sizing: border-box;
+  background: linear-gradient(145deg, #3b3434, #141111 60%); box-shadow: 0 0 0 2px #5c524e, 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.pm-body::before { content: ""; position: absolute; top: 18px; left: 50%; width: 22%; height: 9px; margin-left: -11%; border-radius: 6px; background: #050404; z-index: 3; }
+.pm-screen { position: relative; transform-origin: 0 0; border-radius: 22px; overflow: hidden; }
+.pm-page.ctrl { position: relative; height: 100%; padding-top: 34px; }
+.pm-page .stick-base { width: 230px; }
+.pm-page .move-flash { font-size: 42px; }
+.pm-page .under-graphic { font-size: 20px; }
+.pm-page .board3d { height: 90%; }
+.pm-page .board-shadow { height: 86%; }
+.pm-page .psheet { position: absolute; }
+.pm-page .psheet-card { max-height: 85%; }
+.pm-page .pm-pressed { transform: translateY(4px) scale(0.98); filter: brightness(1.15); }
+.pm-page .pill.pm-pressed, .pm-page .chip.pm-pressed, .pm-page .small-btn.pm-pressed { background: rgba(247, 196, 124, 0.35); }
+.pm-page .deck-stage.pm-ring-ok { box-shadow: inset 0 0 0 3px rgba(61, 220, 132, 0.9), inset 0 0 50px rgba(61, 220, 132, 0.45); }
+.pm-page .deck-stage.pm-ring-bad { box-shadow: inset 0 0 0 3px rgba(255, 90, 90, 0.9), inset 0 0 50px rgba(255, 90, 90, 0.4); }
+.pm-ring-label {
+  position: absolute; left: 0; right: 0; top: 18%; text-align: center; font: italic 900 30px/1 system-ui, sans-serif; letter-spacing: 1px;
+  animation: flash-pop 800ms cubic-bezier(0.2, 1.5, 0.4, 1) forwards;
+}
+.pm-ring-label.ok { color: #3ddc84; text-shadow: 0 3px 0 #0d4a2a, 0 0 20px rgba(61, 220, 132, 0.7); }
+.pm-ring-label.bad { color: #ff6b5e; text-shadow: 0 3px 0 #4a0d0d, 0 0 20px rgba(255, 90, 90, 0.7); }
+
+/* The finger: a see-through fingertip (the contact spot) with the finger above it, a ripple when it presses */
+.pm-finger { position: absolute; width: 0; height: 0; z-index: 60; transition: opacity 120ms; }
+.pm-finger-tip {
+  position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.55), rgba(255, 236, 220, 0.28)); border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); transition: transform 80ms;
+}
+.pm-finger-body {
+  position: absolute; left: -24px; top: 6px; width: 48px; height: 150px; border-radius: 24px 24px 18px 18px;
+  transform-origin: 50% 0; transform: rotate(-26deg) translate(10px, 4px);
+  background: linear-gradient(180deg, rgba(255, 228, 210, 0.42), rgba(255, 228, 210, 0.12)); border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+.pm-finger.down .pm-finger-tip { transform: scale(0.86); background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.85), rgba(255, 220, 190, 0.5)); }
+.pm-finger-ripple { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(255, 242, 214, 0.9); animation: pm-ripple 420ms ease-out forwards; }
+@keyframes pm-ripple { to { transform: scale(2.1); opacity: 0; } }
+
+/* Tilt arrows beside the phone (faint until it tilts that way) */
+.pm-arrow { position: absolute; display: grid; justify-items: center; gap: 2px; font-size: 34px; line-height: 1; color: #7fd6c2; opacity: 0; transition: opacity 150ms; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+.pm-arrow small { font: 800 10px/1.1 system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; max-width: 7em; color: #bff0e4; }
+.pm-arrow.on { opacity: 1; }
+.pm-arrow.side { top: 50%; margin-top: -24px; }
+.pm-arrow.left { left: 0; }
+.pm-arrow.right { right: 0; }
+.pm-arrow.top { top: 2%; right: 0; }
+.pm-arrow.bottom { bottom: 2%; right: 0; }

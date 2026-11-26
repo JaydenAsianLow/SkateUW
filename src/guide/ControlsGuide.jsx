@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
+import DemoView from './DemoView.jsx';
 import { CARDS, GROUPS } from './demos.js';
 import { getClip, onClips, pauseAll, prepare, prepareAll } from './engine.js';
 import './guide.css';
 
 // The Controls guide: a card for every move, grouped (Basics, Tricks, ...). Each card loops a short clip of the real
 // skater doing the move (recorded once from the demo scene, engine.js). Clicking a card opens its demo.
-// where: 'laptop' | 'phone' (the phone page opens the same guide on its own screen).
-export default function ControlsGuide({ onClose, where = 'laptop', onOpenDemo, footer, children }) {
+// where: 'laptop' | 'phone' (the phone page opens the same guide on its own screen). onPin(id): pin a demo to the
+// side of the screen while playing (laptop only). startWith: open this demo straight away.
+export default function ControlsGuide({ onClose, where = 'laptop', onPin, footer, startWith = null }) {
+  const [open, setOpen] = useState(startWith);
   useEffect(() => {
     prepareAll();
     return () => pauseAll();
@@ -37,7 +40,7 @@ export default function ControlsGuide({ onClose, where = 'laptop', onOpenDemo, f
               <h3>{g}</h3>
               <div className="guide-grid">
                 {CARDS.filter((d) => d.group === g).map((d) => (
-                  <Card key={d.id} demo={d} onOpen={() => onOpenDemo?.(d.id)} />
+                  <Card key={d.id} demo={d} onOpen={() => setOpen(d.id)} />
                 ))}
               </div>
             </section>
@@ -45,7 +48,7 @@ export default function ControlsGuide({ onClose, where = 'laptop', onOpenDemo, f
           {footer}
         </div>
       </div>
-      {children}
+      {open && <DemoView id={open} onClose={() => setOpen(null)} onOpen={setOpen} onPin={onPin} />}
     </div>
   );
 }

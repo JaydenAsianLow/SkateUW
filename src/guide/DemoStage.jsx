@@ -13,6 +13,7 @@ import { GRAVITY } from '../display/tuning.js';
 import DemoWorld, { LANES } from './DemoWorld.jsx';
 import { createDriver } from './driver.js';
 import { seedRandom, vclock } from './clock.js';
+import './stage.css';
 
 // The demo scene: the page inside the Controls guide's iframe (/?demo). The real skateboard, rider, physics and
 // camera on the practice set (DemoWorld.jsx), driven by a demo script (demos.js) instead of the phone. It never

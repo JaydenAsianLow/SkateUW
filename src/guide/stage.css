@@ -1,0 +1,7 @@
+/* The demo scene's own page (inside the guide's iframe): the game's HUD meters and callouts, smaller when the demo
+   pane is small (the phone page) so they don't hide the skater. */
+.demo-stage { background: #1c0f0b; }
+@media (max-width: 700px) {
+  .demo-stage .balance { top: 6px; transform: translateX(-50%) scale(0.58); transform-origin: 50% 0; }
+  .demo-stage .trick-callout { font-size: 30px; top: 58%; }
+}

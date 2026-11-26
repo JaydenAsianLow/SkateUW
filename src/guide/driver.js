@@ -169,6 +169,7 @@ export function createDriver(demo, env = {}) {
     // Advance the script from T0 to T1 (s). Call before the game's frame at T1 (performance.now() already at T1).
     update(T0, T1) {
       T = T1;
+      if (rec.press?.hover) rec.press = null; // a timing step sets it again while it lasts
       for (let k = 1; k <= SUB; k++) fingersAt(T0 + ((T1 - T0) * k) / SUB);
       for (const tm of timers.slice()) if (tm.at <= now()) vt.clear(tm.id), tm.fn();
       for (const s of steps) if (s.press && s.at > T0 && s.at <= T1) press(s.press);
