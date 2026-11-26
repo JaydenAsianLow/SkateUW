@@ -14,6 +14,9 @@ import DemoWorld, { LANES } from './DemoWorld.jsx';
 import { createDriver } from './driver.js';
 import { seedRandom, vclock } from './clock.js';
 import './stage.css';
+import { checkDemo } from './check.js';
+import { DEMOS } from './demos.js';
+import { urlParams } from '../display/util.js';
 
 // The demo scene: the page inside the Controls guide's iframe (/?demo). The real skateboard, rider, physics and
 // camera on the practice set (DemoWorld.jsx), driven by a demo script (demos.js) instead of the phone. It never
@@ -90,6 +93,8 @@ const api = {
   get t() {
     return T;
   },
+  // Play a demo through and compare what the game did with the demo's `expect` list (check.js).
+  check: (demo) => checkDemo(api, demo),
 };
 window.__demo = api;
 
@@ -148,6 +153,7 @@ export default function DemoStage() {
         <DemoCallout />
         <BalanceMeter />
         <TimingBar />
+        {urlParams.has('check') && <CheckReport />}
       </div>
     </KeyboardControls>
   );
@@ -173,3 +179,45 @@ function DemoCallout() {
     </div>
   );
 }
+
+// /?demo&check: play every demo through the real game and list which still do what they say.
+function CheckReport() {
+  const [rows, setRows] = useState([]);
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    let stop = false;
+    (async () => {
+      while (!api.ready) await new Promise((r) => setTimeout(r, 100));
+      const out = [];
+      for (const d of DEMOS) {
+        if (stop) return;
+        out.push(await api.check(d));
+        setRows([...out]);
+      }
+      window.__demoCheck = out;
+      setDone(true);
+    })();
+    return () => (stop = true);
+  }, []);
+  const fails = rows.filter((r) => !r.ok).length;
+  return (
+    <div className="demo-check">
+      <h1>
+        Demo check {done ? (fails ? `· ${fails} failed` : '· all good') : `· ${rows.length} / ${DEMOS.length}…`}
+      </h1>
+      <table>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id} className={r.ok ? 'ok' : 'bad'}>
+              <td>{r.ok ? '✓' : '✗'}</td>
+              <td>{r.id}</td>
+              <td>{r.ok ? '' : `missing: ${r.missing.join(', ')}`}</td>
+              <td className="got">{r.got.join(' → ')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+

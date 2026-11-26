@@ -30,6 +30,8 @@
 //                                          wrong moments)
 //   ],
 //   captions: [{ at, to, text }],          shown under the demo, in time with the moves (plain, short words)
+//   expect: ['trick:KICKFLIP'],            what the game must do in this demo, checked by /?demo&check (check.js
+//                                          lists the tokens), so a demo that stops working after a game change shows
 //   extra,                optional: the id of a second, small demo shown with this one (e.g. what a mistake looks like)
 //   hidden,               true for those extra demos: no card of their own
 //   extraLabel,           the button that shows the extra demo, e.g. 'What a miss looks like'
@@ -52,6 +54,7 @@ export const DEMOS = [
     id: 'push', name: 'Push', group: 'Basics', input: 'SWIPE', keys: 'W or ↑ (one tap = one push)',
     spawn: 'flat', warmup: 0.3, length: 4.6,
     steps: [{ at: 0.5, swipe: 'push' }, { at: 1.4, swipe: 'push' }, { at: 2.3, swipe: 'push' }],
+    expect: ['phone:PUSH', 'phone:PUSH', 'phone:PUSH'],
     captions: [
       { at: 0.2, to: 2.2, text: 'Swipe down on the board' },
       { at: 2.2, to: 4.6, text: 'Every swipe is one push' },
@@ -61,6 +64,7 @@ export const DEMOS = [
     id: 'steer', name: 'Steer', group: 'Basics', input: 'TILT', keys: 'A / D or ← / →',
     spawn: 'flat', warmup: 2.4, length: 6,
     steps: [...ROLL, { at: 0.5, to: 2.2, tilt: { steer: 0.75 } }, { at: 3.1, to: 4.9, tilt: { steer: -0.75 } }],
+    expect: ['turn:right', 'turn:left'],
     captions: [
       { at: 0.3, to: 2.7, text: 'Tilt the phone right to turn right' },
       { at: 2.9, to: 5.4, text: 'Tilt it left to turn left' },
@@ -70,6 +74,7 @@ export const DEMOS = [
     id: 'manual', name: 'Manual', group: 'Basics', input: 'TILT', keys: 'S or ↓ (hold it: it balances by itself)',
     spawn: 'flat', warmup: 2.4, length: 7.5,
     steps: [...ROLL, { at: 0.5, to: 5.6, balance: 'keep' }],
+    expect: ['trick:MANUAL'],
     captions: [
       { at: 0.2, to: 1.6, text: '1. Tilt the top of the phone up' },
       { at: 1.6, to: 3.0, text: '2. The front wheels lift' },
@@ -82,6 +87,7 @@ export const DEMOS = [
     id: 'manual-miss', name: 'Manual: leaning too far', group: 'Basics', input: 'TILT', keys: 'S or ↓', hidden: true,
     spawn: 'flat', warmup: 2.4, length: 6.5,
     steps: [...ROLL, { at: 0.5, to: 4.6, balance: 'tooFar' }],
+    expect: ['fall'],
     captions: [
       { at: 0.2, to: 2.4, text: 'Tilt up to start the manual' },
       { at: 2.4, to: 4.2, text: 'Keep tilting up: the marker leaves the green' },
@@ -92,6 +98,7 @@ export const DEMOS = [
     id: 'revert', name: 'Revert', group: 'Basics', input: 'HALF-CIRCLE', keys: 'Q',
     spawn: 'flat', warmup: 2.4, length: 4.5,
     steps: [...ROLL, { at: 0.8, swipe: 'halfCircle' }],
+    expect: ['trick:REVERT'],
     captions: [
       { at: 0.3, to: 2.0, text: 'Draw a half circle with one finger' },
       { at: 2.0, to: 4.5, text: 'The board turns round: now you ride backwards' },
@@ -101,6 +108,7 @@ export const DEMOS = [
     id: 'bail', name: 'Fall and get up', group: 'Basics', input: 'JOYSTICK', keys: 'W A S D to walk to the board, then B',
     spawn: 'flat', warmup: 2.4, length: 8,
     steps: [...ROLL, { at: 0.3, swipe: 'ollie' }, { at: 1.2, swipe: [{ delay: 0, pts: [[0.5, 0.5, 0], [0.74, 0.2, 0.08]] }] }, { at: 4.5, to: 6.6, stick: 'toBoard' }, { at: 7.0, press: 'onoff' }],
+    expect: ['fall', 'mode:find', 'mode:carry', 'mode:ride'],
     captions: [
       { at: 0.2, to: 1.9, text: 'Flip too late and land on your side...' },
       { at: 1.9, to: 4.0, text: '...you fall, then get up' },
@@ -114,6 +122,7 @@ export const DEMOS = [
     id: 'ollie', name: 'Ollie', group: 'Tricks', input: 'SWIPE', keys: 'Shift',
     spawn: 'flat', warmup: 2.4, length: 3.6,
     steps: [...ROLL, { at: 0.7, swipe: 'ollie' }],
+    expect: ['trick:OLLIE'],
     captions: [
       { at: 0.2, to: 1.0, text: '1. Swipe down...' },
       { at: 1.0, to: 1.7, text: '2. ...then straight up' },
@@ -124,6 +133,7 @@ export const DEMOS = [
     id: 'nollie', name: 'Nollie', group: 'Tricks', input: 'SWIPE', keys: 'N',
     spawn: 'flat', warmup: 2.4, length: 3.6,
     steps: [...ROLL, { at: 0.7, swipe: 'nollie' }],
+    expect: ['trick:NOLLIE'],
     captions: [
       { at: 0.2, to: 1.0, text: '1. Swipe up...' },
       { at: 1.0, to: 1.7, text: '2. ...then down' },
@@ -134,6 +144,7 @@ export const DEMOS = [
     id: 'kickflip', name: 'Kickflip', group: 'Tricks', input: 'SWIPE', keys: 'F',
     spawn: 'flat', warmup: 2.4, length: 3.8,
     steps: [...ROLL, { at: 0.7, swipe: 'kickflip' }],
+    expect: ['phone:KICKFLIP', 'trick:KICKFLIP'],
     captions: [
       { at: 0.2, to: 1.0, text: '1. Swipe down, then up' },
       { at: 1.0, to: 1.8, text: '2. Flick up and to the right' },
@@ -144,6 +155,7 @@ export const DEMOS = [
     id: 'varial', name: 'Varial flip', group: 'Tricks', input: 'SWIPE', keys: 'R',
     spawn: 'flat', warmup: 2.4, length: 3.8,
     steps: [...ROLL, { at: 0.7, swipe: 'varial' }],
+    expect: ['phone:VARIAL FLIP', 'trick:VARIAL FLIP'],
     captions: [
       { at: 0.2, to: 1.0, text: '1. Swipe down, then up' },
       { at: 1.0, to: 1.8, text: '2. Two fingers: one up-right, one down-left' },
@@ -154,6 +166,7 @@ export const DEMOS = [
     id: 'tre', name: 'Tre flip', group: 'Tricks', input: 'SWIPE', keys: 'T',
     spawn: 'flat', warmup: 2.4, length: 4,
     steps: [...ROLL, { at: 0.7, swipe: 'tre' }],
+    expect: ['phone:TRE FLIP', 'trick:TRE FLIP'],
     captions: [
       { at: 0.2, to: 1.0, text: '1. Swipe down, then up' },
       { at: 1.0, to: 1.3, text: '2. Stop for a moment' },
@@ -165,6 +178,7 @@ export const DEMOS = [
     id: 'shove', name: 'Pop shove-it', group: 'Tricks', input: 'SWIPE', keys: 'V',
     spawn: 'flat', warmup: 2.4, length: 3.6,
     steps: [...ROLL, { at: 0.8, swipe: 'shove' }],
+    expect: ['trick:POP SHOVE-IT'],
     captions: [
       { at: 0.2, to: 1.5, text: 'Two fingers at once: one right, one down-left' },
       { at: 1.5, to: 3.6, text: 'Pop shove-it: the board spins under you' },
@@ -174,6 +188,7 @@ export const DEMOS = [
     id: 'fs180', name: 'Frontside 180', group: 'Tricks', input: 'HALF-CIRCLE', keys: 'E',
     spawn: 'flat', warmup: 2.4, length: 4,
     steps: [...ROLL, { at: 0.7, swipe: 'ollie180' }],
+    expect: ['trick:FRONTSIDE 180'],
     captions: [
       { at: 0.2, to: 1.0, text: '1. Swipe down, then up' },
       { at: 1.0, to: 1.8, text: '2. Draw a half circle' },
@@ -186,6 +201,7 @@ export const DEMOS = [
     id: '5050', name: '50-50', group: 'Grinds', input: 'SWIPE', keys: 'Shift next to a rail',
     spawn: 'rail', spawnZ: 6, warmup: 2.4, length: 5,
     steps: [...ROLL, { at: 1.4, swipe: 'ollie' }],
+    expect: ['grind:5050', 'trick:50-50'],
     captions: [
       { at: 0.2, to: 1.4, text: '1. Ride next to the rail' },
       { at: 1.4, to: 2.0, text: '2. Ollie onto it' },
@@ -197,6 +213,7 @@ export const DEMOS = [
     id: 'boardslide', name: 'Boardslide', group: 'Grinds', input: 'HALF-CIRCLE', keys: 'Shift, then Q in the air',
     spawn: 'rail', spawnZ: 6, warmup: 2.4, length: 5,
     steps: [...ROLL, { at: 1.4, swipe: 'ollie180' }],
+    expect: ['grind:5050', 'grind:boardslide', 'trick:BOARDSLIDE'],
     captions: [
       { at: 0.2, to: 1.4, text: '1. Ride next to the rail' },
       { at: 1.4, to: 1.7, text: '2. Ollie onto the rail' },
@@ -209,6 +226,7 @@ export const DEMOS = [
     id: 'boardslide-bail', name: 'Boardslide: half circle not finished', group: 'Grinds', input: 'HALF-CIRCLE', keys: 'Shift, then Q in the air', hidden: true,
     spawn: 'rail', spawnZ: 6, warmup: 2.4, length: 5,
     steps: [...ROLL, { at: 1.4, swipe: 'ollieHalfStop' }],
+    expect: ['grind:5050', 'fall'],
     captions: [
       { at: 0.2, to: 1.6, text: 'Ollie onto the rail...' },
       { at: 1.6, to: 2.4, text: '...stop the half circle halfway...' },
@@ -219,6 +237,7 @@ export const DEMOS = [
     id: 'long', name: 'Long grind', group: 'Grinds', input: 'TAP', keys: 'Space when the marker is in the green',
     spawn: 'long', spawnZ: 6, warmup: 2.4, length: 7.5,
     steps: [...ROLL, { at: 1.4, swipe: 'ollie' }, { at: 1.6, to: 6.4, timing: 'hit' }],
+    expect: ['grind:5050', 'tap:good', 'trick:50-50'],
     captions: [
       { at: 0.2, to: 1.7, text: '1. Ollie onto a long rail' },
       { at: 1.7, to: 3.6, text: '2. A bar shows up: tap TAP when the marker is in the green' },
@@ -230,6 +249,7 @@ export const DEMOS = [
     id: 'long-miss', name: 'Long grind: missed taps', group: 'Grinds', input: 'TAP', keys: 'Space', hidden: true,
     spawn: 'long', spawnZ: 6, warmup: 2.4, length: 7,
     steps: [...ROLL, { at: 1.4, swipe: 'ollie' }, { at: 1.6, to: 3.3, timing: 'hit' }, { at: 3.3, to: 6, timing: 'miss' }],
+    expect: ['grind:5050', 'tap:good', 'tap:miss', 'fall'],
     captions: [
       { at: 0.2, to: 1.7, text: 'Ollie onto a long rail' },
       { at: 1.7, to: 3.3, text: 'Taps in the green are good' },
@@ -241,6 +261,7 @@ export const DEMOS = [
     id: 'curb', name: 'Curb grind', group: 'Grinds', input: 'TILT', keys: 'A / D to ride into it',
     spawn: 'curb', spawnZ: 4, warmup: 2.4, length: 4.5,
     steps: [...ROLL, { at: 0.2, to: 0.6, tilt: { steer: 0.12 } }],
+    expect: ['grind:5050', 'trick:50-50'],
     captions: [
       { at: 0.1, to: 1.0, text: '1. Ride into a curb at a small angle' },
       { at: 1.0, to: 2.6, text: '2. You grind it, no ollie needed' },
@@ -253,6 +274,7 @@ export const DEMOS = [
     id: 'onoff', name: 'Get off and on', group: 'On Foot', input: 'TAP', keys: 'B',
     spawn: 'flat', warmup: 2.4, length: 6,
     steps: [...ROLL, { at: 0.8, press: 'onoff' }, { at: 3.6, press: 'onoff' }],
+    expect: ['mode:carry', 'mode:ride'],
     captions: [
       { at: 0.2, to: 3.2, text: 'Tap Get off: you step off with the board in your hand' },
       { at: 3.2, to: 6, text: 'Tap Get on to ride again' },
@@ -262,6 +284,7 @@ export const DEMOS = [
     id: 'walk', name: 'Walk and run', group: 'On Foot', input: 'JOYSTICK', keys: 'W A S D, hold Shift to run',
     spawn: 'flat', warmup: 2.4, length: 6.5,
     steps: [...ON_FOOT, { at: 0.4, to: 2.2, stick: [0, 0.45] }, { at: 2.6, to: 4.6, stick: [0, 1] }, { at: 4.6, to: 5.8, stick: [0.75, 0.65] }],
+    expect: ['run', 'turn:right'],
     captions: [
       { at: 0.2, to: 2.4, text: 'Push the joystick a little to walk' },
       { at: 2.4, to: 4.6, text: 'All the way to run' },
@@ -272,6 +295,7 @@ export const DEMOS = [
     id: 'jump', name: 'Jump', group: 'On Foot', input: 'TAP', keys: 'Space (with the board in your hand)',
     spawn: 'flat', warmup: 2.4, length: 4,
     steps: [...ON_FOOT, { at: 0.3, to: 3.0, stick: [0, 0.6] }, { at: 1.4, press: 'jump' }],
+    expect: ['jump'],
     captions: [
       { at: 0.2, to: 1.3, text: 'Off the board, walking' },
       { at: 1.3, to: 4, text: 'Tap Jump' },
@@ -281,6 +305,7 @@ export const DEMOS = [
     id: 'caveman', name: 'Caveman', group: 'On Foot', input: 'TAP', keys: 'Space, then B in the air',
     spawn: 'flat', warmup: 2.4, length: 5.5,
     steps: [...ON_FOOT, { at: 0.2, to: 2.2, stick: [0, 1] }, { at: 1.7, press: 'jump' }, { at: 1.98, press: 'onoff' }],
+    expect: ['jump', 'mode:ride', 'trick:CAVEMAN'],
     captions: [
       { at: 0.1, to: 1.6, text: '1. Run with the board in your hand' },
       { at: 1.6, to: 1.95, text: '2. Tap Jump' },
@@ -294,6 +319,7 @@ export const DEMOS = [
     id: 'camera', name: 'Camera view', group: 'Camera and Settings', input: 'TAP', keys: 'Settings menu → Camera',
     spawn: 'flat', warmup: 2.4, length: 7.5,
     steps: [...ROLL, { at: 1.6, press: 'view' }, { at: 3.6, press: 'view' }, { at: 5.6, press: 'view' }, { at: 4.2, swipe: 'push' }],
+    expect: ['camera:shoulder', 'camera:side', 'camera:behind'],
     captions: [
       { at: 0.1, to: 1.6, text: 'Before: the camera behind you' },
       { at: 1.6, to: 3.6, text: 'Tap View: over your shoulder' },
@@ -305,6 +331,7 @@ export const DEMOS = [
     id: 'stance', name: 'Goofy stance', group: 'Camera and Settings', input: 'TAP', keys: 'Settings menu → Stance',
     spawn: 'flat', warmup: 2.4, length: 7,
     steps: [...ROLL, { at: 1.7, press: 'settings' }, { at: 2.5, press: 'goofy' }, { at: 3.2, press: 'done' }, { at: 4.2, swipe: 'push' }],
+    expect: ['stance:goofy'],
     captions: [
       { at: 0.1, to: 1.7, text: 'Before: regular, left foot in front' },
       { at: 1.7, to: 3.3, text: 'Settings, then Stance: Goofy' },
@@ -315,6 +342,7 @@ export const DEMOS = [
     id: 'spawn', name: 'Spawn point', group: 'Camera and Settings', input: 'TAP', keys: 'P to set it, Space to go back',
     spawn: 'flat', warmup: 0.3, length: 6,
     steps: [{ at: 0.6, press: 'setspawn' }, { at: 1.4, swipe: 'push' }, { at: 2.1, swipe: 'push' }, { at: 4.6, press: 'tospawn' }],
+    expect: ['phone:SPAWN SET', 'phone:TO SPAWN'],
     captions: [
       { at: 0.1, to: 1.3, text: 'Tap Set spawn: this spot is your start' },
       { at: 1.3, to: 4.4, text: 'Ride somewhere else...' },
