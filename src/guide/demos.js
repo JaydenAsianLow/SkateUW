@@ -29,7 +29,8 @@
 //     { at, to, timing: 'hit' }            long grind: tap TAP each time the marker is in the green ('miss': at the
 //                                          wrong moments)
 //   ],
-//   captions: [{ at, to, text }],          shown under the demo, in time with the moves (plain, short words)
+//   captions: [{ at, to, text, badge }],   shown under the demo, in time with the moves (plain, short words);
+//                                          badge: optional 'BEFORE' / 'AFTER' label (settings demos)
 //   expect: ['trick:KICKFLIP'],            what the game must do in this demo, checked by /?demo&check (check.js
 //                                          lists the tokens), so a demo that stops working after a game change shows
 //   extra,                optional: the id of a second, small demo shown with this one (e.g. what a mistake looks like)
@@ -321,9 +322,9 @@ export const DEMOS = [
     steps: [...ROLL, { at: 1.6, press: 'view' }, { at: 3.6, press: 'view' }, { at: 5.6, press: 'view' }, { at: 4.2, swipe: 'push' }],
     expect: ['camera:shoulder', 'camera:side', 'camera:behind'],
     captions: [
-      { at: 0.1, to: 1.6, text: 'Before: the camera behind you' },
-      { at: 1.6, to: 3.6, text: 'Tap View: over your shoulder' },
-      { at: 3.6, to: 5.6, text: 'Tap View again: from the side' },
+      { at: 0.1, to: 1.6, text: 'The camera behind you', badge: 'BEFORE' },
+      { at: 1.6, to: 3.6, text: 'Tap View: over your shoulder', badge: 'AFTER' },
+      { at: 3.6, to: 5.6, text: 'Tap View again: from the side', badge: 'AFTER' },
       { at: 5.6, to: 7.5, text: 'Once more: back behind you' },
     ],
   },
@@ -333,9 +334,9 @@ export const DEMOS = [
     steps: [...ROLL, { at: 1.7, press: 'settings' }, { at: 2.5, press: 'goofy' }, { at: 3.2, press: 'done' }, { at: 4.2, swipe: 'push' }],
     expect: ['stance:goofy'],
     captions: [
-      { at: 0.1, to: 1.7, text: 'Before: regular, left foot in front' },
+      { at: 0.1, to: 1.7, text: 'Regular: left foot in front', badge: 'BEFORE' },
       { at: 1.7, to: 3.3, text: 'Settings, then Stance: Goofy' },
-      { at: 3.3, to: 7, text: 'After: goofy, right foot in front' },
+      { at: 3.3, to: 7, text: 'Goofy: right foot in front', badge: 'AFTER' },
     ],
   },
   {

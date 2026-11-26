@@ -57,7 +57,10 @@ export default function PinnedDemo({ pin }) {
         </button>
       </header>
       <div className="pinned-phone">{clip ? <PhoneMock rec={rec} history={hist.current} small /> : <span className="pinned-wait">Getting it ready…</span>}</div>
-      <div className="pinned-caption">{caption?.text ?? ' '}</div>
+      <div className="pinned-caption">
+        {caption?.badge && <b className={`demo-badge ${caption.badge.toLowerCase()}`}>{caption.badge}</b>}
+        {caption?.text ?? ' '}
+      </div>
       <ClipView id={pin.id} className="pinned-clip" onTime={onTime} />
     </aside>
   );

@@ -49,24 +49,33 @@ export default function PhoneMock({ rec, history = [], small = false }) {
           </div>
         </div>
       </div>
-      <TiltHint steer={steer} lean={lean} />
+      <TiltHint steer={steer} lean={lean} before={history[Math.max(0, history.length - 12)]?.tilt?.[1] ?? lean} />
     </div>
   );
 }
 
-// Arrows beside the phone for tilt moves: which way it's tilting.
-function TiltHint({ steer, lean }) {
+// Arrows beside the phone for tilt moves: which way it's tilting. Holding a manual (the top tilted up), it shows the
+// small corrections instead: a bit more up, or a bit back down. before: the lean about 0.2 s ago.
+function TiltHint({ steer, lean, before }) {
   const s = Math.abs(steer) > 0.06 ? (steer > 0 ? 'right' : 'left') : null;
-  const l = lean < -0.06 ? 'up' : lean > 0.06 ? 'down' : null;
+  const d = lean - before; // < 0: the top coming up
+  let up = null, down = null;
+  if (lean > 0.06) down = 'top of the phone down';
+  else if (lean < -0.06) {
+    if (before > -0.12 && d < 0) up = 'top of the phone up';
+    else if (d < -0.012) up = 'a bit more up';
+    else if (d > 0.012) down = lean > -0.15 ? 'back to flat' : 'a bit back down';
+    else up = 'hold it there';
+  }
   return (
     <>
       <div className={`pm-arrow side left ${s === 'left' ? 'on' : ''}`}>⟲<small>tilt left</small></div>
       <div className={`pm-arrow side right ${s === 'right' ? 'on' : ''}`}>⟳<small>tilt right</small></div>
-      <div className={`pm-arrow top ${l === 'up' ? 'on' : ''}`}>
-        ⤺<small>top of the phone up</small>
+      <div className={`pm-arrow top ${up ? 'on' : ''}`}>
+        ⤺<small>{up ?? ''}</small>
       </div>
-      <div className={`pm-arrow bottom ${l === 'down' ? 'on' : ''}`}>
-        ⤻<small>top of the phone down</small>
+      <div className={`pm-arrow bottom ${down ? 'on' : ''}`}>
+        ⤻<small>{down ?? ''}</small>
       </div>
     </>
   );

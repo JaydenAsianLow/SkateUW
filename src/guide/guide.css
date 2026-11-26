@@ -218,3 +218,12 @@
 .pinned-caption { min-height: 2.5em; font: italic 800 12.5px/1.25 system-ui, sans-serif; text-align: center; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
 .pinned.medium .pinned-caption { font-size: 14px; }
 .pinned-clip { border-radius: 8px; opacity: 0.95; }
+
+/* BEFORE / AFTER label on a caption (settings demos) */
+.demo-badge {
+  display: inline-block; margin-right: 10px; padding: 4px 8px 3px; border-radius: 6px; vertical-align: 3px;
+  font: normal 900 0.55em/1 system-ui, sans-serif; letter-spacing: 0.14em; text-shadow: none; color: #1a0d0a;
+}
+.demo-badge.before { background: #c9ae93; }
+.demo-badge.after { background: #3ddc84; }
+.pinned-caption .demo-badge { font-size: 9px; margin-right: 6px; vertical-align: 1px; }

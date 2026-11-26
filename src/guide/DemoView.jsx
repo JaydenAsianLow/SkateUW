@@ -82,7 +82,10 @@ export default function DemoView({ id, onClose, onOpen, onPin }) {
           </div>
         </div>
         <div className="demo-caption" aria-live="polite">
-          <span key={caption?.text ?? ''}>{caption?.text ?? ' '}</span>
+          <span key={caption?.text ?? ''}>
+            {caption?.badge && <b className={`demo-badge ${caption.badge.toLowerCase()}`}>{caption.badge}</b>}
+            {caption?.text ?? ' '}
+          </span>
         </div>
         <div className="demo-controls">
           <button onClick={() => ctl.current?.replay()} title="Play it again from the start">
