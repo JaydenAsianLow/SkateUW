@@ -210,3 +210,53 @@ export function pauseAll() {
   paused = true;
   stopLive();
 }
+
+// --- The pinned demo's clip, kept in the browser (IndexedDB) so it plays after a reload without recording again
+// while you play. Only the one pinned clip is kept.
+const DB = 'skate-guide';
+function db() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('pinned');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+const sameDemo = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+export async function savePinnedClip(id) {
+  const clip = clips.get(id);
+  if (!clip) return;
+  try {
+    const blob = await (await fetch(clip.url)).blob();
+    const d = await db();
+    const { url, ...meta } = clip;
+    d.transaction('pinned', 'readwrite').objectStore('pinned').put({ id, demo: demoById[id], blob, meta }, 'clip');
+  } catch {
+    /* no storage: it records again after a reload */
+  }
+}
+
+// The pinned demo's clip: from this session, or saved from an earlier one (if the demo hasn't changed since),
+// or recorded now (once).
+export async function loadPinnedClip(id) {
+  if (clips.has(id)) return clips.get(id);
+  try {
+    const d = await db();
+    const v = await new Promise((resolve) => {
+      const req = d.transaction('pinned').objectStore('pinned').get('clip');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    });
+    if (v && v.id === id && sameDemo(v.demo, demoById[id])) {
+      clips.set(id, { ...v.meta, url: URL.createObjectURL(v.blob) });
+      notify();
+      return clips.get(id);
+    }
+  } catch {
+    /* no storage */
+  }
+  queue.length = 0; // only this one while you play (the guide records the rest when it opens)
+  prepare([id]);
+  return null;
+}

@@ -6,6 +6,7 @@ import { phone } from '../state.js';
 import { CHOICE_UI, RANGES, RANGE_UI } from '../shared.js';
 import { displayRoom } from '../socket.js';
 import { AIRTIME_MAX, AIRTIME_MIN, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
+import { guidePrefs, onGuidePrefs, setGuidePrefs } from '../guide/prefs.js';
 
 // Laptop screens around the game: main menu, phone pairing, settings, controls and the phone-lost overlay.
 
@@ -262,6 +263,23 @@ export function SettingsPanel() {
         />
         <span className="ctl-val">{cfg.airtime.toFixed(1)}×</span>
       </label>
+      <PinnedSetting btn={btn} />
+    </div>
+  );
+}
+
+// The Controls guide's pinned demo (Pin to side in a demo): show it beside the game or not. Saved in this browser.
+function PinnedSetting({ btn }) {
+  const [on, setOn] = useState(guidePrefs.showPinned);
+  useEffect(() => onGuidePrefs((p) => setOn(p.showPinned)), []);
+  return (
+    <div className="ctl-row" title="A demo you pinned from the Controls guide stays beside the game while you play.">
+      <span>Show pinned demo while playing</span>
+      <span className="ctl-btns">
+        {[true, false].map((v) => (
+          <span key={String(v)}>{btn(v ? 'On' : 'Off', () => setGuidePrefs({ showPinned: v }), on === v ? 'on' : '')}</span>
+        ))}
+      </span>
     </div>
   );
 }

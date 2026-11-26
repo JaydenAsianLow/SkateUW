@@ -191,3 +191,30 @@
 .pm-arrow.right { right: 0; }
 .pm-arrow.top { top: 2%; right: 0; }
 .pm-arrow.bottom { bottom: 2%; right: 0; }
+.phone-mock.small .pm-arrow { font-size: 22px; }
+.phone-mock.small .pm-arrow small { font-size: 8px; }
+
+/* ---------- A demo pinned to the side while playing ----------
+   Bottom corner (clear of the score top left, the meters top middle, the callouts in the middle), see-through. */
+.pinned {
+  --g-text: #fff2d6; --g-accent: #f7c47c;
+  position: absolute; bottom: 30px; width: 210px; display: grid; gap: 6px; padding: 8px; color: var(--g-text);
+  background: rgba(26, 14, 10, 0.55); border: 1px solid rgba(255, 242, 214, 0.16); border-radius: 14px; backdrop-filter: blur(4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); opacity: 0.92; user-select: none;
+}
+.pinned.left { left: 12px; }
+.pinned.right { right: 12px; }
+.pinned.medium { width: 290px; }
+.pinned-head { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.pinned-head b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; font-weight: 900; letter-spacing: 0.02em; }
+.pinned-head button {
+  width: 26px; height: 24px; padding: 0; border-radius: 7px; font-size: 12px; font-weight: 800;
+  background: rgba(255, 242, 214, 0.08); border: 1px solid rgba(255, 242, 214, 0.18); color: var(--g-text);
+}
+.pinned-head button:hover { border-color: var(--g-accent); color: var(--g-accent); }
+.pinned-phone { position: relative; height: 230px; }
+.pinned.medium .pinned-phone { height: 300px; }
+.pinned-wait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; opacity: 0.7; }
+.pinned-caption { min-height: 2.5em; font: italic 800 12.5px/1.25 system-ui, sans-serif; text-align: center; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.pinned.medium .pinned-caption { font-size: 14px; }
+.pinned-clip { border-radius: 8px; opacity: 0.95; }

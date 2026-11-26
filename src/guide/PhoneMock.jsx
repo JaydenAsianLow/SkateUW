@@ -28,13 +28,14 @@ export default function PhoneMock({ rec, history = [], small = false }) {
     const fit = () => {
       const r = el.getBoundingClientRect();
       const frame = 26;
-      setK(Math.max(0.2, Math.min((r.width - 56) / (W + frame), (r.height - 56) / (H + frame)))); // room to tilt
+      const pad = small ? 14 : 56; // room to tilt
+      setK(Math.max(0.12, Math.min((r.width - pad) / (W + frame), (r.height - pad) / (H + frame))));
     };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [small]);
 
   const steer = rec?.tilt?.[0] ?? 0;
   const lean = rec?.tilt?.[1] ?? 0;

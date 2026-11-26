@@ -18,6 +18,9 @@ import Effects from './Effects.jsx';
 import Hud from './Hud.jsx';
 import { ControlsList, MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
 import ControlsGuide from '../guide/ControlsGuide.jsx';
+import PinnedDemo from '../guide/PinnedDemo.jsx';
+import { savePinnedClip } from '../guide/engine.js';
+import { guidePrefs, onGuidePrefs, setGuidePrefs } from '../guide/prefs.js';
 import { urlParams } from './util.js';
 
 // Keyboard fallback so the scene can be tested without a phone.
@@ -66,6 +69,15 @@ export default function Display() {
   const [screen, setScreen] = useState(SKIP_MENU ? 'play' : 'menu'); // 'menu' | 'pair' | 'play'
   const [keyboard, setKeyboard] = useState(SKIP_MENU);
   const [guide, setGuide] = useState(false); // the Controls guide is open: the game pauses and stops drawing
+  const [gprefs, setGprefs] = useState(() => ({ ...guidePrefs })); // the pinned demo and its setting (guide/prefs.js)
+  useEffect(() => onGuidePrefs(setGprefs), []);
+  // Pin to side (in a demo): close the guide and keep a small copy of that demo beside the game.
+  const pinDemo = (id) => {
+    const old = guidePrefs.pin;
+    setGuidePrefs({ pin: { id, side: old?.side ?? 'right', size: old?.size ?? 'small' }, showPinned: true });
+    savePinnedClip(id);
+    setGuide(false);
+  };
   const status = usePhoneStatus();
   // Only call the phone lost after a short grace period, so Wi-Fi blips don't flash the red card.
   const [lostLong, setLostLong] = useState(false);
@@ -186,6 +198,8 @@ export default function Display() {
           </Suspense>
         </Canvas>
         {CLEAN ? null : <>
+        {/* the pinned demo goes under the HUD (its Settings panel opens over it) */}
+        {screen === 'play' && running && gprefs.showPinned && gprefs.pin && <PinnedDemo pin={gprefs.pin} />}
         {screen === 'play' && <Hud onMenu={toMenu} onControls={() => setGuide(true)} />}
         {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} onControls={() => setGuide(true)} />}
         {screen === 'pair' && (
@@ -200,7 +214,7 @@ export default function Display() {
         )}
         {phoneLost && <PhoneLost status={status} onMenu={toMenu} />}
         {guide && (
-          <ControlsGuide onClose={() => setGuide(false)} footer={<AllKeys />} />
+          <ControlsGuide onClose={() => setGuide(false)} onPin={pinDemo} footer={<AllKeys />} />
         )}
         </>}
         {/* ODbL attribution for the OpenStreetMap layout (MAP.md §6). Always visible. */}
