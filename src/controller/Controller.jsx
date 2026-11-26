@@ -41,6 +41,14 @@ export default function Controller() {
   const [shared, setShared] = useState(null); // shared settings from the laptop (shared.js), null until it sends them
   const [showSettings, setShowSettings] = useState(false);
   const [showGuide, setShowGuide] = useState(false); // the Controls guide, on the phone's own screen
+  // While it's open the laptop's game waits (and says why).
+  useEffect(() => {
+    const s = socketRef.current;
+    const tell = () => s?.emit('guide', { open: showGuide });
+    tell();
+    s?.on('connect', tell);
+    return () => s?.off('connect', tell);
+  }, [showGuide]);
   const [vibrate, setVib] = useState(vibrateOn());
   const sharedRef = useRef(null); // the same, for the 50 Hz tilt loop
   sharedRef.current = shared;

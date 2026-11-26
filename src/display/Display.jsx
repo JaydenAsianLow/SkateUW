@@ -69,6 +69,7 @@ export default function Display() {
   const [screen, setScreen] = useState(SKIP_MENU ? 'play' : 'menu'); // 'menu' | 'pair' | 'play'
   const [keyboard, setKeyboard] = useState(SKIP_MENU);
   const [guide, setGuide] = useState(false); // the Controls guide is open: the game pauses and stops drawing
+  const [phoneGuide, setPhoneGuide] = useState(false); // the phone has its own Controls guide open: the game waits
   const [gprefs, setGprefs] = useState(() => ({ ...guidePrefs })); // the pinned demo and its setting (guide/prefs.js)
   useEffect(() => onGuidePrefs(setGprefs), []);
   // Pin to side (in a demo): close the guide and keep a small copy of that demo beside the game.
@@ -89,7 +90,7 @@ export default function Display() {
     return () => clearTimeout(t);
   }, [waiting]);
   const phoneLost = waiting && lostLong;
-  const running = screen === 'play' && !phoneLost && !guide;
+  const running = screen === 'play' && !phoneLost && !guide && !phoneGuide;
   // Shared with the 3D scene; set after render (before the next frame) rather than during it.
   useLayoutEffect(() => {
     game.running = running;
@@ -113,7 +114,11 @@ export default function Display() {
     const offSettings = onSettings(sendConfig);
     s.on('connect', () => ((net.connected = true), sendConfig()));
     s.on('disconnect', () => (net.connected = false));
-    s.on('status', (st) => (net.controllers = st.controllers));
+    s.on('status', (st) => {
+      net.controllers = st.controllers;
+      if (!st.controllers) setPhoneGuide(false);
+    });
+    s.on('guide', (d) => setPhoneGuide(d?.open === true));
     s.on('tilt', (d) => {
       Object.assign(phone, d);
       phone.lastUpdate = performance.now();
@@ -213,6 +218,15 @@ export default function Display() {
           />
         )}
         {phoneLost && <PhoneLost status={status} onMenu={toMenu} />}
+        {screen === 'play' && phoneGuide && !phoneLost && !guide && (
+          <div className="phone-guide-note">The phone is showing the Controls guide. The game waits until you close it.</div>
+        )}
+        {screen === 'menu' && !gprefs.offered && !guide && (
+          <FirstTimeOffer
+            onOpen={() => (setGuidePrefs({ offered: true }), setGuide(true))}
+            onSkip={() => setGuidePrefs({ offered: true })}
+          />
+        )}
         {guide && (
           <ControlsGuide onClose={() => setGuide(false)} onPin={pinDemo} footer={<AllKeys />} />
         )}
@@ -233,3 +247,23 @@ function AllKeys() {
     </details>
   );
 }
+
+// The first time the game opens: offer the Controls guide once (Skip, and it never shows again by itself).
+function FirstTimeOffer({ onOpen, onSkip }) {
+  return (
+    <div className="first-offer" role="dialog" aria-label="Learn the controls">
+      <div className="first-offer-text">
+        <b>New here?</b> See how every move works on the phone: short demos with the real skater.
+      </div>
+      <div className="first-offer-btns">
+        <button className="menu-btn small primary" onClick={(e) => (e.currentTarget.blur(), onOpen())}>
+          Show me the controls
+        </button>
+        <button className="menu-btn small" onClick={(e) => (e.currentTarget.blur(), onSkip())}>
+          Skip
+        </button>
+      </div>
+    </div>
+  );
+}
+
