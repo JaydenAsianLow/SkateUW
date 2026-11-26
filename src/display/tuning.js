@@ -114,6 +114,7 @@ export const CAM_FOLLOW = 6; // camera position easing rate (1/s)
 
 // Camera views (Settings → Camera, or the View button on the phone). Behind uses the numbers above.
 export const CAM_SWITCH_TIME = 0.4; // s, blend between views
+export const CAM_FACE_RATE = 7; // 1/s, how fast the camera swings round to the rider's back after a revert / 180 (fakie)
 // Over the shoulder: close, at shoulder height, off to the rider's back (heel) side, looking well ahead past them.
 export const SHOULDER_DISTANCE = 1.7;
 export const SHOULDER_HEIGHT = 1.55;

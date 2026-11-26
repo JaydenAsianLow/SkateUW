@@ -8,11 +8,12 @@ import { SUN_DIR, sunView } from './look.js';
 import { NOT_RAGDOLL } from './ragdoll.js';
 import { smooth, urlParams } from './util.js';
 import {
-  CAM_CLEAR_FROM, CAM_CLIP_PAD, CAM_DISTANCE, CAM_FOLLOW, CAM_HEIGHT, CAM_LOOK_AHEAD, CAM_LOOK_RIGHT, CAM_LOOK_Y, CAM_MAX_ROLL, CAM_MIN_DISTANCE,
+  CAM_CLEAR_FROM, CAM_CLIP_PAD, CAM_DISTANCE, CAM_FACE_RATE, CAM_FOLLOW, CAM_HEIGHT, CAM_LOOK_AHEAD, CAM_LOOK_RIGHT, CAM_LOOK_Y, CAM_MAX_ROLL, CAM_MIN_DISTANCE,
   CAM_RIGHT, CAM_SWITCH_TIME, GRIND_CAM, SHOULDER_DISTANCE, SHOULDER_HEIGHT, SHOULDER_LOOK_AHEAD, SHOULDER_LOOK_Y, SHOULDER_SIDE,
   SIDE_DISTANCE, SIDE_HEIGHT, SIDE_LOOK_AHEAD, SIDE_LOOK_Y,
 } from './tuning.js';
 
+const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const aim = new Vector3();
 const fromPos = new Vector3();
 const fromAim = new Vector3();
@@ -61,6 +62,7 @@ export default function CameraRig() {
   const target = useRef(new Vector3());
   const roll = useRef(0);
   const angle = useRef(0); // camera swing toward the side during a manual (rad)
+  const face = useRef(0); // which way the rider faces, relative to travel (0 forward, ±π fakie), smoothed (rad)
   const first = useRef(true);
   const sw = useRef({ view: settings.camera, from: null, t: 1 }); // view switch in progress
   const gc = useRef({ w: 0, id: null, side: 1, tx: 0, tz: -1 }); // grind side camera: blend weight, line, side
@@ -81,11 +83,21 @@ export default function CameraRig() {
       camera.lookAt(p.x * 0.25, 0, p.z * 0.25);
       return updateSunView(camera);
     }
+    // The behind and shoulder views follow the way the rider faces, not the way they travel: riding fakie (after a
+    // revert or a 180) the camera swings round with the body, so it stays at the rider's back and you see where
+    // you've come from, as the rider would. It follows the spin as it happens, so a revert turns it smoothly.
+    const riding = board.mode === 'ride';
+    const faceTo = riding ? (board.fakie ? Math.PI : 0) + (board.view.spin ?? 0) : 0;
+    const dFace = Math.atan2(Math.sin(faceTo - face.current), Math.cos(faceTo - face.current));
+    face.current = wrapAngle(face.current + dFace * (1 - Math.exp(-CAM_FACE_RATE * dt)));
     // Manual: swing round toward the toe side (a slight side angle) so you can see the board on its back wheels.
-    const side = (board.fakie ? -1 : 1) * (board.mirror ?? 1); // goofy / switch: the toe side is the other side
+    // In the rider's facing frame fakie doesn't change the toe side; goofy / switch does.
+    const side = board.mirror ?? 1;
     angle.current += ((board.anim.manual ?? 0) * 0.75 * side - angle.current) * (1 - Math.exp(-3 * dt));
     const fx = -Math.sin(board.heading);
     const fz = -Math.cos(board.heading);
+    const hx = -Math.sin(board.heading + face.current); // facing direction
+    const hz = -Math.cos(board.heading + face.current);
     if (SIDE_CAM) {
       // Debug view of the rider (?sidecam): from the toe side, 3 m out, looking at the rider's front.
       camera.position.set(p.x - fz * 3, p.y + 0.9, p.z + fx * 3);
@@ -102,9 +114,10 @@ export default function CameraRig() {
       s.t = 0;
     }
     s.t = Math.min(1, s.t + dt / CAM_SWITCH_TIME);
-    viewPose(s.view, p, fx, fz, angle.current, target.current, aim);
+    const pose = (view, pos, out) => (view === 'side' ? viewPose(view, p, fx, fz, angle.current, pos, out) : viewPose(view, p, hx, hz, angle.current, pos, out));
+    pose(s.view, target.current, aim);
     if (s.t < 1 && s.from) {
-      viewPose(s.from, p, fx, fz, angle.current, fromPos, fromAim);
+      pose(s.from, fromPos, fromAim);
       const k = smooth(s.t);
       target.current.lerp(fromPos, 1 - k);
       aim.lerp(fromAim, 1 - k);
