@@ -6,6 +6,7 @@ import { connect, displayRoom } from '../socket.js';
 import { board, game, haptics, phone, net, phoneIsLive } from '../state.js';
 import { commands, onSettings, settings, updateSettings } from '../settings.js';
 import { cleanSetting, sharedOnly } from '../shared.js';
+import { PHONE_EVENTS, applyPhoneEvent } from '../phoneEvents.js';
 import World from './World.jsx';
 import Skateboard from './Skateboard.jsx';
 import RayCheck from './RayCheck.jsx';
@@ -15,7 +16,11 @@ import { GRAVITY } from './tuning.js';
 import CameraRig from './CameraRig.jsx';
 import Effects from './Effects.jsx';
 import Hud from './Hud.jsx';
-import { MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
+import { ControlsList, MainMenu, PairScreen, PhoneLost } from './Menus.jsx';
+import ControlsGuide from '../guide/ControlsGuide.jsx';
+import PinnedDemo from '../guide/PinnedDemo.jsx';
+import { savePinnedClip } from '../guide/engine.js';
+import { guidePrefs, onGuidePrefs, setGuidePrefs } from '../guide/prefs.js';
 import { urlParams } from './util.js';
 
 // Keyboard fallback so the scene can be tested without a phone.
@@ -63,6 +68,17 @@ function usePhoneStatus() {
 export default function Display() {
   const [screen, setScreen] = useState(SKIP_MENU ? 'play' : 'menu'); // 'menu' | 'pair' | 'play'
   const [keyboard, setKeyboard] = useState(SKIP_MENU);
+  const [guide, setGuide] = useState(false); // the Controls guide is open: the game pauses and stops drawing
+  const [phoneGuide, setPhoneGuide] = useState(false); // the phone has its own Controls guide open: the game waits
+  const [gprefs, setGprefs] = useState(() => ({ ...guidePrefs })); // the pinned demo and its setting (guide/prefs.js)
+  useEffect(() => onGuidePrefs(setGprefs), []);
+  // Pin to side (in a demo): close the guide and keep a small copy of that demo beside the game.
+  const pinDemo = (id) => {
+    const old = guidePrefs.pin;
+    setGuidePrefs({ pin: { id, side: old?.side ?? 'right', size: old?.size ?? 'small' }, showPinned: true });
+    savePinnedClip(id);
+    setGuide(false);
+  };
   const status = usePhoneStatus();
   // Only call the phone lost after a short grace period, so Wi-Fi blips don't flash the red card.
   const [lostLong, setLostLong] = useState(false);
@@ -74,7 +90,7 @@ export default function Display() {
     return () => clearTimeout(t);
   }, [waiting]);
   const phoneLost = waiting && lostLong;
-  const running = screen === 'play' && !phoneLost;
+  const running = screen === 'play' && !phoneLost && !guide && !phoneGuide;
   // Shared with the 3D scene; set after render (before the next frame) rather than during it.
   useLayoutEffect(() => {
     game.running = running;
@@ -98,26 +114,22 @@ export default function Display() {
     const offSettings = onSettings(sendConfig);
     s.on('connect', () => ((net.connected = true), sendConfig()));
     s.on('disconnect', () => (net.connected = false));
-    s.on('status', (st) => (net.controllers = st.controllers));
+    s.on('status', (st) => {
+      net.controllers = st.controllers;
+      if (!st.controllers) setPhoneGuide(false);
+    });
+    s.on('guide', (d) => setPhoneGuide(d?.open === true));
     s.on('tilt', (d) => {
       Object.assign(phone, d);
       phone.lastUpdate = performance.now();
       phone.packets++;
     });
-    s.on('push', (d) => (phone.pushQueued = Math.min(3, phone.pushQueued + (d?.power ?? 1))));
-    s.on('pop', (d) => ((phone.popQueued = d?.power ?? 1), (phone.popNose = d?.nose === true)));
     s.on('setting', (d) => {
       const value = cleanSetting(d?.key, d?.value);
       if (value !== undefined) updateSettings({ [d.key]: value });
     });
-    s.on('trick', (d) => d?.type && (phone.trickQueued = { type: d.type, side: d.side ?? 1 }));
-    s.on('revert', (d) => (phone.revertQueued = d?.dir ?? 1));
-    s.on('partial', () => (phone.partialQueued = true));
-    s.on('grindTap', () => (phone.tapQueued = true));
-    s.on('reset', () => (phone.resetQueued = true));
-    s.on('carry', () => (phone.carryQueued = true));
-    s.on('jump', () => (phone.jumpQueued = true));
-    s.on('setSpawn', () => (commands.setSpawn = true));
+    // Moves (push, pop, trick, ...): the same handler the Controls guide's demos use (phoneEvents.js).
+    for (const ev of PHONE_EVENTS) s.on(ev, (d) => applyPhoneEvent(ev, d));
     // Mirror the deck's rotation to the phone's 3D board (~30 Hz, only while a phone is connected).
     const mirror = setInterval(() => {
       // Only while actually playing, so a second laptop tab (menu, paused) never contradicts the game's state.
@@ -163,6 +175,7 @@ export default function Display() {
     <KeyboardControls map={keyMap}>
       <div className="display">
         <Canvas
+          frameloop={guide ? 'never' : 'always'} // hidden behind the guide: don't spend the GPU on it
           shadows="percentage" // PCF: what three.js uses anyway since it dropped PCFSoft (no console warning)
           flat
           dpr={[1, 1.5]} // above 1.5x the GPU cost grows ~4x for a barely visible gain on a laptop screen
@@ -190,8 +203,10 @@ export default function Display() {
           </Suspense>
         </Canvas>
         {CLEAN ? null : <>
-        {screen === 'play' && <Hud onMenu={toMenu} />}
-        {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} />}
+        {/* the pinned demo goes under the HUD (its Settings panel opens over it) */}
+        {screen === 'play' && running && gprefs.showPinned && gprefs.pin && <PinnedDemo pin={gprefs.pin} />}
+        {screen === 'play' && <Hud onMenu={toMenu} onControls={() => setGuide(true)} />}
+        {screen === 'menu' && <MainMenu onPlay={() => setScreen(status.ready ? 'play' : 'pair')} onControls={() => setGuide(true)} />}
         {screen === 'pair' && (
           <PairScreen
             status={status}
@@ -203,6 +218,18 @@ export default function Display() {
           />
         )}
         {phoneLost && <PhoneLost status={status} onMenu={toMenu} />}
+        {screen === 'play' && phoneGuide && !phoneLost && !guide && (
+          <div className="phone-guide-note">The phone is showing the Controls guide. The game waits until you close it.</div>
+        )}
+        {screen === 'menu' && !gprefs.offered && !guide && (
+          <FirstTimeOffer
+            onOpen={() => (setGuidePrefs({ offered: true }), setGuide(true))}
+            onSkip={() => setGuidePrefs({ offered: true })}
+          />
+        )}
+        {guide && (
+          <ControlsGuide onClose={() => setGuide(false)} onPin={pinDemo} footer={<AllKeys />} />
+        )}
         </>}
         {/* ODbL attribution for the OpenStreetMap layout (MAP.md §6). Always visible. */}
         <div className="osm-credit">Red Square, UW · Map data © OpenStreetMap contributors</div>
@@ -210,3 +237,33 @@ export default function Display() {
     </KeyboardControls>
   );
 }
+
+// The whole list as text, at the bottom of the guide (phone moves and keyboard keys).
+function AllKeys() {
+  return (
+    <details className="guide-list">
+      <summary>Every control as a list</summary>
+      <ControlsList />
+    </details>
+  );
+}
+
+// The first time the game opens: offer the Controls guide once (Skip, and it never shows again by itself).
+function FirstTimeOffer({ onOpen, onSkip }) {
+  return (
+    <div className="first-offer" role="dialog" aria-label="Learn the controls">
+      <div className="first-offer-text">
+        <b>New here?</b> See how every move works on the phone: short demos with the real skater.
+      </div>
+      <div className="first-offer-btns">
+        <button className="menu-btn small primary" onClick={(e) => (e.currentTarget.blur(), onOpen())}>
+          Show me the controls
+        </button>
+        <button className="menu-btn small" onClick={(e) => (e.currentTarget.blur(), onSkip())}>
+          Skip
+        </button>
+      </div>
+    </div>
+  );
+}
+

@@ -128,6 +128,7 @@ io.on('connection', (socket) => {
   relay('revert', (d) => ({ dir: d.dir < 0 ? -1 : 1 }));
   relay('partial', () => ({})); // a half circle given up halfway (bails a grind)
   relay('grindTap', () => ({})); // TAP button: the timing bar on a long grind
+  relay('guide', (d) => ({ open: d.open === true })); // the phone has the Controls guide open: the game waits
   relay('reset', () => ({}));
   relay('carry', () => ({}));
   relay('jump', () => ({})); // on foot, board in hand

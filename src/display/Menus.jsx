@@ -6,6 +6,7 @@ import { phone } from '../state.js';
 import { CHOICE_UI, RANGES, RANGE_UI } from '../shared.js';
 import { displayRoom } from '../socket.js';
 import { AIRTIME_MAX, AIRTIME_MIN, keyLabel, onSettings, settings, updateSettings } from '../settings.js';
+import { guidePrefs, onGuidePrefs, setGuidePrefs } from '../guide/prefs.js';
 
 // Laptop screens around the game: main menu, phone pairing, settings, controls and the phone-lost overlay.
 
@@ -14,20 +15,20 @@ const blurAfter = (fn) => (e) => {
   fn();
 };
 
-// Title screen: Play / Controls / Settings, over the dimmed level.
-export function MainMenu({ onPlay }) {
-  const [panel, setPanel] = useState(null); // 'controls' | 'settings' | null
+// Title screen: Play / Controls / Settings, over the dimmed level. Controls opens the Controls guide (guide/).
+export function MainMenu({ onPlay, onControls }) {
+  const [panel, setPanel] = useState(null); // 'settings' | null
   if (panel) {
     return (
       <div className="screen">
         <div className="menu-card wide">
           <div className="menu-head">
-            <h2>{panel === 'controls' ? 'Controls' : 'Settings'}</h2>
+            <h2>Settings</h2>
             <button className="menu-btn small" onClick={blurAfter(() => setPanel(null))}>
               Back
             </button>
           </div>
-          {panel === 'controls' ? <ControlsList /> : <SettingsPanel />}
+          <SettingsPanel />
         </div>
       </div>
     );
@@ -43,7 +44,7 @@ export function MainMenu({ onPlay }) {
           <button className="menu-btn primary" onClick={blurAfter(onPlay)} autoFocus>
             Play
           </button>
-          <button className="menu-btn" onClick={blurAfter(() => setPanel('controls'))}>
+          <button className="menu-btn" onClick={blurAfter(onControls)}>
             Controls
           </button>
           <button className="menu-btn" onClick={blurAfter(() => setPanel('settings'))}>
@@ -262,6 +263,23 @@ export function SettingsPanel() {
         />
         <span className="ctl-val">{cfg.airtime.toFixed(1)}×</span>
       </label>
+      <PinnedSetting btn={btn} />
+    </div>
+  );
+}
+
+// The Controls guide's pinned demo (Pin to side in a demo): show it beside the game or not. Saved in this browser.
+function PinnedSetting({ btn }) {
+  const [on, setOn] = useState(guidePrefs.showPinned);
+  useEffect(() => onGuidePrefs((p) => setOn(p.showPinned)), []);
+  return (
+    <div className="ctl-row" title="A demo you pinned from the Controls guide stays beside the game while you play.">
+      <span>Show pinned demo while playing</span>
+      <span className="ctl-btns">
+        {[true, false].map((v) => (
+          <span key={String(v)}>{btn(v ? 'On' : 'Off', () => setGuidePrefs({ showPinned: v }), on === v ? 'on' : '')}</span>
+        ))}
+      </span>
     </div>
   );
 }

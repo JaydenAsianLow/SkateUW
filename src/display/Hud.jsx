@@ -7,8 +7,9 @@ import { urlParams } from './util.js';
 // ?clean hides the overlay (for screenshots against the DESIGN.md reference).
 const CLEAN = urlParams.has('clean');
 
-// In-game overlay: just Settings and Main menu buttons, plus the trick callout and the manual meter.
-export default function Hud({ onMenu }) {
+// In-game overlay: just Settings, Controls (the guide; the game pauses while it's open) and Main menu buttons, plus
+// the trick callout and the manual meter.
+export default function Hud({ onMenu, onControls }) {
   const [trick, setTrick] = useState(null);
   const [open, setOpen] = useState(false);
   const [foot, setFoot] = useState('ride'); // board.view.mode: walking back to the board after a fall?
@@ -39,6 +40,9 @@ export default function Hud({ onMenu }) {
         <button className={`hud-btn ${open ? 'on' : ''}`} onClick={blur(() => setOpen((o) => !o))}>
           Settings
         </button>
+        <button className="hud-btn" onClick={blur(() => (setOpen(false), onControls()))}>
+          Controls
+        </button>
         <button className="hud-btn" onClick={blur(onMenu)}>
           Main menu
         </button>
@@ -60,7 +64,7 @@ export default function Hud({ onMenu }) {
 // back; the green zone drifts and the needle has to stay in it (it flashes red while you're outside). Left end =
 // front wheels drop, right end = bail. Under it: seconds held and the points so far.
 // Hides straight away on a push (which ends the manual), otherwise lingers a moment after the wheels come down.
-function BalanceMeter() {
+export function BalanceMeter() {
   const wrap = useRef(null);
   const needle = useRef(null);
   const zone = useRef(null);
@@ -133,7 +137,7 @@ function BalanceMeter() {
 
 // Timing bar on long grinds (grind/grinding.js stepTiming): the marker sweeps back and forth; tap (phone TAP button
 // or Space) while it's in the green. Flashes green on a good tap, red on a miss; the dots are the misses left.
-function TimingBar() {
+export function TimingBar() {
   const wrap = useRef(null);
   const needle = useRef(null);
   const zone = useRef(null);
